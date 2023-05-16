@@ -1,0 +1,28 @@
+from __future__ import annotations
+
+import os
+
+from dotenv import load_dotenv
+
+
+def read_config() -> dict[str, str]:
+    load_dotenv()
+
+    config = {}
+    # Mandatory configuration
+    for key in [
+        "OPENAI_API_KEY",
+        "OPENAI_ORG_ID",
+    ]:
+        config[key] = os.getenv(key=key, default="")
+        if config[key] == "":
+            raise Exception(f"The mandatory environment variable {key} is empty")
+    # Optional configuration
+    for key in [
+        "OPENAI_API_DEV_KEY",
+        "SERVICE_ACCOUNT_CREDENTIALS",
+        "GS_AI_EVAL_SPREADSHEET_ID",
+        "GS_AI_EVAL_DEV_SPREADSHEET_ID",
+    ]:
+        config[key] = os.getenv(key=key, default="")
+    return config
