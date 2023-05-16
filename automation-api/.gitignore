@@ -1,0 +1,12 @@
+*.pyc
+*.egg-info
+*.bak
+.coverage
+.tox
+.venv
+test.db
+.ipynb_checkpoints
+dist
+.env
+*.ipynb
+requirements.txt
