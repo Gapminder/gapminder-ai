@@ -59,13 +59,6 @@ test = ["pytest", "lint"]
 pytest = "pytest --cov=lib --verbose tests/"
 lint = { shell = "find . -type d -name '.venv*' -prune -o -type f -name '*.py' -print0 | xargs -0 pre-commit run --files" }
 install_kernel = "python -m ipykernel install --user --name gapminder-ai-automation-api"
-deploy = ["export_requirements", "deploy_gcp"]
-export_requirements = { shell = "poetry export --without-hashes --format=requirements.txt | grep -v '@ file://' > requirements.txt" }
-deploy_gcp = { shell = """
-echo Deploying GCP Cloud Functions in project $GCP_PROJECT
-gcloud functions deploy "refresh_surveys_and_combined_listings" --memory 2gb --runtime python39 --set-secrets "SURVEY_MONKEY_API_TOKEN=survey-monkey-api-token:latest" --trigger-http --project=$GCP_PROJECT --region=$GCP_REGION --verbosity=info --timeout=540
-""" }
-logs = "gcloud functions logs read \"refresh_surveys_and_combined_listings\" --project $GCP_PROJECT --region $GCP_REGION"
 
 [tool.poe]
 envfile = ".env"
