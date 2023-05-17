@@ -59,6 +59,10 @@ class OpenAIModel:
         return self._model
 
     def run(self, prompt_text, **kwargs):
+        """format prompt_text and run it with the model.
+
+        All keyword args will be passed to format the prompt_text.
+        """
         prompt = PromptTemplate(
             template=prompt_text, input_variables=list(kwargs.keys())
         )
