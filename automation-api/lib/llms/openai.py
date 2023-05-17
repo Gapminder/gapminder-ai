@@ -18,7 +18,8 @@ class OpenAIModel:
 
     example:
 
-    >>> model = OpenAIModel('gpt-3.5-turbo')
+    >>> model_config = {'temperature': 0}
+    >>> model = OpenAIModel('gpt-3.5-turbo', model_config=model_config)
     >>> template = "What are the top {k} resources to learn {this} in 2023?"
     >>> model.run(template, k=3, this='rust')
 
@@ -29,6 +30,7 @@ class OpenAIModel:
     """
 
     model_name: str
+    model_config: Optional[dict] = field(default_factory=dict)
     api_key: Optional[str] = field(default=None, repr=False)
     org_id: Optional[str] = field(default=None, repr=False)
     _model: Union[OpenAI, ChatOpenAI] = field(init=False, default=None, repr=False)
@@ -46,12 +48,14 @@ class OpenAIModel:
                 model_name=self.model_name,
                 openai_api_key=self.api_key,
                 openai_organization=self.org_id,
+                **self.model_config
             )
         else:
             self._model = OpenAI(
                 model_name=self.model_name,
                 openai_api_key=self.api_key,
                 openai_organization=self.org_id,
+                **self.model_config
             )
 
     @property
