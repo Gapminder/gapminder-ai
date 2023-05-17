@@ -38,3 +38,26 @@ authorized_clients = get_service_account_authorized_clients()
 
 from lib.config import read_config
 config = read_config()
+
+# ## OpenAI access via LangChain
+
+# +
+from langchain.chains import LLMChain
+from langchain.llms import OpenAI
+from langchain.prompts import PromptTemplate
+
+from lib.config import read_config
+
+config = read_config()
+openai_api_key = config["OPENAI_API_KEY"]
+
+template = "What are the top {k} resources to learn {this} in 2023?"
+prompt = PromptTemplate(template=template, input_variables=["k", "this"])
+
+llm = OpenAI(model_name="text-davinci-003", openai_api_key=config["OPENAI_API_KEY"])
+chain = LLMChain(llm=llm, prompt=prompt)
+
+print(chain.run({"k": 3, "this": "Rust"}))
+# -
+
+
