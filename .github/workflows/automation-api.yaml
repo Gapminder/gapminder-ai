@@ -3,7 +3,6 @@ on: push
 env:
   OPENAI_API_KEY: invalid-openai-api-key-for-ci
   OPENAI_ORG_ID: invalid-openai-org-id-for-ci
-  SERVICE_ACCOUNT_CREDENTIALS: invalid-service-account-credentials-for-ci
 defaults:
   run:
     working-directory: automation-api
