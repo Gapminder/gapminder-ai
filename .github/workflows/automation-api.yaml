@@ -1,5 +1,8 @@
 name: Automation API
 on: push
+env:
+  OPENAI_API_KEY: invalid-openai-api-key-for-ci
+  OPENAI_ORG_ID: invalid-openai-org-id-for-ci
 defaults:
   run:
     working-directory: automation-api
