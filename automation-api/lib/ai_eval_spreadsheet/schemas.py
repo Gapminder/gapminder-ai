@@ -16,10 +16,10 @@ class Question(BaseModel):
     include_in_next_evaluation: Optional[bool] = Field(
         None, title="Include in next evaluation"
     )
-    question_id: Optional[int] = Field(None, title="Question ID")
-    survey_id: Optional[int] = Field(None, title="Survey ID")
+    question_id: Optional[str] = Field(None, title="Question ID")
+    survey_id: Optional[str] = Field(None, title="Survey ID")
     survey_name: Optional[str] = Field(None, title="Survey Name")
-    survey_question_id: Optional[int] = Field(None, title="Survey Question ID")
+    survey_question_id: Optional[str] = Field(None, title="Survey Question ID")
     question_number: Optional[int] = Field(None, title="Question number")
     question_as_in_g_survey: Optional[str] = Field(
         None, title="Question (as in G Survey)"
@@ -45,10 +45,10 @@ class QuestionsDf(pa.DataFrameModel):
 
 
 class QuestionOption(BaseModel):
-    question_id: Optional[int] = Field(None, title="Question ID")
-    survey_id: Optional[int] = Field(None, title="Survey ID")
+    question_id: Optional[str] = Field(None, title="Question ID")
+    survey_id: Optional[str] = Field(None, title="Survey ID")
     survey_name: Optional[str] = Field(None, title="Survey Name")
-    survey_question_id: Optional[int] = Field(None, title="Survey Question ID")
+    survey_question_id: Optional[str] = Field(None, title="Survey Question ID")
     question_number: Optional[int] = Field(None, title="Question number")
     question_text: Optional[str] = Field(None, title="Question text")
     letter: Optional[str] = Field(None, title="Letter")
