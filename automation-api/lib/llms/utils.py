@@ -1,6 +1,7 @@
 """utilities to create language models and send queries to model APIs
 """
 
+from typing import Any, Dict, Union
 
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
@@ -10,7 +11,7 @@ from langchain.prompts import PromptTemplate
 from lib.config import read_config
 
 
-def get_openai_model(model_name, **kwargs):
+def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI]:
     """get OpenAI modle from langchain
 
     api key and organization will be set automatically.
@@ -23,13 +24,13 @@ def get_openai_model(model_name, **kwargs):
     >>> model = get_openai_model('text-ada-001')
 
     """
-    config = read_config()
-    api_key = (
+    config: Dict[str, str] = read_config()
+    api_key: str = (
         kwargs.pop("openai_api_key")
         if "openai_api_key" in kwargs
         else config["OPENAI_API_KEY"]
     )
-    org_id = (
+    org_id: str = (
         kwargs.pop("openai_organization")
         if "openai_organization" in kwargs
         else config["OPENAI_ORG_ID"]
@@ -50,7 +51,9 @@ def get_openai_model(model_name, **kwargs):
         )
 
 
-def run_model(llm, prompt_template, **kwargs) -> str:
+def run_model(
+    llm: Union[ChatOpenAI, OpenAI], prompt_template: str, **kwargs: Any
+) -> str:
     """run a language model with prompt.
 
     prompt_template will be formatted with all keyword arguments.
@@ -62,5 +65,7 @@ def run_model(llm, prompt_template, **kwargs) -> str:
     return chain.run(kwargs)
 
 
-def ask_question(prompt_template, question, llm):
+def ask_question(
+    prompt_template: str, question: str, llm: Union[ChatOpenAI, OpenAI]
+) -> str:
     return run_model(llm, prompt_template, question=question)
