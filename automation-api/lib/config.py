@@ -21,8 +21,8 @@ def read_config() -> dict[str, str]:
     for key in [
         "OPENAI_API_DEV_KEY",
         "SERVICE_ACCOUNT_CREDENTIALS",
-        "GS_AI_EVAL_SPREADSHEET_ID",
-        "GS_AI_EVAL_DEV_SPREADSHEET_ID",
+        "AI_EVAL_SPREADSHEET_ID",
+        "AI_EVAL_DEV_SPREADSHEET_ID",
     ]:
         config[key] = os.getenv(key=key, default="")
     return config
