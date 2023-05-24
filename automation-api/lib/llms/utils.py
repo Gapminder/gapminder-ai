@@ -3,6 +3,7 @@
 
 from typing import Any, Dict, Union
 
+from langchain.base_language import BaseLanguageModel
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
@@ -51,9 +52,7 @@ def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI
         )
 
 
-def run_model(
-    llm: Union[ChatOpenAI, OpenAI], prompt_template: str, **kwargs: Any
-) -> str:
+def run_model(llm: BaseLanguageModel, prompt_template: str, **kwargs: Any) -> str:
     """run a language model with prompt.
 
     prompt_template will be formatted with all keyword arguments.
@@ -65,7 +64,5 @@ def run_model(
     return chain.run(kwargs)
 
 
-def ask_question(
-    prompt_template: str, question: str, llm: Union[ChatOpenAI, OpenAI]
-) -> str:
+def ask_question(prompt_template: str, question: str, llm: BaseLanguageModel) -> str:
     return run_model(llm, prompt_template, question=question)
