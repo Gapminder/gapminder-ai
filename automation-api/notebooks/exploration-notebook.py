@@ -59,5 +59,40 @@ chain = LLMChain(llm=llm, prompt=prompt)
 
 print(chain.run({"k": 3, "this": "Rust"}))
 # -
+# ## Read from AI Eval spreadsheet
+
+
+# +
+from lib.ai_eval_spreadsheet.wrapper import (
+    get_ai_eval_spreadsheet,
+    read_ai_eval_data,
+)
+from pandera.errors import SchemaErrors, SchemaError
+
+ai_eval_spreadsheet_id = config["AI_EVAL_DEV_SPREADSHEET_ID"]
+ai_eval_spreadsheet = get_ai_eval_spreadsheet(
+    authorized_clients, ai_eval_spreadsheet_id
+)
+
+try:
+    ai_eval_data = read_ai_eval_data(ai_eval_spreadsheet)
+    display(ai_eval_data)
+except SchemaError as err:
+    print("DataFrame validation failed. Errors:", err.check)
+    print("Schema:")
+    display(err.schema)
+    print("Failure cases:")
+    display(err.failure_cases)  # dataframe of schema errors
+    print("Original data:")
+    display(err.data)  # invalid dataframe
+# -
+
+ai_eval_data.questions.data.df
+
+ai_eval_data.question_options.data.df
+
+ai_eval_data.prompt_variations.data.df
+
+ai_eval_data.gen_ai_models.data.df
 
 
