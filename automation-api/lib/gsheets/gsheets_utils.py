@@ -1,4 +1,4 @@
-from __future__ import annotations
+from typing import Type
 
 import pandas as pd
 from gspread import Spreadsheet, Worksheet, WorksheetNotFound
@@ -49,7 +49,7 @@ def get_worksheet(
     return worksheet
 
 
-def get_pydantic_model_field_titles(model: type[BaseModel]) -> dict[str, str]:
+def get_pydantic_model_field_titles(model: Type[BaseModel]) -> dict[str, str]:
     schema = model.schema()
     titles = {
         property: details.get("title")
