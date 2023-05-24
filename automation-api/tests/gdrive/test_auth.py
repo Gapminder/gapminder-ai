@@ -7,6 +7,10 @@ def test_auth() -> None:
 
     b64_encoded_service_account_credentials = config["SERVICE_ACCOUNT_CREDENTIALS"]
 
+    # Don't test further if credentials are not set
+    if len(b64_encoded_service_account_credentials) == 0:
+        return
+
     assert len(b64_encoded_service_account_credentials) > 1
 
     credentials = authorized_service_account_credentials(
