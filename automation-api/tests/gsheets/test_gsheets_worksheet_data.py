@@ -26,45 +26,39 @@ def test_gsheets_worksheet_data() -> None:
 
     internal_df = pd.DataFrame(
         [
-            {"foo": "=C$2:C[[CURRENT_ROW]]", "bar": "Cat", "bool": False},
-            {"foo": "=C$2:C[[CURRENT_ROW]]", "bar": "Mouse", "bool": False},
-            {"foo": "=C$2:C2", "bar": "Dog", "bool": True},
-            {"foo": "=C$2:C[[CURRENT_ROW]]", "bar": "Eagle", "bool": True},
-            {"foo": "C$2:C6", "bar": "Albatross", "bool": False},
-            {"foo": "", "bar": "Albatross", "bool": False},
+            {"foo": "=C$2:C[[CURRENT_ROW]]", "bar": "Cat", "bool_column": False},
+            {"foo": "=C$2:C[[CURRENT_ROW]]", "bar": "Mouse", "bool_column": False},
+            {"foo": "=C$2:C2", "bar": "Dog", "bool_column": True},
+            {"foo": "=C$2:C[[CURRENT_ROW]]", "bar": "Eagle", "bool_column": True},
+            {"foo": "C$2:C6", "bar": "Albatross", "bool_column": False},
+            {"foo": "", "bar": "Albatross", "bool_column": False},
         ]
     )
 
     class Foo(BaseModel):
-        include_in_next_evaluation: Optional[bool] = Field(
-            None, title="Include in next evaluation"
-        )
-        model_id: Optional[int] = Field(None, title="Model ID")
-        vendor: Optional[str] = Field(None, title="Vendor")
-        model_name: Optional[str] = Field(None, title="Model name")
+        foo: Optional[str] = Field(..., title="Foo")
+        bar: Optional[str] = Field(..., title="bar")
+        bool_column: Optional[bool] = Field(..., title="bool")
 
     class FooDfModel(pa.DataFrameModel):
         class Config:
             dtype = PydanticModel(Foo)
             coerce = True
-            # strict = True
+            # strict = True # Not compatible with only PydanticModel row-wise checks
 
-    # Then you can use FooDataFrameSchema to instantiate your class
-    # gsheet_data = GsheetsWorksheetData(FooDataFrameSchema)
-    # gsheet_data.df = your_dataframe
-
-    data = GsheetsWorksheetData[FooDfModel](
-        FooDfModel,
-        original_df,
+    data = GsheetsWorksheetData[FooDfModel, Foo](
+        df_schema=FooDfModel,
+        row_schema=Foo,
+        df=original_df,
         header_row_number=0,
-        attributes_to_columns_map={"foo": "Foo"},
+        # attributes_to_columns_map=get_pydantic_model_field_titles(Foo),
     )
-    actual = dumps(data.df.to_json(orient="records"), indent=2)
-    expected = dumps(internal_df.to_json(orient="records"), indent=2)
+    actual = dumps(data.df.to_dict(orient="records"), indent=2)
+    expected = dumps(internal_df.to_dict(orient="records"), indent=2)
     assert actual == expected
 
-    actual = dumps(data.export().to_json(orient="records"), indent=2)
-    expected = dumps(original_df.to_json(orient="records"), indent=2)
+    actual = dumps(data.export().to_dict(orient="records"), indent=2)
+    expected = dumps(original_df.to_dict(orient="records"), indent=2)
     assert actual == expected
 
 

@@ -47,12 +47,12 @@ def test_gsheets_worksheet_editor(
             coerce = True
             # strict = True
 
-    editor = GsheetsWorksheetEditor[FooDfModel](
-        schema=FooDfModel,
+    editor = GsheetsWorksheetEditor[FooDfModel, Foo](
+        df_schema=FooDfModel,
+        row_schema=Foo,
         sh=mock_spreadsheet,
         worksheet_name="Sheet1",
         header_row_number=0,
-        attributes_to_columns_map={"foo": "Foo"},
     )
 
     assert editor.data.df is not None

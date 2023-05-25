@@ -1,46 +1,48 @@
-from typing import Any, Dict, Generic, TypeVar, Union
+from typing import Any, Dict, Generic, Type, TypeVar, Union
 
 import gspread_dataframe
 import pandas as pd
 from gspread import Spreadsheet, Worksheet
 from gspread.utils import rowcol_to_a1
 from pandera import DataFrameModel
+from pydantic.main import BaseModel
 
 from lib.gsheets.gsheets_utils import get_worksheet
 from lib.gsheets.gsheets_worksheet_data import GsheetsWorksheetData
 
-SchemaModel = TypeVar("SchemaModel", bound=DataFrameModel)
+DfSchemaModel = TypeVar("DfSchemaModel", bound=Type[DataFrameModel])
+RowSchemaModel = TypeVar("RowSchemaModel", bound=Type[BaseModel])
 
 
-class GsheetsWorksheetEditor(Generic[SchemaModel]):
-    schema: SchemaModel
+class GsheetsWorksheetEditor(Generic[DfSchemaModel, RowSchemaModel]):
+    df_schema: DfSchemaModel
+    row_schema: RowSchemaModel
     sh: Spreadsheet
-    data: GsheetsWorksheetData[SchemaModel]
+    data: GsheetsWorksheetData[DfSchemaModel, RowSchemaModel]
     worksheet: Worksheet
     worksheet_name: str
     header_row_number: int
-    attributes_to_columns_map: dict
     evaluate_formulas: bool
     remove_empty_rows: bool
     remove_empty_columns: bool
 
     def __init__(
         self,
-        schema: SchemaModel,
+        df_schema: DfSchemaModel,
+        row_schema: RowSchemaModel,
         sh: Spreadsheet,
         worksheet_name: str,
         header_row_number: int,
-        attributes_to_columns_map: dict,
         evaluate_formulas: bool = False,
         remove_empty_rows: bool = True,
         remove_empty_columns: bool = False,
     ):
-        self.schema = schema
+        self.df_schema = df_schema
+        self.row_schema = row_schema
         self.sh = sh
         self.worksheet_name = worksheet_name
         self.worksheet = get_worksheet(self.sh, self.worksheet_name)
         self.header_row_number = header_row_number
-        self.attributes_to_columns_map = attributes_to_columns_map
         self.evaluate_formulas = evaluate_formulas
         self.remove_empty_rows = remove_empty_rows
         self.remove_empty_columns = remove_empty_columns
@@ -61,10 +63,10 @@ class GsheetsWorksheetEditor(Generic[SchemaModel]):
             df = df.dropna(axis=1, how="all")
 
         self.data = GsheetsWorksheetData(
-            schema=self.schema,
+            df_schema=self.df_schema,
+            row_schema=self.row_schema,
             df=df,
             header_row_number=self.header_row_number,
-            attributes_to_columns_map=self.attributes_to_columns_map,
         )
 
     def __repr__(self) -> str:

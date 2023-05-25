@@ -71,7 +71,7 @@ class PromptVariation(BaseModel):
     include_in_next_evaluation: Optional[bool] = Field(
         None, title="Include in next evaluation"
     )
-    variation_id: Optional[int] = Field(None, title="Variation ID")
+    variation_id: Optional[str] = Field(None, title="Variation ID")
     question_prompt_template: Optional[str] = Field(
         None, title="Question prompt template"
     )
@@ -93,7 +93,7 @@ class GenAiModel(BaseModel):
     include_in_next_evaluation: Optional[bool] = Field(
         None, title="Include in next evaluation"
     )
-    model_id: Optional[int] = Field(None, title="Model ID")
+    model_id: Optional[str] = Field(None, title="Model ID")
     vendor: Optional[str] = Field(None, title="Vendor")
     model_name: Optional[str] = Field(None, title="Model name")
 
