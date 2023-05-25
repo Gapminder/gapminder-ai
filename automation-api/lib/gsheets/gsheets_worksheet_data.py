@@ -32,7 +32,6 @@ class GsheetsWorksheetData(Generic[DfSchemaModel, RowSchemaModel]):
         row_schema: RowSchemaModel,
         df: pa.typing.DataFrame[DfSchemaModel],
         header_row_number: int,
-        # attributes_to_columns_map: dict = {},
     ):
         self.df_schema = df_schema
         self.row_schema = row_schema

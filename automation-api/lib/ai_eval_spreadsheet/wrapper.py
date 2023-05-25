@@ -53,7 +53,6 @@ def read_ai_eval_data(
         row_schema=Question,
         worksheet_name=sheet_names["questions"],
         header_row_number=0,
-        # attributes_to_columns_map=get_pydantic_model_field_titles(Question),
         evaluate_formulas=True,
     )
 
@@ -63,7 +62,6 @@ def read_ai_eval_data(
         row_schema=QuestionOption,
         worksheet_name=sheet_names["question_options"],
         header_row_number=0,
-        # attributes_to_columns_map=get_pydantic_model_field_titles(Question),
         evaluate_formulas=True,
     )
 

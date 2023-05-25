@@ -22,7 +22,6 @@ class GsheetsWorksheetEditor(Generic[DfSchemaModel, RowSchemaModel]):
     worksheet: Worksheet
     worksheet_name: str
     header_row_number: int
-    # attributes_to_columns_map: dict
     evaluate_formulas: bool
     remove_empty_rows: bool
     remove_empty_columns: bool
@@ -34,7 +33,6 @@ class GsheetsWorksheetEditor(Generic[DfSchemaModel, RowSchemaModel]):
         sh: Spreadsheet,
         worksheet_name: str,
         header_row_number: int,
-        # attributes_to_columns_map: dict,
         evaluate_formulas: bool = False,
         remove_empty_rows: bool = True,
         remove_empty_columns: bool = False,
@@ -45,7 +43,6 @@ class GsheetsWorksheetEditor(Generic[DfSchemaModel, RowSchemaModel]):
         self.worksheet_name = worksheet_name
         self.worksheet = get_worksheet(self.sh, self.worksheet_name)
         self.header_row_number = header_row_number
-        # self.attributes_to_columns_map = attributes_to_columns_map
         self.evaluate_formulas = evaluate_formulas
         self.remove_empty_rows = remove_empty_rows
         self.remove_empty_columns = remove_empty_columns
@@ -70,7 +67,6 @@ class GsheetsWorksheetEditor(Generic[DfSchemaModel, RowSchemaModel]):
             row_schema=self.row_schema,
             df=df,
             header_row_number=self.header_row_number,
-            # attributes_to_columns_map=self.attributes_to_columns_map,
         )
 
     def __repr__(self) -> str:
