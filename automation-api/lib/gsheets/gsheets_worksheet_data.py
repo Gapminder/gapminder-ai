@@ -1,44 +1,52 @@
 import re
-from typing import Generic, TypeVar
+from typing import Generic, Type, TypeVar
 
 import numpy as np
 import pandera as pa
+from pandera import DataFrameModel
+from pydantic.main import BaseModel
+
+from lib.gsheets.gsheets_utils import get_pydantic_model_field_titles
 
 
 def inv_dict(my_dict: dict) -> dict:
     return {v: k for k, v in my_dict.items()}
 
 
-# Define a type variable for the DataFrame schema
-SchemaModel = TypeVar("SchemaModel", bound=pa.DataFrameModel)
+DfSchemaModel = TypeVar("DfSchemaModel", bound=Type[DataFrameModel])
+RowSchemaModel = TypeVar("RowSchemaModel", bound=Type[BaseModel])
 
 
-class GsheetsWorksheetData(Generic[SchemaModel]):
+class GsheetsWorksheetData(Generic[DfSchemaModel, RowSchemaModel]):
     row_number_placeholder_in_formulas = "[[CURRENT_ROW]]"
 
-    schema: SchemaModel
-    df: pa.typing.DataFrame[SchemaModel]
+    df_schema: DfSchemaModel
+    row_schema: RowSchemaModel
+    df: pa.typing.DataFrame[DfSchemaModel]
     header_row_number: int
     attributes_to_columns_map: dict
 
     def __init__(
         self,
-        schema: SchemaModel,
-        df: pa.typing.DataFrame[SchemaModel],
+        df_schema: DfSchemaModel,
+        row_schema: RowSchemaModel,
+        df: pa.typing.DataFrame[DfSchemaModel],
         header_row_number: int,
-        attributes_to_columns_map: dict = {},
+        # attributes_to_columns_map: dict = {},
     ):
-        self.schema = schema
+        self.df_schema = df_schema
+        self.row_schema = row_schema
         self.header_row_number = header_row_number
-        self.attributes_to_columns_map = attributes_to_columns_map
-        self.df = self.replace_current_row_numbers_in_formulas(
-            df.rename(columns=inv_dict(attributes_to_columns_map))
+        self.attributes_to_columns_map = get_pydantic_model_field_titles(
+            self.row_schema
         )
-        self.df = self.schema.validate(self.df)
+        df = df.rename(columns=inv_dict(self.attributes_to_columns_map))
+        df = self.replace_current_row_numbers_in_formulas(df)
+        self.df = df_schema(df)
 
     def replace_current_row_numbers_in_formulas(
-        self, df: pa.typing.DataFrame[SchemaModel]
-    ) -> pa.typing.DataFrame[SchemaModel]:
+        self, df: pa.typing.DataFrame[DfSchemaModel]
+    ) -> pa.typing.DataFrame[DfSchemaModel]:
         df = df.copy()
         df["__row_number"] = np.arange(len(df)) + self.header_row_number + 2
 
@@ -61,8 +69,8 @@ class GsheetsWorksheetData(Generic[SchemaModel]):
         return replaced_df.drop(columns=["__row_number"])
 
     def restore_current_row_numbers_in_formulas(
-        self, df: pa.typing.DataFrame[SchemaModel]
-    ) -> pa.typing.DataFrame[SchemaModel]:
+        self, df: pa.typing.DataFrame[DfSchemaModel]
+    ) -> pa.typing.DataFrame[DfSchemaModel]:
         df = df.copy()
         df["__row_number"] = np.arange(len(df)) + self.header_row_number + 2
 
@@ -83,7 +91,7 @@ class GsheetsWorksheetData(Generic[SchemaModel]):
         )
         return replaced_df.drop(columns=["__row_number"])
 
-    def export(self) -> pa.typing.DataFrame[SchemaModel]:
+    def export(self) -> pa.typing.DataFrame[DfSchemaModel]:
         return self.restore_current_row_numbers_in_formulas(self.df).rename(
             columns=self.attributes_to_columns_map
         )
