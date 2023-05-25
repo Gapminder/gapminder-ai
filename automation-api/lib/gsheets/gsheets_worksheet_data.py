@@ -34,7 +34,7 @@ class GsheetsWorksheetData(Generic[SchemaModel]):
         self.df = self.replace_current_row_numbers_in_formulas(
             df.rename(columns=inv_dict(attributes_to_columns_map))
         )
-        self.schema.validate(self.df)
+        self.df = self.schema.validate(self.df)
 
     def replace_current_row_numbers_in_formulas(
         self, df: pa.typing.DataFrame[SchemaModel]
