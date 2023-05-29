@@ -11,6 +11,8 @@ from langchain.prompts import PromptTemplate
 
 from lib.config import read_config
 
+from .fake import RandomAnswerLLM
+
 
 def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI]:
     """get OpenAI modle from langchain
@@ -52,7 +54,20 @@ def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI
         )
 
 
-def run_model(llm: BaseLanguageModel, prompt_template: str, **kwargs: Any) -> str:
+def get_dummy_model(model_name: str, **kwargs: Any) -> RandomAnswerLLM:
+    if model_name == "fakellm":
+        answer_list = kwargs.get("answer_list", None)
+        if answer_list is None:
+            return RandomAnswerLLM(answer_list=["A", "B", "C"])
+        else:
+            return RandomAnswerLLM(answer_list=answer_list)
+    else:
+        raise NotImplementedError(f"llm f{model_name} not defined.")
+
+
+def run_model(
+    llm: BaseLanguageModel, prompt_template: str, verbose: bool, **kwargs: Any
+) -> str:
     """run a language model with prompt.
 
     prompt_template will be formatted with all keyword arguments.
@@ -64,5 +79,7 @@ def run_model(llm: BaseLanguageModel, prompt_template: str, **kwargs: Any) -> st
     return chain.run(kwargs)
 
 
-def ask_question(prompt_template: str, question: str, llm: BaseLanguageModel) -> str:
-    return run_model(llm, prompt_template, question=question)
+def ask_question(
+    prompt_template: str, question: str, llm: BaseLanguageModel, verbose: bool = False
+) -> str:
+    return run_model(llm, prompt_template, verbose, question=question)
