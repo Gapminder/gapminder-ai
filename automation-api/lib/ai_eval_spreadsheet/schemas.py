@@ -5,6 +5,7 @@
 # for more info
 # Note that most types are str since spreadsheet columns can be formulas
 
+from datetime import datetime
 from typing import Optional
 
 import pandera as pa
@@ -121,7 +122,7 @@ class EvalResult(BaseModel):
     question_id: Optional[str] = Field(None, title="Question ID")
     prompt_variation_id: Optional[str] = Field(None, title="Prompt variation ID")
     model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
-    last_evaluation_time: Optional[float] = Field(None, title="Last Evaluation Time")
+    last_evaluation_datetime: Optional[datetime] = Field(None, title="Last Evaluation")
     correct_count: Optional[int] = Field(None, title="Correct Count")
     wrong_count: Optional[int] = Field(None, title="Wrong Count")
     very_wrong_count: Optional[int] = Field(None, title="Very Wrong Count")

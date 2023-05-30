@@ -1,6 +1,6 @@
 # +
 import logging
-import time
+from datetime import datetime
 from functools import partial
 
 import pandas as pd
@@ -18,6 +18,7 @@ from lib.pilot.helpers import (
     read_ai_eval_spreadsheet,
     run_evaluation_,
 )
+from lib.ai_eval_spreadsheet.schemas import EvalResultsDf
 
 # set up logger
 logger = AppSingleton().get_logger()
@@ -94,7 +95,7 @@ evaluated_configs = sheet.evaluation_results.data.df[
 evaluated_configs
 # -
 
-# whether run all configurations. 
+# whether run all configurations.
 # If set to TRUE, all model configuration/prompt variation pairs will be evaluated.
 # If set to FALSE, the model configuration/prompt variation pairs which are in the evaluated_configs will be skipped.
 RERUN_ALL = True
@@ -143,7 +144,7 @@ eval_result
 
 # +
 report_df_records = []
-current_time = time.time()
+current_time = datetime.isoformat(datetime.utcnow())
 for k, lst in eval_result:
     print(k)
     vs = [v["grades"] for v in lst]
@@ -152,7 +153,7 @@ for k, lst in eval_result:
     q_and_g = zip(questions_list, grade_counts)
     for q, g in q_and_g:
         rec = {
-            "last_evaluation_time": current_time,
+            "last_evaluation_datetime": current_time,
             "question_id": q.question_id,
             "model_configuration_id": k[0],
             "prompt_variation_id": k[1],
@@ -166,6 +167,7 @@ for k, lst in eval_result:
 
 
 report_df = pd.DataFrame.from_records(report_df_records)
+report_df = EvalResultsDf.validate(report_df)
 report_df
 
 # +
@@ -175,14 +177,8 @@ if RERUN_ALL:
     sheet.evaluation_results.replace_data(report_df)
 else:
     # There is a bug in below append_data function
-    # sheet.evaluation_results.append_data(report_df)
-    # so we create a new df and replace data.
-    df = sheet.evaluation_results.data.df.copy()
-    dfnew = pd.concat([df, report_df], ignore_index=True)
-    sheet.evaluation_results.replace_data(dfnew)
+    sheet.evaluation_results.append_data(report_df)
 
 # +
 # done!
 # -
-
-
