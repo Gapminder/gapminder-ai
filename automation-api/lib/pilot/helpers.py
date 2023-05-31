@@ -1,6 +1,6 @@
-from collections import Counter
+import json
 from itertools import product
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 from langchain.chains import LLMChain
@@ -8,6 +8,13 @@ from langchain.llms.base import LLM
 from langchain.prompts import PromptTemplate
 from pandera.errors import SchemaError
 
+from lib.ai_eval_spreadsheet.schemas import (
+    GenAiModel,
+    GenAiModelConfig,
+    PromptVariation,
+    Question,
+    QuestionOption,
+)
 from lib.ai_eval_spreadsheet.wrapper import (
     AiEvalData,
     get_ai_eval_spreadsheet,
@@ -18,9 +25,12 @@ from lib.authorized_clients import get_service_account_authorized_clients
 from lib.config import read_config
 from lib.llms.utils import get_dummy_model, get_openai_model
 
-from .datatypes import ModelConfig, PromptVariation, Question, QuestionOption
-
 logger = AppSingleton().get_logger()
+
+
+# defining type alias to make function types more easier to write
+QuestionAndOptions = Tuple[Question, List[QuestionOption]]
+ModelAndConfig = Tuple[GenAiModel, GenAiModelConfig]
 
 
 def read_ai_eval_spreadsheet() -> AiEvalData:
@@ -56,41 +66,28 @@ def filter_included_rows(df: pd.DataFrame) -> pd.DataFrame:
     return df[df[col_to_filter]]
 
 
-def prepare_questions_data(sheet: AiEvalData) -> pd.DataFrame:
-    question_df = sheet.questions.data.df.copy()
-    options_df = sheet.question_options.data.df.copy()
-
-    enabled_questions_df = filter_included_rows(question_df)
-    enabled_questions_df = enabled_questions_df[
-        ["question_id", "published_version_of_question"]
-    ].set_index("question_id")
-
-    options_df = options_df[
-        ["question_id", "letter", "question_option", "correctness_of_answer_option"]
-    ].set_index("question_id")
-
-    return enabled_questions_df.join(options_df, on="question_id", how="inner")
+def class_objects_from_df(df: pd.DataFrame, cls: type) -> list:
+    # FIXME: how to write correct type annotation for this?
+    return [cls(**rec) for rec in df.to_dict(orient="records")]
 
 
-def get_questions(sheet: AiEvalData) -> List[Question]:
-    qdf = prepare_questions_data(sheet)
-    questions_list = []
-    gs = qdf.groupby("question_id")
-    for g, df in gs:
-        options = list()
-        qt = df["published_version_of_question"].iloc[0]
-        correct_option = None
-        i = 0
-        for _, row in df.sort_values(by="letter").iterrows():
-            letter = row["letter"]
-            option_text = row["question_option"]
-            correctness = row["correctness_of_answer_option"]
-            options.append(QuestionOption(letter, option_text, correctness))
-            if correctness == 1:
-                correct_option = i
-            i = i + 1
-        questions_list.append(Question(g, qt, options, correct_option))
-    return questions_list
+def get_questions(sheet: AiEvalData) -> List[QuestionAndOptions]:
+    questions = filter_included_rows(sheet.questions.data.df)
+    options = sheet.question_options.data.df
+    qs = class_objects_from_df(questions, Question)
+
+    res = []
+    for q in qs:
+        qid = q.question_id
+        qopts = [
+            QuestionOption(**rec)
+            for rec in options.loc[options["question_id"] == qid].to_dict(
+                orient="records"
+            )
+        ]
+        res.append((q, qopts))
+
+    return res
 
 
 def get_model(model_id, vendor, model_conf):
@@ -102,50 +99,61 @@ def get_model(model_id, vendor, model_conf):
         raise NotImplementedError(f"{model_id} from {vendor} is not supported yet.")
 
 
-def simple_evaluation(question: Question, answer: str) -> str:
-    """a simple method to grade the answer"""
+def option_text(opt: QuestionOption, letter_and_text: bool = True) -> str:
+    if letter_and_text:
+        return f"{opt.letter}. {opt.question_option}"
+    else:
+        return opt.letter
+
+
+def simple_evaluation(question: QuestionAndOptions, answer: str) -> str:
     correctness_map = {1: "correct", 2: "wrong", 3: "very wrong"}
     # some times the model will return 'A.' instead of 'A'
     if len(answer) == 2 and answer[1] == ".":
         answer = answer[0]
-    for opt in question.options:
-        if answer == opt.letter or answer == opt.letter_and_text():
-            return correctness_map[opt.correctness]
+
+    for opt in question[1]:
+        if answer == opt.letter or answer == option_text(opt, letter_and_text=True):
+            return correctness_map[opt.correctness_of_answer_option]
     return "failed"
 
 
+def create_question_data_for_test(question: QuestionAndOptions) -> Dict[str, str]:
+    q, options = question
+    question_dict = {"question": q.published_version_of_question}
+    question_dict["options"] = "\n".join(
+        [option_text(opt, letter_and_text=True) for opt in options]
+    )
+    return question_dict
+
+
 def create_question_dataset_for_test(
-    question_list: List[Question],
+    question_list: List[QuestionAndOptions],
 ) -> List[Dict[str, str]]:
-    res = []
-    for question in question_list:
-        question_dict = {"question": question.question_text}
-        question_dict["options"] = "\n".join(
-            [f"{x.letter}. {x.option_text}" for x in question.options]
-        )
-        res.append(question_dict)
-    return res
+    return [create_question_data_for_test(q) for q in question_list]
+
+
+def create_question_data_for_eval(question: QuestionAndOptions) -> Dict[str, str]:
+    q, options = question
+    question_dict = {}
+    question_text_list = [q.published_version_of_question]
+    for opt in options:
+        opt_text = option_text(opt, letter_and_text=True)
+        question_text_list.append(opt_text)
+        if opt.correctness_of_answer_option == 1:
+            question_dict["correct_answer"] = opt_text
+        elif opt.correctness_of_answer_option == 2:
+            question_dict["wrong_answer"] = opt_text
+        else:
+            question_dict["very_wrong_answer"] = opt_text
+    question_dict["question"] = "\n".join(question_text_list)
+    return question_dict
 
 
 def create_question_dataset_for_eval(
-    question_list: List[Question],
+    question_list: List[QuestionAndOptions],
 ) -> List[Dict[str, str]]:
-    res = []
-    for question in question_list:
-        question_dict = {}
-        question_text_list = [question.question_text]
-        for opt in question.options:
-            opt_text = opt.letter_and_text()
-            question_text_list.append(opt_text)
-            if opt.correctness == 1:
-                question_dict["correct_answer"] = opt_text
-            elif opt.correctness == 2:
-                question_dict["wrong_answer"] = opt_text
-            else:
-                question_dict["very_wrong_answer"] = opt_text
-        question_dict["question"] = "\n".join(question_text_list)
-        res.append(question_dict)
-    return res
+    return [create_question_data_for_eval(q) for q in question_list]
 
 
 def check_llm_eval_output(eval_output: str) -> str:
@@ -161,121 +169,95 @@ def check_llm_eval_output(eval_output: str) -> str:
 
 
 def get_prompt_variants(sheet: AiEvalData) -> List[PromptVariation]:
-    df = filter_included_rows(sheet.prompt_variations.data.df)
+    prompt_variations = filter_included_rows(sheet.prompt_variations.data.df)
+    res = class_objects_from_df(prompt_variations, PromptVariation)
+    return res
+
+
+def get_model_configs(sheet: AiEvalData) -> List[ModelAndConfig]:
+    models_df = sheet.gen_ai_models.data.df
+    model_configs_df = filter_included_rows(sheet.gen_ai_model_configs.data.df)
+
+    model_configs = class_objects_from_df(model_configs_df, GenAiModelConfig)
     result = []
-    for _, row in df.iterrows():
-        variation_id = row["variation_id"]
-        question_prompt_template = row["question_prompt_template"]
-        followup_prompt_template = row[
-            "follow_up_answer_correctness_evaluation_prompt_template"
-        ]
-        result.append(
-            PromptVariation(
-                variation_id=variation_id,
-                question_prompt_template=question_prompt_template,
-                followup_prompt_template=followup_prompt_template,
-            )
-        )
+    for mc in model_configs:
+        model_df = models_df.loc[models_df["model_id"] == mc.model_id]
+        model = class_objects_from_df(model_df, GenAiModel)[0]
+        result.append((model, mc))
     return result
 
 
-def get_model_configs(sheet: AiEvalData) -> List[ModelConfig]:
-    model_df = sheet.gen_ai_models.data.df
-    model_config_df = filter_included_rows(sheet.gen_ai_model_configs.data.df)
-
-    model_df = model_df.set_index("model_id")
-    model_config_df = model_config_df.set_index("model_id")
-
-    df = model_config_df.join(model_df, on="model_id", how="inner").reset_index()
-    result = []
-    for _, row in df.iterrows():
-        result.append(
-            ModelConfig(
-                vendor=row["vendor"],
-                model_config_id=row["model_config_id"],
-                model_id=row["model_id"],
-                repeat_times=row["repeat_times"],
-                model_parameters=row["model_parameters"],
-            )
-        )
-    return result
+def load_model_parameters(s: str) -> Dict[str, Any]:
+    if s == "nan":
+        # NOTE: nan (float) value has converted to 'nan' (string)
+        # by the reader. That's why I am checking with 'nan' here.
+        return {}
+    return json.loads(s)
 
 
-def run_evaluation_(
-    questions_list: List[Question],
-    question_dataset: List[Dict[str, str]],
-    eval_dataset: List[Dict[str, str]],
+def run_evaluation(
+    question: QuestionAndOptions,
     prompt_var: PromptVariation,
-    model_conf: ModelConfig,
+    model_conf: ModelAndConfig,
     eval_llm: LLM,
 ) -> List[Dict[str, Any]]:
     # get some variables
-    model_id = model_conf.model_id
-    model_parameters = model_conf.model_parameters
+    model, conf = model_conf
+    model_id = model.model_id
+    model_parameters = load_model_parameters(conf.model_parameters)
     prompt_id = prompt_var.variation_id
-    model_config_id = model_conf.model_config_id
-    vendor = model_conf.vendor
+    model_config_id = conf.model_config_id
+    vendor = model.vendor
+    question_id = question[0].question_id
     logger.debug(f"running model: {model_id}")
     logger.debug(f"parameters: {model_parameters}")
+    logger.debug(f"question ID: {question_id}")
     llm = get_model(model_id, vendor, model_parameters)
+    # create question data
+    question_data = create_question_data_for_test(question)
+    eval_data = create_question_data_for_eval(question)
+    # create llm related vavriables
+    prompt_tmpl = PromptTemplate.from_template(prompt_var.question_prompt_template)
+    chain = LLMChain(llm=llm, prompt=prompt_tmpl)
+
+    followup = prompt_var.follow_up_answer_correctness_evaluation_prompt_template
+    # gather results
     result = []
-    for t in range(model_conf.repeat_times):
-        res = {"model_config_id": model_config_id, "prompt_id": prompt_id, "round": t}
+    for t in range(conf.repeat_times):
+        res = {
+            "model_config_id": model_config_id,
+            "prompt_id": prompt_id,
+            "question_id": question_id,
+            "round": t,
+        }
         logger.debug(f"prompt {prompt_id}, round {t}")
         # ask llm to answer questions
-        prompt_tmpl = PromptTemplate.from_template(prompt_var.question_prompt_template)
-        chain = LLMChain(llm=llm, prompt=prompt_tmpl)
-        output = chain.apply(question_dataset)
-        res["outputs"] = output
+        output = chain.run(question_data)
+        res["output"] = output
 
         # preform a correctness checking
-        followup = prompt_var.followup_prompt_template
-        if followup == "":  # simple string matching
+        # followup = prompt_var.followup_prompt_template
+        if followup == "nan":  # simple string matching
+            # NOTE: nan (float) value has converted to 'nan' (string)
+            # by the reader. That's why I am checking with 'nan' here.
             logger.debug("using string comparing method to evaluate")
-            qa_pairs = zip(questions_list, output)
-            grades = [simple_evaluation(q, a["text"]) for q, a in qa_pairs]
-            res["grades"] = grades
+            res["grade"] = simple_evaluation(question, output)
         else:  # use LLM to eval
             logger.debug("using LLM method to evaluate")
             followup_tmpl = PromptTemplate.from_template(followup)
             eval_chain = LLMChain(llm=eval_llm, prompt=followup_tmpl)
             # combine the output and eval dataset
-            eval_inputs = []
-            for i, rec in enumerate(eval_dataset):
-                rec_new = rec.copy()
-                rec_new["text"] = output[i]["text"]
-                eval_inputs.append(rec_new)
-            grades_output = eval_chain.apply(eval_inputs)
-            grades = [check_llm_eval_output(x["text"]) for x in grades_output]
-            res["grades"] = grades
+            eval_data["text"] = output
+            grade_output = eval_chain.run(eval_data)
+            grade = check_llm_eval_output(grade_output)
+            res["grade"] = grade
         result.append(res)
     return result
 
 
-def run_evaluation(
-    questions_list: List[Question],
-    prompt_var: PromptVariation,
-    model_conf: ModelConfig,
-    eval_llm: LLM,
-) -> List[Dict[str, Any]]:
-    # construct datasets from question list, which will be consumed by LLMChain.
-    question_dataset = create_question_dataset_for_test(questions_list)
-    eval_dataset = create_question_dataset_for_eval(questions_list)
-    # this will run slower than run_evaluation_(), because we generate
-    # the datasets on the fly.
-    return run_evaluation_(
-        questions_list, question_dataset, eval_dataset, prompt_var, model_conf, eval_llm
-    )
-
-
 def get_search_space(
-    model_configs: List[ModelConfig], prompt_variants: List[PromptVariation]
+    questions: List[QuestionAndOptions],
+    model_configs: List[ModelAndConfig],
+    prompt_variants: List[PromptVariation],
 ):
-    return product(model_configs, prompt_variants)
-
-
-def count_grades(it: List[Iterable[str]]) -> List[Counter]:
-    res = []
-    for x in zip(*it):
-        res.append(Counter(x))
-    return res
+    return product(questions, model_configs, prompt_variants)
