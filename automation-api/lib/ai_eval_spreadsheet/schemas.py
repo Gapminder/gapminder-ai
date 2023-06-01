@@ -8,9 +8,10 @@
 from datetime import datetime
 from typing import Optional
 
+import pandas as pd
 import pandera as pa
 from pandera.engines.pandas_engine import PydanticModel
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 class Question(BaseModel):
@@ -21,6 +22,10 @@ class Question(BaseModel):
     published_version_of_question: Optional[str] = Field(
         None, title="Published version of question"
     )
+
+    @validator("include_in_next_evaluation", pre=True, always=True)
+    def default_if_nan(cls, v):  # noqa: N805
+        return False if pd.isna(v) else v
 
 
 class QuestionsDf(pa.DataFrameModel):
