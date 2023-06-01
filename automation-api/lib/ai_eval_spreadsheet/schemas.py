@@ -5,6 +5,7 @@
 # for more info
 # Note that most types are str since spreadsheet columns can be formulas
 
+from datetime import datetime
 from typing import Optional
 
 import pandera as pa
@@ -53,7 +54,7 @@ class QuestionOption(BaseModel):
     question_text: Optional[str] = Field(None, title="Question text")
     letter: Optional[str] = Field(None, title="Letter")
     question_option: Optional[str] = Field(None, title="Question option")
-    correctness_of_answer_option: Optional[str] = Field(
+    correctness_of_answer_option: Optional[int] = Field(
         None, title="Correctness of answer option"
     )
     human_answer_percentage: Optional[float] = Field(
@@ -90,9 +91,6 @@ class PromptVariationsDf(pa.DataFrameModel):
 
 
 class GenAiModel(BaseModel):
-    include_in_next_evaluation: Optional[bool] = Field(
-        None, title="Include in next evaluation"
-    )
     model_id: Optional[str] = Field(None, title="Model ID")
     vendor: Optional[str] = Field(None, title="Vendor")
     model_name: Optional[str] = Field(None, title="Model name")
@@ -101,4 +99,38 @@ class GenAiModel(BaseModel):
 class GenAiModelsDf(pa.DataFrameModel):
     class Config:
         dtype = PydanticModel(GenAiModel)
+        coerce = True
+
+
+class GenAiModelConfig(BaseModel):
+    include_in_next_evaluation: Optional[bool] = Field(
+        None, title="Include in next evaluation"
+    )
+    model_config_id: Optional[str] = Field(None, title="Model configuration ID")
+    model_id: Optional[str] = Field(None, title="Model ID")
+    model_parameters: Optional[str] = Field(None, title="Model Parameters")
+    repeat_times: Optional[int] = Field(None, title="Repeat Times")
+
+
+class GenAiModelConfigsDf(pa.DataFrameModel):
+    class Config:
+        dtype = PydanticModel(GenAiModelConfig)
+        coerce = True
+
+
+class EvalResult(BaseModel):
+    question_id: Optional[str] = Field(None, title="Question ID")
+    prompt_variation_id: Optional[str] = Field(None, title="Prompt variation ID")
+    model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
+    last_evaluation_datetime: Optional[datetime] = Field(None, title="Last Evaluation")
+    correct_count: Optional[int] = Field(None, title="Correct Count")
+    wrong_count: Optional[int] = Field(None, title="Wrong Count")
+    very_wrong_count: Optional[int] = Field(None, title="Very Wrong Count")
+    eval_failed_count: Optional[int] = Field(None, title="Eval Failed Count")
+    result: Optional[str] = Field(None, title="Result")
+
+
+class EvalResultsDf(pa.DataFrameModel):
+    class Config:
+        dtype = PydanticModel(EvalResult)
         coerce = True
