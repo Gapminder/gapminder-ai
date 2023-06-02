@@ -51,7 +51,7 @@ def read_ai_eval_spreadsheet() -> AiEvalData:
         logger.error(err.failure_cases)  # dataframe of schema errors
         logger.error("Original data:")
         logger.error(err.data)  # invalid dataframe
-        return None
+        raise Exception("Data validation. Please fix and retry")
 
 
 def filter_included_rows(df: pd.DataFrame) -> pd.DataFrame:

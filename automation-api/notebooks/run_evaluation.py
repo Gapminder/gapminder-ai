@@ -1,3 +1,7 @@
+# Makes edits in the included files available without restarting the kernel
+# %reload_ext autoreload
+# %autoreload 2
+
 # +
 import logging
 from datetime import datetime

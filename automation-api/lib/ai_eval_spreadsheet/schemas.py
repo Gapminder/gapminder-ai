@@ -8,9 +8,10 @@
 from datetime import datetime
 from typing import Optional
 
+import pandas as pd
 import pandera as pa
 from pandera.engines.pandas_engine import PydanticModel
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 class Question(BaseModel):
@@ -18,25 +19,13 @@ class Question(BaseModel):
         None, title="Include in next evaluation"
     )
     question_id: Optional[str] = Field(None, title="Question ID")
-    survey_id: Optional[str] = Field(None, title="Survey ID")
-    survey_name: Optional[str] = Field(None, title="Survey Name")
-    survey_question_id: Optional[str] = Field(None, title="Survey Question ID")
-    question_number: Optional[int] = Field(None, title="Question number")
-    question_as_in_g_survey: Optional[str] = Field(
-        None, title="Question (as in G Survey)"
-    )
-    expect_igno: Optional[str] = Field(None, title="Expect igno")
     published_version_of_question: Optional[str] = Field(
         None, title="Published version of question"
     )
-    results_summary: Optional[str] = Field(None, title="Results summary")
-    correct_answer: Optional[str] = Field(None, title="Correct Answer")
-    very_wrong_answer: Optional[str] = Field(
-        None,
-        title="Very Wrong Answer - filled out only if it can't be derived numerically",
-    )
-    contentful_id: Optional[str] = Field(None, title="Contentful ID")
-    upgrader_link: Optional[str] = Field(None, title="upgrader_link")
+
+    @validator("include_in_next_evaluation", pre=True, always=True)
+    def default_if_nan(cls, v):  # noqa: N805
+        return False if pd.isna(v) else v
 
 
 class QuestionsDf(pa.DataFrameModel):
@@ -46,19 +35,12 @@ class QuestionsDf(pa.DataFrameModel):
 
 
 class QuestionOption(BaseModel):
+    question_option_id: Optional[str] = Field(None, title="Question Option ID")
     question_id: Optional[str] = Field(None, title="Question ID")
-    survey_id: Optional[str] = Field(None, title="Survey ID")
-    survey_name: Optional[str] = Field(None, title="Survey Name")
-    survey_question_id: Optional[str] = Field(None, title="Survey Question ID")
-    question_number: Optional[int] = Field(None, title="Question number")
-    question_text: Optional[str] = Field(None, title="Question text")
     letter: Optional[str] = Field(None, title="Letter")
     question_option: Optional[str] = Field(None, title="Question option")
     correctness_of_answer_option: Optional[int] = Field(
         None, title="Correctness of answer option"
-    )
-    human_answer_percentage: Optional[float] = Field(
-        None, title="Human answer percentage"
     )
 
 
