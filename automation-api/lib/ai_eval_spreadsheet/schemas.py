@@ -92,6 +92,8 @@ class GenAiModelConfig(BaseModel):
     model_id: Optional[str] = Field(None, title="Model ID")
     model_parameters: Optional[str] = Field(None, title="Model Parameters")
     repeat_times: Optional[int] = Field(None, title="Repeat Times")
+    memory: Optional[bool] = Field(None, title="Memory")
+    memory_size: Optional[int] = Field(None, title="Memory Size")
 
 
 class GenAiModelConfigsDf(pa.DataFrameModel):
