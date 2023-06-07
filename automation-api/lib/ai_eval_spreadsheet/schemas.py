@@ -55,6 +55,9 @@ class PromptVariation(BaseModel):
         None, title="Include in next evaluation"
     )
     variation_id: Optional[str] = Field(None, title="Variation ID")
+    question_template: Optional[str] = Field(None, title="Question template")
+    question_prefix: Optional[str] = Field(None, title="Question prefix")
+    ai_prefix: Optional[str] = Field(None, title="AI prefix")
     question_prompt_template: Optional[str] = Field(
         None, title="Question prompt template"
     )
