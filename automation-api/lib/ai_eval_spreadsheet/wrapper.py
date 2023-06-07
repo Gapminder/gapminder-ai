@@ -16,6 +16,8 @@ from lib.ai_eval_spreadsheet.schemas import (
     QuestionOption,
     QuestionOptionsDf,
     QuestionsDf,
+    SessionResult,
+    SessionResultsDf,
 )
 from lib.gdrive.auth import AuthorizedClients
 from lib.gsheets.gsheets_worksheet_editor import GsheetsWorksheetEditor
@@ -37,6 +39,9 @@ class AiEvalData:
     evaluation_results: Optional[
         GsheetsWorksheetEditor[EvalResult, EvalResultsDf]
     ] = None
+    session_results: Optional[
+        GsheetsWorksheetEditor[SessionResult, SessionResultsDf]
+    ] = None
 
 
 sheet_names = {
@@ -46,6 +51,7 @@ sheet_names = {
     "gen_ai_models": "Models",
     "gen_ai_model_configs": "Model configurations",
     "evaluation_results": "Evaluations",
+    "session_results": "Sessions",
 }
 
 
@@ -113,6 +119,15 @@ def read_ai_eval_data(
         evaluate_formulas=False,
     )
 
+    session_results = GsheetsWorksheetEditor(
+        sh=ai_eval_spreadsheet,
+        df_schema=SessionResultsDf,
+        row_schema=SessionResult,
+        worksheet_name=sheet_names["session_results"],
+        header_row_number=0,
+        evaluate_formulas=False,
+    )
+
     return AiEvalData(
         questions=questions,
         question_options=question_options,
@@ -120,4 +135,5 @@ def read_ai_eval_data(
         gen_ai_models=gen_ai_models,
         gen_ai_model_configs=gen_ai_model_configs,
         evaluation_results=evaluation_results,
+        session_results=session_results,
     )

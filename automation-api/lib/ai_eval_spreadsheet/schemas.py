@@ -118,3 +118,21 @@ class EvalResultsDf(pa.DataFrameModel):
     class Config:
         dtype = PydanticModel(EvalResult)
         coerce = True
+
+
+class SessionResult(BaseModel):
+    session_id: Optional[str] = Field(None, title="Session ID")
+    session_time: Optional[str] = Field(None, title="Session Time")
+    prompt_variation_id: Optional[str] = Field(None, title="Prompt Variation ID")
+    model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
+    survey_id: Optional[str] = Field(None, title="Survey ID")
+    question_id: Optional[str] = Field(None, title="Question ID")
+    question_number: Optional[int] = Field(None, title="Question No.")
+    output: Optional[str] = Field(None, title="Response Text")
+    grade: Optional[str] = Field(None, title="Grade")
+
+
+class SessionResultsDf(pa.DataFrameModel):
+    class Config:
+        dtype = PydanticModel(SessionResult)
+        coerce = True
