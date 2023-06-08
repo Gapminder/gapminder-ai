@@ -244,6 +244,11 @@ def run_survey(
     logger.debug(f"running model: {model_id}")
     logger.debug(f"parameters: {model_parameters}")
     logger.debug(f"Survey ID: {survey_id}")
+    logger.debug(f"memory: {conf.memory}")
+    if followup == "nan":
+        logger.debug("using simple string matching to correctness")
+    else:
+        logger.debug("using LLM method to check correctness")
     for i, question in enumerate(questions):
         res = {
             "session_id": session_id,
@@ -263,7 +268,6 @@ def run_survey(
             # by the reader. That's why I am checking with 'nan' here.
             res["grade"] = simple_evaluation(question, output)
         else:  # use LLM to eval
-            logger.debug("using LLM method to evaluate")
             followup_tmpl = PromptTemplate.from_template(followup)
             eval_chain = LLMChain(llm=eval_llm, prompt=followup_tmpl, verbose=verbose)
             # combine the output and eval dataset
