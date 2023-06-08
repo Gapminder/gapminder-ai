@@ -48,7 +48,7 @@ questions
 
 
 
-# # 3. construct search space and gather results
+# # 3. construct search space and gather session results
 
 model_configs = get_model_configs(sheet)
 prompt_variants = get_prompt_variants(sheet)
@@ -58,10 +58,10 @@ model_configs
 prompt_variants
 
 # +
-# define a llm to eval results.
+# define a llm to check result correctness.
 
-eval_llm = get_model('gpt-3.5-turbo', 'OpenAI', {})  # use this to evaluation answers with openai
-# eval_llm = get_model("fakellm", "Dummy", {"answer_list": ["1", "2", "3"]})
+# eval_llm = get_model('gpt-3.5-turbo', 'OpenAI', {})  # use this to check answers with openai
+eval_llm = get_model("fakellm", "Dummy", {"answer_list": ["1", "2", "3"]})
 # -
 
 # create survey, which is a tuple of (survey_id, questions)
@@ -78,8 +78,8 @@ survey
 # NOTE: if the prompt has `history` field but model donesn't have memory=True, and vice visa, it will result in error.
 run_survey(
     survey,
-    prompt_variants[1],
-    model_configs[3],
+    prompt_variants[0],
+    model_configs[1],
     eval_llm,
     verbose=True
 )
@@ -106,6 +106,12 @@ shuffle(questions)
 survey_id = get_survey_hash(questions)
 survey = (survey_id, questions)
 survey
+
+# +
+# define a llm to check result correctness.
+
+eval_llm = get_model('gpt-3.5-turbo', 'OpenAI', {})  # use this to check answers with openai
+# eval_llm = get_model("fakellm", "Dummy", {"answer_list": ["1", "2", "3"]})
 
 # +
 # iterate over search space
@@ -183,43 +189,61 @@ else:
 
 
 
-# # 4. construct the result dataframe
+# # 4. construct the evaluation result dataframe
+
+session_df = sheet.session_results.data.df
+
+session_df['session_time'] = pd.to_datetime(session_df['session_time'])
+
+gs = session_df.groupby(["prompt_variation_id", "model_configuration_id", "question_id"])
+
+gs.get_group(('a', 'mc001', '1655'))
 
 # +
-# FIXME: add more metrics.
+report_df_records = []
+
+for g, df in gs:
+    pid, mid, qid = g
+    total_count = df.shape[0]
+    last_eval_time = df.session_time.max()
+    
+    # compute grade metrics
+    grade_counts = Counter(df["grade"].values)
+    top2 = grade_counts.most_common(2)
+    # print(len(top2))
+    if len(top2) == 1 or top2[0][1] != top2[1][1]:
+        result = top2[0][0]
+    else:
+        logger.debug(f"can not determine the result: {top2}")
+        result = 'n/a'
+        
+    pcorrect = grade_counts.get("correct", 0) / total_count
+    pwrong = grade_counts.get("wrong", 0) / total_count
+    pvery_wrong = grade_counts.get("very wrong", 0) / total_count
+    pfailed = grade_counts.get("failed", 0) / total_count
+        
+    rec = {
+        "last_evaluation_datetime": last_eval_time,
+        "question_id": qid,
+        "model_configuration_id": mid,
+        "prompt_variation_id": pid,
+        "percent_correct": pcorrect,
+        "percent_wrong": pwrong,
+        "percent_very_wrong": pvery_wrong,
+        "percent_eval_failed": pfailed,
+        "rounds": total_count,
+        "result": result
+    }
+    report_df_records.append(rec)
+# -
+
+report_df = pd.DataFrame.from_records(report_df_records)
+
+report_df = EvalResultsDf.validate(report_df)
+
+report_df
 
 
-# report_df_records = []
-# current_time = datetime.isoformat(datetime.utcnow())
-# for k, lst in session_result:
-#     logger.debug(k)
-#     question_id, model_config_id, prompt_var_id = k
-#     grade_counts = Counter([v["grade"] for v in lst])
-#     # check result, if we found that top 2 of most common
-#     # grade have the same number, then the result is undefined.
-#     top2 = grade_counts.most_common(2)
-#     if top2[0][1] == top2[1][1]:
-#         logger.debug(f"can not determine the result: {top2}")
-#         result = 'n/a'
-#     else:
-#         result = top2[0][0]
-#     rec = {
-#         "last_evaluation_datetime": current_time,
-#         "question_id": question_id,
-#         "model_configuration_id": model_config_id,
-#         "prompt_variation_id": prompt_var_id,
-#         "correct_count": grade_counts.get("correct", 0),
-#         "wrong_count": grade_counts.get("wrong", 0),
-#         "very_wrong_count": grade_counts.get("very wrong", 0),
-#         "eval_failed_count": grade_counts.get("failed", 0),
-#         "result": result
-#     }
-#     report_df_records.append(rec)
-
-
-# report_df = pd.DataFrame.from_records(report_df_records)
-# report_df = EvalResultsDf.validate(report_df)
-# report_df
 
 # +
 # upload to google spreadsheet

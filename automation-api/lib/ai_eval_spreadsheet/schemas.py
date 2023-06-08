@@ -110,10 +110,11 @@ class EvalResult(BaseModel):
     prompt_variation_id: Optional[str] = Field(None, title="Prompt variation ID")
     model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
     last_evaluation_datetime: Optional[datetime] = Field(None, title="Last Evaluation")
-    correct_count: Optional[int] = Field(None, title="Correct Count")
-    wrong_count: Optional[int] = Field(None, title="Wrong Count")
-    very_wrong_count: Optional[int] = Field(None, title="Very Wrong Count")
-    eval_failed_count: Optional[int] = Field(None, title="Eval Failed Count")
+    percent_correct: Optional[float] = Field(None, title="Percent Correct")
+    percent_wrong: Optional[float] = Field(None, title="Percent Wrong")
+    percent_very_wrong: Optional[float] = Field(None, title="Percent Very Wrong")
+    percent_eval_failed: Optional[float] = Field(None, title="Percent Eval Failed")
+    rounds: Optional[int] = Field(None, title="Rounds")
     result: Optional[str] = Field(None, title="Result")
 
 
