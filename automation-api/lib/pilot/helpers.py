@@ -1,10 +1,12 @@
 import json
-from itertools import product
+import uuid
+from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 from langchain.chains import LLMChain
 from langchain.llms.base import LLM
+from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import PromptTemplate
 from pandera.errors import SchemaError
 
@@ -23,6 +25,7 @@ from lib.ai_eval_spreadsheet.wrapper import (
 from lib.app_singleton import AppSingleton
 from lib.authorized_clients import get_service_account_authorized_clients
 from lib.config import read_config
+from lib.hash.fnv64hash import hash_dn
 from lib.llms.utils import get_dummy_model, get_openai_model
 
 logger = AppSingleton().get_logger()
@@ -118,19 +121,22 @@ def simple_evaluation(question: QuestionAndOptions, answer: str) -> str:
     return "failed"
 
 
-def create_question_data_for_test(question: QuestionAndOptions) -> Dict[str, str]:
+def create_question_data_for_test(
+    question_tmpl: str, question: QuestionAndOptions
+) -> Dict[str, str]:
     q, options = question
     question_dict = {"question": q.published_version_of_question}
     question_dict["options"] = "\n".join(
         [option_text(opt, letter_and_text=True) for opt in options]
     )
-    return question_dict
+    return {"question": question_tmpl.format(**question_dict)}
 
 
 def create_question_dataset_for_test(
+    question_tmpl: str,
     question_list: List[QuestionAndOptions],
 ) -> List[Dict[str, str]]:
-    return [create_question_data_for_test(q) for q in question_list]
+    return [create_question_data_for_test(question_tmpl, q) for q in question_list]
 
 
 def create_question_data_for_eval(question: QuestionAndOptions) -> Dict[str, str]:
@@ -187,6 +193,11 @@ def get_model_configs(sheet: AiEvalData) -> List[ModelAndConfig]:
     return result
 
 
+def get_survey_hash(questions: List[QuestionAndOptions]) -> str:
+    joined = ",".join([q[0].question_id for q in questions])
+    return hash_dn(joined, "")
+
+
 def load_model_parameters(s: str) -> Dict[str, Any]:
     if s == "nan":
         # NOTE: nan (float) value has converted to 'nan' (string)
@@ -195,69 +206,88 @@ def load_model_parameters(s: str) -> Dict[str, Any]:
     return json.loads(s)
 
 
-def run_evaluation(
-    question: QuestionAndOptions,
+def run_survey(
+    survey: Tuple[str, List[QuestionAndOptions]],
     prompt_var: PromptVariation,
     model_conf: ModelAndConfig,
     eval_llm: LLM,
+    verbose: bool = False,
 ) -> List[Dict[str, Any]]:
-    # get some variables
     model, conf = model_conf
     model_id = model.model_id
     model_parameters = load_model_parameters(conf.model_parameters)
     prompt_id = prompt_var.variation_id
     model_config_id = conf.model_config_id
     vendor = model.vendor
-    question_id = question[0].question_id
-    logger.debug(f"running model: {model_id}")
-    logger.debug(f"parameters: {model_parameters}")
-    logger.debug(f"question ID: {question_id}")
     llm = get_model(model_id, vendor, model_parameters)
-    # create question data
-    question_data = create_question_data_for_test(question)
-    eval_data = create_question_data_for_eval(question)
-    # create llm related vavriables
     prompt_tmpl = PromptTemplate.from_template(prompt_var.question_prompt_template)
-    chain = LLMChain(llm=llm, prompt=prompt_tmpl)
+    question_tmpl = prompt_var.question_template
+
+    if conf.memory:
+        memory = ConversationBufferWindowMemory(
+            k=conf.memory_size,
+            human_prefix=prompt_var.question_prefix,
+            ai_prefix=prompt_var.ai_prefix,
+        )
+        chain = LLMChain(llm=llm, prompt=prompt_tmpl, memory=memory, verbose=verbose)
+    else:
+        chain = LLMChain(llm=llm, prompt=prompt_tmpl, verbose=verbose)
 
     followup = prompt_var.follow_up_answer_correctness_evaluation_prompt_template
-    # gather results
-    result = []
-    for t in range(conf.repeat_times):
+
+    results = []
+    session_id = str(uuid.uuid4())
+    session_time = datetime.isoformat(datetime.utcnow())
+    # 1. get output from LLM.
+    # 2. get grade.
+    survey_id, questions = survey
+    logger.debug(f"running model: {model_id}")
+    logger.debug(f"parameters: {model_parameters}")
+    logger.debug(f"Survey ID: {survey_id}")
+    logger.debug(f"memory: {conf.memory}")
+    if followup == "nan":
+        logger.debug("using simple string matching to correctness")
+    else:
+        logger.debug("using LLM method to check correctness")
+    for i, question in enumerate(questions):
         res = {
-            "model_config_id": model_config_id,
-            "prompt_id": prompt_id,
-            "question_id": question_id,
-            "round": t,
+            "session_id": session_id,
+            "session_time": session_time,
+            "survey_id": survey_id,
+            "model_configuration_id": model_config_id,
+            "prompt_variation_id": prompt_id,
+            "question_id": question[0].question_id,
+            "question_number": i + 1,
         }
-        logger.debug(f"prompt {prompt_id}, round {t}")
-        # ask llm to answer questions
+        question_data = create_question_data_for_test(question_tmpl, question)
+        eval_data = create_question_data_for_eval(question)
         output = chain.run(question_data)
         res["output"] = output
-
-        # preform a correctness checking
-        # followup = prompt_var.followup_prompt_template
         if followup == "nan":  # simple string matching
             # NOTE: nan (float) value has converted to 'nan' (string)
             # by the reader. That's why I am checking with 'nan' here.
-            logger.debug("using string comparing method to evaluate")
             res["grade"] = simple_evaluation(question, output)
         else:  # use LLM to eval
-            logger.debug("using LLM method to evaluate")
             followup_tmpl = PromptTemplate.from_template(followup)
-            eval_chain = LLMChain(llm=eval_llm, prompt=followup_tmpl)
+            eval_chain = LLMChain(llm=eval_llm, prompt=followup_tmpl, verbose=verbose)
             # combine the output and eval dataset
             eval_data["text"] = output
             grade_output = eval_chain.run(eval_data)
             grade = check_llm_eval_output(grade_output)
             res["grade"] = grade
-        result.append(res)
+        results.append(res)
+    return results
+
+
+def run_survey_n_round(
+    survey: Tuple[str, List[QuestionAndOptions]],
+    prompt_var: PromptVariation,
+    model_conf: ModelAndConfig,
+    eval_llm: LLM,
+    verbose: bool = False,
+) -> List[Dict[str, Any]]:
+    repeat_times = model_conf[1].repeat_times
+    result = []
+    for _ in range(repeat_times):
+        result.extend(run_survey(survey, prompt_var, model_conf, eval_llm, verbose))
     return result
-
-
-def get_search_space(
-    questions: List[QuestionAndOptions],
-    model_configs: List[ModelAndConfig],
-    prompt_variants: List[PromptVariation],
-):
-    return product(questions, model_configs, prompt_variants)

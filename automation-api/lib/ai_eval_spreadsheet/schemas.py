@@ -55,6 +55,9 @@ class PromptVariation(BaseModel):
         None, title="Include in next evaluation"
     )
     variation_id: Optional[str] = Field(None, title="Variation ID")
+    question_template: Optional[str] = Field(None, title="Question template")
+    question_prefix: Optional[str] = Field(None, title="Question prefix")
+    ai_prefix: Optional[str] = Field(None, title="AI prefix")
     question_prompt_template: Optional[str] = Field(
         None, title="Question prompt template"
     )
@@ -92,6 +95,8 @@ class GenAiModelConfig(BaseModel):
     model_id: Optional[str] = Field(None, title="Model ID")
     model_parameters: Optional[str] = Field(None, title="Model Parameters")
     repeat_times: Optional[int] = Field(None, title="Repeat Times")
+    memory: Optional[bool] = Field(None, title="Memory")
+    memory_size: Optional[int] = Field(None, title="Memory Size")
 
 
 class GenAiModelConfigsDf(pa.DataFrameModel):
@@ -105,14 +110,33 @@ class EvalResult(BaseModel):
     prompt_variation_id: Optional[str] = Field(None, title="Prompt variation ID")
     model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
     last_evaluation_datetime: Optional[datetime] = Field(None, title="Last Evaluation")
-    correct_count: Optional[int] = Field(None, title="Correct Count")
-    wrong_count: Optional[int] = Field(None, title="Wrong Count")
-    very_wrong_count: Optional[int] = Field(None, title="Very Wrong Count")
-    eval_failed_count: Optional[int] = Field(None, title="Eval Failed Count")
+    percent_correct: Optional[float] = Field(None, title="Percent Correct")
+    percent_wrong: Optional[float] = Field(None, title="Percent Wrong")
+    percent_very_wrong: Optional[float] = Field(None, title="Percent Very Wrong")
+    percent_eval_failed: Optional[float] = Field(None, title="Percent Eval Failed")
+    rounds: Optional[int] = Field(None, title="Rounds")
     result: Optional[str] = Field(None, title="Result")
 
 
 class EvalResultsDf(pa.DataFrameModel):
     class Config:
         dtype = PydanticModel(EvalResult)
+        coerce = True
+
+
+class SessionResult(BaseModel):
+    session_id: Optional[str] = Field(None, title="Session ID")
+    session_time: Optional[str] = Field(None, title="Session Time")
+    prompt_variation_id: Optional[str] = Field(None, title="Prompt Variation ID")
+    model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
+    survey_id: Optional[str] = Field(None, title="Survey ID")
+    question_id: Optional[str] = Field(None, title="Question ID")
+    question_number: Optional[int] = Field(None, title="Question No.")
+    output: Optional[str] = Field(None, title="Response Text")
+    grade: Optional[str] = Field(None, title="Grade")
+
+
+class SessionResultsDf(pa.DataFrameModel):
+    class Config:
+        dtype = PydanticModel(SessionResult)
         coerce = True
