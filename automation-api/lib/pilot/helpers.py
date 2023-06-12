@@ -126,9 +126,13 @@ def create_question_data_for_test(
 ) -> Dict[str, str]:
     q, options = question
     question_dict = {"question": q.published_version_of_question}
-    question_dict["options"] = "\n".join(
-        [option_text(opt, letter_and_text=True) for opt in options]
-    )
+    for opt in options:
+        if opt.letter == "A":
+            question_dict["option_a"] = opt.question_option
+        elif opt.letter == "B":
+            question_dict["option_b"] = opt.question_option
+        elif opt.letter == "C":
+            question_dict["option_c"] = opt.question_option
     return {"question": question_tmpl.format(**question_dict)}
 
 
@@ -141,18 +145,17 @@ def create_question_dataset_for_test(
 
 def create_question_data_for_eval(question: QuestionAndOptions) -> Dict[str, str]:
     q, options = question
-    question_dict = {}
-    question_text_list = [q.published_version_of_question]
+    question_dict = {"question": q.published_version_of_question}
     for opt in options:
-        opt_text = option_text(opt, letter_and_text=True)
-        question_text_list.append(opt_text)
-        if opt.correctness_of_answer_option == 1:
-            question_dict["correct_answer"] = opt_text
-        elif opt.correctness_of_answer_option == 2:
-            question_dict["wrong_answer"] = opt_text
-        else:
-            question_dict["very_wrong_answer"] = opt_text
-    question_dict["question"] = "\n".join(question_text_list)
+        if opt.letter == "A":
+            question_dict["option_a"] = opt.question_option
+            question_dict["option_a_correctness"] = opt.correctness_of_answer_option
+        elif opt.letter == "B":
+            question_dict["option_b"] = opt.question_option
+            question_dict["option_b_correctness"] = opt.correctness_of_answer_option
+        elif opt.letter == "C":
+            question_dict["option_c"] = opt.question_option
+            question_dict["option_c_correctness"] = opt.correctness_of_answer_option
     return question_dict
 
 
