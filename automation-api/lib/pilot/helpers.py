@@ -111,12 +111,17 @@ def option_text(opt: QuestionOption, letter_and_text: bool = True) -> str:
 
 def simple_evaluation(question: QuestionAndOptions, answer: str) -> str:
     correctness_map = {1: "correct", 2: "wrong", 3: "very wrong"}
-    # some times the model will return 'A.' instead of 'A'
-    if len(answer) == 2 and answer[1] == ".":
-        answer = answer[0]
+    # sometimes the model will return 'A.' instead of 'A'
+    # and sometimes model will return 'A. 20%.' instead of 'A. 20%'
+    if answer[-1] == ".":
+        answer = answer[:-1]
 
     for opt in question[1]:
         if answer == opt.letter or answer == option_text(opt, letter_and_text=True):
+            return correctness_map[opt.correctness_of_answer_option]
+        elif option_text(opt, letter_and_text=True) in answer:
+            logger.debug("not exact match but the answer includes the option")
+            logger.debug(answer)
             return correctness_map[opt.correctness_of_answer_option]
     return "failed"
 
@@ -166,7 +171,7 @@ def create_question_dataset_for_eval(
 
 
 def check_llm_eval_output(eval_output: str) -> str:
-    eval_output = eval_output.strip().replace(".", "").lower()
+    eval_output = eval_output.strip().replace(".", "").lower()[0]
     if eval_output == "1":
         return "correct"
     elif eval_output == "2":
@@ -276,6 +281,7 @@ def run_survey(
             # combine the output and eval dataset
             eval_data["text"] = output
             grade_output = eval_chain.run(eval_data)
+            logger.debug("eval llm output: " + grade_output)
             grade = check_llm_eval_output(grade_output)
             res["grade"] = grade
         results.append(res)
