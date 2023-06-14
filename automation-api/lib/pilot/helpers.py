@@ -249,10 +249,14 @@ def run_survey(
     # 1. get output from LLM.
     # 2. get grade.
     survey_id, questions = survey
-    logger.debug(f"running model: {model_id}")
-    logger.debug(f"parameters: {model_parameters}")
-    logger.debug(f"Survey ID: {survey_id}")
-    logger.debug(f"memory: {conf.memory}")
+    log_msg = [
+        "Evaluating:",
+        f"Model: {model_id}",
+        f"parameters: {model_parameters}",
+        f"Survey ID: {survey_id}",
+        f"memory: {conf.memory}",
+    ]
+    logger.info("\n".join(log_msg))
     if followup == "nan":
         logger.debug("using simple string matching to correctness")
     else:
@@ -282,7 +286,7 @@ def run_survey(
             eval_data["text"] = output
             grade_output = eval_chain.run(eval_data)
             logger.debug("eval llm output: " + grade_output)
-            grade = check_llm_eval_output(grade_output)
+            grade = simple_evaluation(question, grade_output)
             res["grade"] = grade
         results.append(res)
     return results
