@@ -253,8 +253,9 @@ def run_survey(
         "Evaluating:",
         f"Model: {model_id}",
         f"parameters: {model_parameters}",
-        f"Survey ID: {survey_id}",
         f"memory: {conf.memory}",
+        f"Survey ID: {survey_id}",
+        f"prompt ID: {prompt_id}",
     ]
     logger.info("\n".join(log_msg))
     if followup == "nan":
