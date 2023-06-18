@@ -95,12 +95,26 @@ def run_evaluation(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="PilotRunner")
-    parser.add_argument("-j", "--jobs", default=1, type=int)
-    parser.add_argument("-d", "--debug", action="store_true", default=False)
-    parser.add_argument("-a", "--append", action="store_true", default=False)
+    parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-t", "--tmp_dir", type=pathlib.Path, default=pathlib.Path("./output")
+        "-j", "--jobs", default=1, type=int, help="Use how many cpu processes to run"
+    )
+    parser.add_argument(
+        "-d", "--debug", action="store_true", default=False, help="Run in debug mode"
+    )
+    parser.add_argument(
+        "-a",
+        "--append",
+        action="store_true",
+        default=False,
+        help="Append the session result to GSpreadsheet",
+    )
+    parser.add_argument(
+        "-t",
+        "--tmp_dir",
+        type=pathlib.Path,
+        default=pathlib.Path("./output"),
+        help="Dir to store the cached session results (default to ./output)",
     )
 
     args = parser.parse_args()
