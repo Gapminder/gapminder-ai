@@ -38,7 +38,7 @@ def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI
         if "openai_organization" in kwargs
         else config["OPENAI_ORG_ID"]
     )
-    if model_name in ["gpt-3.5-turbo", "gpt-4"]:
+    if model_name.startswith("gpt-3.5-turbo") or model_name.startswith("gpt-4"):
         return ChatOpenAI(
             model_name=model_name,
             openai_api_key=api_key,
