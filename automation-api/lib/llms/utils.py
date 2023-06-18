@@ -6,7 +6,7 @@ from typing import Any, Dict, Union
 from langchain.base_language import BaseLanguageModel
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI
+from langchain.llms import HuggingFaceHub, OpenAI
 from langchain.prompts import PromptTemplate
 
 from lib.config import read_config
@@ -38,7 +38,7 @@ def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI
         if "openai_organization" in kwargs
         else config["OPENAI_ORG_ID"]
     )
-    if model_name in ["gpt-3.5-turbo", "gpt-4"]:
+    if model_name.startswith("gpt-3.5-turbo") or model_name.startswith("gpt-4"):
         return ChatOpenAI(
             model_name=model_name,
             openai_api_key=api_key,
@@ -63,6 +63,16 @@ def get_dummy_model(model_name: str, **kwargs: Any) -> RandomAnswerLLM:
             return RandomAnswerLLM(answer_list=answer_list)
     else:
         raise NotImplementedError(f"llm f{model_name} not defined.")
+
+
+def get_huggingface_model(model_name: str, **kwargs: Any) -> HuggingFaceHub:
+    config: Dict[str, str] = read_config()
+    huggingfacehub_api_token = config["HUGGINGFACEHUB_API_TOKEN"]
+    return HuggingFaceHub(
+        huggingfacehub_api_token=huggingfacehub_api_token,
+        repo_id=model_name,
+        model_kwargs=kwargs,
+    )
 
 
 def run_model(
