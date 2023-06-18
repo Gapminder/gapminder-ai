@@ -113,6 +113,7 @@ def simple_evaluation(question: QuestionAndOptions, answer: str) -> str:
     correctness_map = {1: "correct", 2: "wrong", 3: "very wrong"}
     # sometimes the model will return 'A.' instead of 'A'
     # and sometimes model will return 'A. 20%.' instead of 'A. 20%'
+    answer = answer.strip()
     if answer[-1] == ".":
         answer = answer[:-1]
 
