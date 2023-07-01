@@ -26,7 +26,7 @@ from lib.app_singleton import AppSingleton
 from lib.authorized_clients import get_service_account_authorized_clients
 from lib.config import read_config
 from lib.hash.fnv64hash import hash_dn
-from lib.llms.utils import get_dummy_model, get_openai_model
+from lib.llms.utils import get_dummy_model, get_huggingface_model, get_openai_model
 
 logger = AppSingleton().get_logger()
 
@@ -98,6 +98,8 @@ def get_model(model_id, vendor, model_conf):
         return get_openai_model(model_id, **model_conf)
     elif vendor == "Dummy":
         return get_dummy_model(model_id, **model_conf)
+    elif vendor == "HuggingFace":
+        return get_huggingface_model(model_id, **model_conf)
     else:
         raise NotImplementedError(f"{model_id} from {vendor} is not supported yet.")
 

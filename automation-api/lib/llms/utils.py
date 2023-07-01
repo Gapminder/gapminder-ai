@@ -6,7 +6,7 @@ from typing import Any, Dict, Union
 from langchain.base_language import BaseLanguageModel
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI
+from langchain.llms import HuggingFaceHub, OpenAI
 from langchain.prompts import PromptTemplate
 
 from lib.config import read_config
@@ -63,6 +63,16 @@ def get_dummy_model(model_name: str, **kwargs: Any) -> RandomAnswerLLM:
             return RandomAnswerLLM(answer_list=answer_list)
     else:
         raise NotImplementedError(f"llm f{model_name} not defined.")
+
+
+def get_huggingface_model(model_name: str, **kwargs: Any) -> HuggingFaceHub:
+    config: Dict[str, str] = read_config()
+    huggingfacehub_api_token = config["HUGGINGFACEHUB_API_TOKEN"]
+    return HuggingFaceHub(
+        huggingfacehub_api_token=huggingfacehub_api_token,
+        repo_id=model_name,
+        model_kwargs=kwargs,
+    )
 
 
 def run_model(

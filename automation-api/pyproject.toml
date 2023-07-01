@@ -43,6 +43,9 @@ bracelogger = "^1.1.0"
 openai = "^0.27.6"
 langchain = "^0.0.170"
 
+# for hugging face
+huggingface_hub = "^0.15.1"
+
 # unsorted (new deps gets listed here)
 
 [tool.poetry.dev-dependencies]

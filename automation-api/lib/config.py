@@ -23,6 +23,7 @@ def read_config() -> dict[str, str]:
         "SERVICE_ACCOUNT_CREDENTIALS",
         "AI_EVAL_SPREADSHEET_ID",
         "AI_EVAL_DEV_SPREADSHEET_ID",
+        "HUGGINGFACEHUB_API_TOKEN",
     ]:
         config[key] = os.getenv(key=key, default="")
     return config
