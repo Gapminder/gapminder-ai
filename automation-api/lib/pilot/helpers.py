@@ -111,12 +111,18 @@ def option_text(opt: QuestionOption, letter_and_text: bool = True) -> str:
 
 def simple_evaluation(question: QuestionAndOptions, answer: str) -> str:
     correctness_map = {1: "correct", 2: "wrong", 3: "very wrong"}
-    # some times the model will return 'A.' instead of 'A'
-    if len(answer) == 2 and answer[1] == ".":
-        answer = answer[0]
+    # sometimes the model will return 'A.' instead of 'A'
+    # and sometimes model will return 'A. 20%.' instead of 'A. 20%'
+    answer = answer.strip()
+    if answer[-1] == ".":
+        answer = answer[:-1]
 
     for opt in question[1]:
         if answer == opt.letter or answer == option_text(opt, letter_and_text=True):
+            return correctness_map[opt.correctness_of_answer_option]
+        elif option_text(opt, letter_and_text=True) in answer:
+            logger.debug("not exact match but the answer includes the option")
+            logger.debug(answer)
             return correctness_map[opt.correctness_of_answer_option]
     return "failed"
 
@@ -166,7 +172,7 @@ def create_question_dataset_for_eval(
 
 
 def check_llm_eval_output(eval_output: str) -> str:
-    eval_output = eval_output.strip().replace(".", "").lower()
+    eval_output = eval_output.strip().replace(".", "").lower()[0]
     if eval_output == "1":
         return "correct"
     elif eval_output == "2":
@@ -244,10 +250,15 @@ def run_survey(
     # 1. get output from LLM.
     # 2. get grade.
     survey_id, questions = survey
-    logger.debug(f"running model: {model_id}")
-    logger.debug(f"parameters: {model_parameters}")
-    logger.debug(f"Survey ID: {survey_id}")
-    logger.debug(f"memory: {conf.memory}")
+    log_msg = [
+        "Evaluating:",
+        f"Model: {model_id}",
+        f"parameters: {model_parameters}",
+        f"memory: {conf.memory}",
+        f"Survey ID: {survey_id}",
+        f"prompt ID: {prompt_id}",
+    ]
+    logger.info("\n".join(log_msg))
     if followup == "nan":
         logger.debug("using simple string matching to correctness")
     else:
@@ -276,7 +287,8 @@ def run_survey(
             # combine the output and eval dataset
             eval_data["text"] = output
             grade_output = eval_chain.run(eval_data)
-            grade = check_llm_eval_output(grade_output)
+            logger.debug("eval llm output: " + grade_output)
+            grade = simple_evaluation(question, grade_output)
             res["grade"] = grade
         results.append(res)
     return results
