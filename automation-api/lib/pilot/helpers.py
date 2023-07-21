@@ -26,7 +26,12 @@ from lib.app_singleton import AppSingleton
 from lib.authorized_clients import get_service_account_authorized_clients
 from lib.config import read_config
 from lib.hash.fnv64hash import hash_dn
-from lib.llms.utils import get_dummy_model, get_huggingface_model, get_openai_model
+from lib.llms.utils import (
+    get_dummy_model,
+    get_google_palm_model,
+    get_huggingface_model,
+    get_openai_model,
+)
 
 logger = AppSingleton().get_logger()
 
@@ -96,6 +101,8 @@ def get_questions(sheet: AiEvalData) -> List[QuestionAndOptions]:
 def get_model(model_id, vendor, model_conf):
     if vendor == "OpenAI":
         return get_openai_model(model_id, **model_conf)
+    if vendor == "Google":
+        return get_google_palm_model(model_id, **model_conf)
     elif vendor == "Dummy":
         return get_dummy_model(model_id, **model_conf)
     elif vendor == "HuggingFace":

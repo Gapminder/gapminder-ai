@@ -5,8 +5,8 @@ from typing import Any, Dict, Union
 
 from langchain.base_language import BaseLanguageModel
 from langchain.chains import LLMChain
-from langchain.chat_models import ChatOpenAI
-from langchain.llms import HuggingFaceHub, OpenAI
+from langchain.chat_models import ChatGooglePalm, ChatOpenAI
+from langchain.llms import GooglePalm, HuggingFaceHub, OpenAI
 from langchain.prompts import PromptTemplate
 
 from lib.config import read_config
@@ -54,6 +54,23 @@ def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI
         )
 
 
+def get_google_palm_model(
+    model_name: str, **kwargs: Any
+) -> Union[GooglePalm, ChatGooglePalm]:
+    config: Dict[str, str] = read_config()
+    api_key: str = (
+        kwargs.pop("google_api_key")
+        if "google_api_key" in kwargs
+        else config["GOOGLE_API_KEY"]
+    )
+    if model_name == "text-bison":
+        return GooglePalm(google_api_key=api_key, **kwargs)
+    elif model_name == "chat-bison":
+        return ChatGooglePalm(google_api_key=api_key, **kwargs)
+    else:
+        raise NotImplementedError(f"llm {model_name} not defined")
+
+
 def get_dummy_model(model_name: str, **kwargs: Any) -> RandomAnswerLLM:
     if model_name == "fakellm":
         answer_list = kwargs.get("answer_list", None)
@@ -62,7 +79,7 @@ def get_dummy_model(model_name: str, **kwargs: Any) -> RandomAnswerLLM:
         else:
             return RandomAnswerLLM(answer_list=answer_list)
     else:
-        raise NotImplementedError(f"llm f{model_name} not defined.")
+        raise NotImplementedError(f"llm {model_name} not defined.")
 
 
 def get_huggingface_model(model_name: str, **kwargs: Any) -> HuggingFaceHub:

@@ -41,10 +41,13 @@ bracelogger = "^1.1.0"
 
 # for access to AI models
 openai = "^0.27.6"
-langchain = "^0.0.170"
+langchain = "^0.0.228"
 
 # for hugging face
 huggingface_hub = "^0.15.1"
+
+# for google PaLM
+google-generativeai = "^0.1.0"
 
 # unsorted (new deps gets listed here)
 
