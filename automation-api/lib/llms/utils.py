@@ -63,9 +63,9 @@ def get_google_palm_model(
         if "google_api_key" in kwargs
         else config["GOOGLE_API_KEY"]
     )
-    if model_name == "palm_text":
+    if model_name == "text-bison":
         return GooglePalm(google_api_key=api_key, **kwargs)
-    elif model_name == "palm_chat":
+    elif model_name == "chat-bison":
         return ChatGooglePalm(google_api_key=api_key, **kwargs)
     else:
         raise NotImplementedError(f"llm {model_name} not defined")
