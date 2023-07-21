@@ -46,8 +46,10 @@ langchain = "^0.0.228"
 # for hugging face
 huggingface_hub = "^0.15.1"
 
-# unsorted (new deps gets listed here)
+# for google PaLM
 google-generativeai = "^0.1.0"
+
+# unsorted (new deps gets listed here)
 
 [tool.poetry.dev-dependencies]
 coverage = "^6.3.2"
