@@ -3,10 +3,10 @@ API for IFlyTek's Spark, and langchain class for it.
 """
 
 import base64
-import datetime
 import hashlib
 import hmac
 import json
+from datetime import datetime
 from time import mktime
 from typing import Any, Dict, List, Mapping, Optional
 from urllib.parse import urlencode, urlparse
