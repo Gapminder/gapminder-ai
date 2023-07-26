@@ -30,6 +30,7 @@ from lib.llms.utils import (
     get_dummy_model,
     get_google_palm_model,
     get_huggingface_model,
+    get_iflytek_model,
     get_openai_model,
 )
 
@@ -107,6 +108,8 @@ def get_model(model_id, vendor, model_conf):
         return get_dummy_model(model_id, **model_conf)
     elif vendor == "HuggingFace":
         return get_huggingface_model(model_id, **model_conf)
+    elif vendor == "iFlyTek":
+        return get_iflytek_model(**model_conf)
     else:
         raise NotImplementedError(f"{model_id} from {vendor} is not supported yet.")
 
