@@ -19,6 +19,7 @@ class Question(BaseModel):
         None, title="Include in next evaluation"
     )
     question_id: Optional[str] = Field(None, title="Question ID")
+    language: Optional[str] = Field(None, title="Language")
     published_version_of_question: Optional[str] = Field(
         None, title="Published version of question"
     )
@@ -37,6 +38,7 @@ class QuestionsDf(pa.DataFrameModel):
 class QuestionOption(BaseModel):
     question_option_id: Optional[str] = Field(None, title="Question Option ID")
     question_id: Optional[str] = Field(None, title="Question ID")
+    language: Optional[str] = Field(None, title="Language")
     letter: Optional[str] = Field(None, title="Letter")
     question_option: Optional[str] = Field(None, title="Question option")
     correctness_of_answer_option: Optional[int] = Field(
