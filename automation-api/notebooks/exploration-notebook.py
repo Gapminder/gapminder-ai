@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.14.7
 #   kernelspec:
 #     display_name: gapminder-ai-automation-api
 #     language: python
@@ -39,26 +39,46 @@ authorized_clients = get_service_account_authorized_clients()
 from lib.config import read_config
 config = read_config()
 
-# ## OpenAI access via LangChain
+# ## Run models via LangChain
+
+# Test openai model
+from lib.llms.utils import get_openai_model, run_model
 
 # +
-from langchain.chains import LLMChain
-from langchain.llms import OpenAI
-from langchain.prompts import PromptTemplate
+# If you have set the openai api key and org in .env, then the function will read the them from the .env file
+llm = get_openai_model('gpt-3.5-turbo', temperature=0.1)
+# you can also provide the api key and org in the function. as shown below:
+# llm = get_openai_model('gpt-3.5-turbo', openai_api_key="sk-your_key", openai_organization="your-org", tempernature=0.1)
 
-from lib.config import read_config
-
-config = read_config()
-openai_api_key = config["OPENAI_API_KEY"]
-
+# then you can run the model:
 template = "What are the top {k} resources to learn {this} in 2023?"
-prompt = PromptTemplate(template=template, input_variables=["k", "this"])
-
-llm = OpenAI(model_name="text-davinci-003", openai_api_key=config["OPENAI_API_KEY"])
-chain = LLMChain(llm=llm, prompt=prompt)
-
-print(chain.run({"k": 3, "this": "Rust"}))
+print(run_model(llm, template, verbose=True, k=3, this="python"))
 # -
+
+# There are more vendors supported in this lib. For example Google PaLM.
+from lib.llms.utils import get_google_palm_model, run_model
+
+# +
+# Again, if you have set the google api key in .env, then the function will read the them from the .env file
+llm = get_google_palm_model('text-bison', temperature=0.1)
+# you can also provide the api key in the function. as shown below:
+# llm = get_google_palm_model('text-bison', google_api_key="your_key", tempernature=0.1)
+
+# then you can run the model:
+template = "Please search Google and summarize: What are the top {k} resources to learn {this} in 2023?"
+print(run_model(llm, template, verbose=True, k=3, this="python"))
+
+# +
+# more functions to explore:
+# - get_huggingface_model  # get model from Huggingface
+# - get_dummy_model  # Just a Fake LLM
+# - get_iflytek_model  # iFlyTek Spark
+# -
+
+
+
+
+
 # ## Read from AI Eval spreadsheet
 
 
