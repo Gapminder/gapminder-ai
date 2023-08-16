@@ -661,6 +661,20 @@ tomli = {version = "*", optional = true, markers = "python_full_version <= \"3.1
 toml = ["tomli"]
 
 [[package]]
+name = "dashscope"
+version = "1.6.0"
+description = "dashscope client sdk library"
+optional = false
+python-versions = ">=3.7.0"
+files = [
+    {file = "dashscope-1.6.0-py3-none-any.whl", hash = "sha256:b9b8c1b39b0eb582ce500c8fa2a32c0f9b6524d829f94359123827e70f246ffd"},
+]
+
+[package.dependencies]
+aiohttp = "*"
+requests = "*"
+
+[[package]]
 name = "dataclasses-json"
 version = "0.5.9"
 description = "Easily serialize dataclasses to and from JSON"
@@ -4332,4 +4346,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.10"
-content-hash = "db66f8c32971656b6721d54b13801376af89e1c916809d69336fdd2887386109"
+content-hash = "852f931ffc76292fd0708cb183d4993c1d2513768799d99a0756ea0971a1b169"
