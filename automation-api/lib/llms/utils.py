@@ -12,7 +12,7 @@ from langchain.prompts import PromptTemplate
 from lib.config import read_config
 
 from .fake import RandomAnswerLLM
-from .iflytek import Spark
+from .spark import Spark
 
 
 def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI]:

@@ -1,1 +1,1 @@
-from .spark_api import Spark  # noqa: F401
+from .spark_api import SparkClient  # noqa: F401
