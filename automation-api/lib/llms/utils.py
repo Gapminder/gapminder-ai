@@ -11,6 +11,7 @@ from langchain.prompts import PromptTemplate
 
 from lib.config import read_config
 
+from .alibaba import Alibaba
 from .fake import RandomAnswerLLM
 from .spark import Spark
 
@@ -104,6 +105,12 @@ def get_iflytek_model(**kwargs: Any) -> Spark:
         iflytek_api_secret=iflytek_api_secret,
         **kwargs,
     )
+
+
+def get_alibaba_model(**kwargs: Any) -> Alibaba:
+    config: Dict[str, str] = read_config()
+    dashscope_api_key = config["DASHSCOPE_API_KEY"]
+    return Alibaba(dashscope_api_key=dashscope_api_key, **kwargs)
 
 
 def run_model(
