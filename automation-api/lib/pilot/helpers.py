@@ -27,6 +27,7 @@ from lib.authorized_clients import get_service_account_authorized_clients
 from lib.config import read_config
 from lib.hash.fnv64hash import hash_dn
 from lib.llms.utils import (
+    get_alibaba_model,
     get_dummy_model,
     get_google_palm_model,
     get_huggingface_model,
@@ -110,6 +111,8 @@ def get_model(model_id, vendor, model_conf):
         return get_huggingface_model(model_id, **model_conf)
     elif vendor == "iFlyTek":
         return get_iflytek_model(**model_conf)
+    elif vendor == "Alibaba":
+        return get_alibaba_model(**model_conf)
     else:
         raise NotImplementedError(f"{model_id} from {vendor} is not supported yet.")
 
