@@ -94,7 +94,9 @@ def get_reply(url: str, data: Dict) -> Dict[str, Any]:
 
 
 class SparkClient:
-    gpt_url: str = "wss://spark-api.xf-yun.com/v1.1/chat"
+    gpt_url: str = "wss://spark-api.xf-yun.com/v2.1/chat"
+    # TODO: add support for selecting v1 and v2?
+    # v1 url: "ws(s)://spark-api.xf-yun.com/v1.1/chat"
 
     def __init__(self, appid: str, api_key: str, api_secret: str) -> None:
         self.appid = appid
@@ -112,7 +114,7 @@ class SparkClient:
             "header": {"app_id": self.appid, "uid": uid},
             "parameter": {
                 "chat": {
-                    "domain": "general",
+                    "domain": "generalv2",  # v1 domain: "general"
                     "temperature": temperature,
                     "max_tokens": max_tokens,
                     "top_k": top_k,
