@@ -49,9 +49,14 @@ huggingface_hub = "^0.15.1"
 # for google PaLM
 google-generativeai = "^0.1.0"
 
-# unsorted (new deps gets listed here)
+# for iflytek
 websocket-client = "^1.6.1"
+
+# for alibaba
 dashscope = "^1.6.0"
+
+# unsorted (new deps gets listed here)
+
 
 [tool.poetry.dev-dependencies]
 coverage = "^6.3.2"
