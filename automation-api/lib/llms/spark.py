@@ -6,6 +6,11 @@ from typing import Any, Dict, List, Mapping, Optional
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms.base import LLM
 from pydantic import root_validator
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+)
 
 from lib.config import read_config
 from lib.llms.iflytek import SparkClient
@@ -63,6 +68,18 @@ class Spark(LLM):
 
         return values
 
+    @retry(
+        retry=(retry_if_exception_type()),
+        stop=stop_after_attempt(3),
+    )
+    def generate_text_with_retry(self, prompt):
+        return self.client.generate_text(
+            prompt,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            top_k=self.top_k,
+        )["text"]
+
     def _call(
         self,
         prompt: str,
@@ -71,12 +88,7 @@ class Spark(LLM):
     ) -> str:
         if stop is not None:
             raise ValueError("stop kwargs are not permitted.")
-        return self.client.generate_text(
-            prompt,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            top_k=self.top_k,
-        )["text"]
+        return self.generate_text_with_retry(prompt)
 
     @property
     def _identifying_params(self) -> Mapping[str, Any]:
