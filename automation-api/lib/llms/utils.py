@@ -11,7 +11,9 @@ from langchain.prompts import PromptTemplate
 
 from lib.config import read_config
 
+from .alibaba import Alibaba
 from .fake import RandomAnswerLLM
+from .spark import Spark
 
 
 def get_openai_model(model_name: str, **kwargs: Any) -> Union[ChatOpenAI, OpenAI]:
@@ -90,6 +92,25 @@ def get_huggingface_model(model_name: str, **kwargs: Any) -> HuggingFaceHub:
         repo_id=model_name,
         model_kwargs=kwargs,
     )
+
+
+def get_iflytek_model(**kwargs: Any) -> Spark:
+    config: Dict[str, str] = read_config()
+    iflytek_appid = config["IFLYTEK_APPID"]
+    iflytek_api_key = config["IFLYTEK_API_KEY"]
+    iflytek_api_secret = config["IFLYTEK_API_SECRET"]
+    return Spark(
+        iflytek_appid=iflytek_appid,
+        iflytek_api_key=iflytek_api_key,
+        iflytek_api_secret=iflytek_api_secret,
+        **kwargs,
+    )
+
+
+def get_alibaba_model(**kwargs: Any) -> Alibaba:
+    config: Dict[str, str] = read_config()
+    dashscope_api_key = config["DASHSCOPE_API_KEY"]
+    return Alibaba(dashscope_api_key=dashscope_api_key, **kwargs)
 
 
 def run_model(

@@ -25,6 +25,10 @@ def read_config() -> dict[str, str]:
         "AI_EVAL_DEV_SPREADSHEET_ID",
         "HUGGINGFACEHUB_API_TOKEN",
         "GOOGLE_API_KEY",
+        "IFLYTEK_APPID",
+        "IFLYTEK_API_KEY",
+        "IFLYTEK_API_SECRET",
+        "DASHSCOPE_API_KEY",
     ]:
         config[key] = os.getenv(key=key, default="")
     return config
