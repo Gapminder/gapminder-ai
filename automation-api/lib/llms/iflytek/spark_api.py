@@ -100,7 +100,8 @@ class SparkClient:
 
     def __init__(self, appid: str, api_key: str, api_secret: str) -> None:
         self.appid = appid
-        self.ws_url = Ws_Param(appid, api_key, api_secret, self.gpt_url).create_url()
+        self.api_key = api_key
+        self.api_secret = api_secret
 
     def gen_parameters(
         self,
@@ -133,9 +134,12 @@ class SparkClient:
         return data
 
     def generate_text(self, content, **kwargs) -> Dict[str, Any]:
+        ws_url = Ws_Param(
+            self.appid, self.api_key, self.api_secret, self.gpt_url
+        ).create_url()
         data = self.gen_parameters(**kwargs)
         data.update(self.gen_payload(content))
-        res = get_reply(self.ws_url, data)
+        res = get_reply(ws_url, data)
         return res
 
     def chat(self):
