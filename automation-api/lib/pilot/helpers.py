@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from langchain.chains import LLMChain
@@ -81,19 +81,29 @@ def class_objects_from_df(df: pd.DataFrame, cls: type) -> list:
     return [cls(**rec) for rec in df.to_dict(orient="records")]
 
 
-def get_questions(sheet: AiEvalData) -> List[QuestionAndOptions]:
-    questions = filter_included_rows(sheet.questions.data.df)
+def get_questions(
+    sheet: AiEvalData, include_all: bool = False, language: Optional[str] = None
+) -> List[QuestionAndOptions]:
+    if include_all:
+        questions = sheet.questions.data.df
+    else:
+        questions = filter_included_rows(sheet.questions.data.df)
+
+    if language is not None:
+        questions = questions.loc[questions["language"] == language]
+
     options = sheet.question_options.data.df
     qs = class_objects_from_df(questions, Question)
 
     res = []
     for q in qs:
         qid = q.question_id
+        lang = q.language
         qopts = [
             QuestionOption(**rec)
-            for rec in options.loc[options["question_id"] == qid].to_dict(
-                orient="records"
-            )
+            for rec in options.loc[
+                (options["question_id"] == qid) & (options["language"] == lang)
+            ].to_dict(orient="records")
         ]
         res.append((q, qopts))
 
@@ -198,8 +208,13 @@ def check_llm_eval_output(eval_output: str) -> str:
         return "failed"
 
 
-def get_prompt_variants(sheet: AiEvalData) -> List[PromptVariation]:
-    prompt_variations = filter_included_rows(sheet.prompt_variations.data.df)
+def get_prompt_variants(
+    sheet: AiEvalData, include_all: bool = False
+) -> List[PromptVariation]:
+    if include_all:
+        prompt_variations = sheet.prompt_variations.data.df
+    else:
+        prompt_variations = filter_included_rows(sheet.prompt_variations.data.df)
     res = class_objects_from_df(prompt_variations, PromptVariation)
     return res
 
