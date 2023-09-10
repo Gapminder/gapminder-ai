@@ -301,6 +301,7 @@ def run_survey(
             "model_configuration_id": model_config_id,
             "prompt_variation_id": prompt_id,
             "question_id": question[0].question_id,
+            "language": question[0].language,
             "question_number": i + 1,
         }
         question_data = create_question_data_for_test(question_tmpl, question)
