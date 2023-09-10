@@ -122,7 +122,7 @@ def get_model(model_id, vendor, model_conf):
     elif vendor == "iFlyTek":
         return get_iflytek_model(**model_conf)
     elif vendor == "Alibaba":
-        return get_alibaba_model(**model_conf)
+        return get_alibaba_model(model_id, **model_conf)
     else:
         raise NotImplementedError(f"{model_id} from {vendor} is not supported yet.")
 

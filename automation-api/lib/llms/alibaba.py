@@ -23,9 +23,16 @@ def response_is_ok(response):
     return False
 
 
+def return_last_message(retry_state):
+    last_val = retry_state.outcome.result()
+    result = {"output": {"text": f"Error: {last_val.code}: {last_val.message}"}}
+    return result
+
+
 @retry(
     retry=(retry_if_exception_type() | retry_if_not_result(response_is_ok)),
     stop=stop_after_attempt(3),
+    retry_error_callback=return_last_message,
 )
 def get_reply(**kwargs):
     return Generation.call(**kwargs)
@@ -74,15 +81,15 @@ class Alibaba(LLM):
     def _call(
         self,
         prompt: str,
-        history: Optional[List[Dict]] = None,
+        messages: Optional[List[Dict]] = None,
         stop: Optional[List[str]] = None,
         run_manager: Optional[CallbackManagerForLLMRun] = None,
     ) -> str:
         if stop is not None:
             raise ValueError("stop kwargs are not permitted.")
 
-        if history is None:
-            history = []
+        if messages is None:
+            messages = []
 
         if self.seed is None:
             # FIXME: Alibaba's API support uint64
@@ -99,13 +106,12 @@ class Alibaba(LLM):
         )(
             model=self.model_name,
             prompt=prompt,
-            history=history,
+            messages=messages,
             top_p=self.top_p,
             top_k=self.top_k,
             seed=seed,
             enable_search=self.enable_search,
         )
-
         return result["output"]["text"]
 
     @property
