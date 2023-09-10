@@ -85,11 +85,11 @@ def run_evaluation(
         logger.warning(
             f"({model_config_id}, {prompt_var_id}, {survey_id}) has been evaluated."
         )
-
     session_df = pd.DataFrame.from_records(session_result)
     session_df = SessionResultsDf.validate(session_df)
     # write result to tmp file.
     session_df.to_csv(out_file_path, index=False)
+    logger.info(f"session saved to {out_file_path}")
 
     return session_df
 
@@ -143,7 +143,10 @@ if __name__ == "__main__":
     survey_id = get_survey_hash(questions)
     survey = (survey_id, questions)
 
-    eval_llm = get_model("gpt-3.5-turbo", "OpenAI", {"temperature": 0})
+    # FIXME: add support to set eval llm and parameters.
+    eval_llm = get_model(
+        "gpt-3.5-turbo", "OpenAI", {"temperature": 0, "request_timeout": 120}
+    )
 
     search_space = list(product(model_configs, prompt_variants))
 
@@ -156,8 +159,11 @@ if __name__ == "__main__":
         out_dir=args.tmp_dir,
     )
 
-    with Pool(args.jobs) as p:
-        session_dfs = p.map(threaded_func, search_space)
+    if args.jobs == 1:
+        session_dfs = [threaded_func(v) for v in search_space]
+    else:
+        with Pool(args.jobs) as p:
+            session_dfs = p.map(threaded_func, search_space)
 
     try:
         session_df = pd.concat(session_dfs)
