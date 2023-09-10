@@ -41,7 +41,7 @@ bracelogger = "^1.1.0"
 
 # for access to AI models
 openai = "^0.27.6"
-langchain = "^0.0.228"
+langchain = "^0.0.285"
 
 # for hugging face
 huggingface_hub = "^0.15.1"
