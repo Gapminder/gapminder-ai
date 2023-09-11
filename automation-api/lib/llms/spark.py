@@ -12,6 +12,7 @@ from tenacity import (
     stop_after_attempt,
 )
 
+from lib.app_singleton import app_logger as logger
 from lib.config import read_config
 from lib.llms.iflytek import SparkClient
 
@@ -88,7 +89,9 @@ class Spark(LLM):
     ) -> str:
         if stop is not None:
             raise ValueError("stop kwargs are not permitted.")
-        return self.generate_text_with_retry(prompt)
+        output = self.generate_text_with_retry(prompt)
+        logger.debug(f"Spark: {output}")
+        return output
 
     @property
     def _identifying_params(self) -> Mapping[str, Any]:

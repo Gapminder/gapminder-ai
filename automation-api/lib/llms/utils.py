@@ -107,10 +107,10 @@ def get_iflytek_model(**kwargs: Any) -> Spark:
     )
 
 
-def get_alibaba_model(**kwargs: Any) -> Alibaba:
+def get_alibaba_model(model_name, **kwargs: Any) -> Alibaba:
     config: Dict[str, str] = read_config()
     dashscope_api_key = config["DASHSCOPE_API_KEY"]
-    return Alibaba(dashscope_api_key=dashscope_api_key, **kwargs)
+    return Alibaba(model_name=model_name, dashscope_api_key=dashscope_api_key, **kwargs)
 
 
 def run_model(

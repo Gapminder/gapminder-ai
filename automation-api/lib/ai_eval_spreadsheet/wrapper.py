@@ -50,7 +50,7 @@ sheet_names = {
     "prompt_variations": "Prompt variations",
     "gen_ai_models": "Models",
     "gen_ai_model_configs": "Model configurations",
-    "evaluation_results": "Evaluations",
+    "evaluation_results": "Latest Results",
     "session_results": "Sessions",
 }
 

@@ -109,6 +109,7 @@ class GenAiModelConfigsDf(pa.DataFrameModel):
 
 class EvalResult(BaseModel):
     question_id: Optional[str] = Field(None, title="Question ID")
+    language: Optional[str] = Field(None, title="Language")
     prompt_variation_id: Optional[str] = Field(None, title="Prompt variation ID")
     model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
     last_evaluation_datetime: Optional[datetime] = Field(None, title="Last Evaluation")
@@ -133,6 +134,7 @@ class SessionResult(BaseModel):
     model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
     survey_id: Optional[str] = Field(None, title="Survey ID")
     question_id: Optional[str] = Field(None, title="Question ID")
+    language: Optional[str] = Field(None, title="Language")
     question_number: Optional[int] = Field(None, title="Question No.")
     output: Optional[str] = Field(None, title="Response Text")
     grade: Optional[str] = Field(None, title="Grade")
