@@ -6,7 +6,7 @@ import dashscope
 from dashscope import Generation
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms.base import LLM
-from pydantic import root_validator
+from pydantic import model_validator
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -62,7 +62,8 @@ class Alibaba(LLM):
     def _llm_type(self) -> str:
         return "alibaba"
 
-    @root_validator()
+    @model_validator()
+    @classmethod
     def validate_environment(cls, values: Dict) -> Dict:  # noqa: N805
         """Validate api key, python package exists."""
         dashscope_api_key = get_from_dict_or_env(

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Mapping, Optional
 
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms.base import LLM
-from pydantic import root_validator
+from pydantic import model_validator
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -43,7 +43,8 @@ class Spark(LLM):
     def _llm_type(self) -> str:
         return "iflytek_spark"
 
-    @root_validator()
+    @model_validator()
+    @classmethod
     def validate_environment(cls, values: Dict) -> Dict:  # noqa: N805
         """Validate api key, python package exists."""
         iflytek_appid = get_from_dict_or_env(values, "iflytek_appid", "IFLYTEK_APPID")

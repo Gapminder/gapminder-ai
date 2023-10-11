@@ -11,12 +11,12 @@ from typing import Optional
 import pandas as pd
 import pandera as pa
 from pandera.engines.pandas_engine import PydanticModel
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class Question(BaseModel):
     include_in_next_evaluation: Optional[bool] = Field(
-        None, title="Include in next evaluation"
+        None, title="Include in next evaluation", validate_default=True
     )
     question_id: Optional[str] = Field(None, title="Question ID")
     language: Optional[str] = Field(None, title="Language")
@@ -24,7 +24,8 @@ class Question(BaseModel):
         None, title="Published version of question"
     )
 
-    @validator("include_in_next_evaluation", pre=True, always=True)
+    @field_validator("include_in_next_evaluation", mode="before")
+    @classmethod
     def default_if_nan(cls, v):  # noqa: N805
         return False if pd.isna(v) else v
 
