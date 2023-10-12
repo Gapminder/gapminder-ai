@@ -5,16 +5,17 @@
 # for more info
 # Note that most types are str since spreadsheet columns can be formulas
 
-from datetime import datetime
 from typing import Optional
 
 import pandas as pd
 import pandera as pa
 from pandera.engines.pandas_engine import PydanticModel
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Question(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
     include_in_next_evaluation: Optional[bool] = Field(
         None, title="Include in next evaluation", validate_default=True
     )
@@ -37,6 +38,8 @@ class QuestionsDf(pa.DataFrameModel):
 
 
 class QuestionOption(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
     question_option_id: Optional[str] = Field(None, title="Question Option ID")
     question_id: Optional[str] = Field(None, title="Question ID")
     language: Optional[str] = Field(None, title="Language")
@@ -54,6 +57,8 @@ class QuestionOptionsDf(pa.DataFrameModel):
 
 
 class PromptVariation(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
     include_in_next_evaluation: Optional[bool] = Field(
         None, title="Include in next evaluation"
     )
@@ -79,6 +84,8 @@ class PromptVariationsDf(pa.DataFrameModel):
 
 
 class GenAiModel(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
+
     model_id: Optional[str] = Field(None, title="Model ID")
     vendor: Optional[str] = Field(None, title="Vendor")
     model_name: Optional[str] = Field(None, title="Model name")
@@ -91,6 +98,8 @@ class GenAiModelsDf(pa.DataFrameModel):
 
 
 class GenAiModelConfig(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
+
     include_in_next_evaluation: Optional[bool] = Field(
         None, title="Include in next evaluation"
     )
@@ -109,11 +118,13 @@ class GenAiModelConfigsDf(pa.DataFrameModel):
 
 
 class EvalResult(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
+
     question_id: Optional[str] = Field(None, title="Question ID")
     language: Optional[str] = Field(None, title="Language")
     prompt_variation_id: Optional[str] = Field(None, title="Prompt variation ID")
     model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
-    last_evaluation_datetime: Optional[datetime] = Field(None, title="Last Evaluation")
+    last_evaluation_datetime: Optional[str] = Field(None, title="Last Evaluation")
     percent_correct: Optional[float] = Field(None, title="Percent Correct")
     percent_wrong: Optional[float] = Field(None, title="Percent Wrong")
     percent_very_wrong: Optional[float] = Field(None, title="Percent Very Wrong")
@@ -129,6 +140,8 @@ class EvalResultsDf(pa.DataFrameModel):
 
 
 class SessionResult(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
+
     session_id: Optional[str] = Field(None, title="Session ID")
     session_time: Optional[str] = Field(None, title="Session Time")
     prompt_variation_id: Optional[str] = Field(None, title="Prompt Variation ID")
