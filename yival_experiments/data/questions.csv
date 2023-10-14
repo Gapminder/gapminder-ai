@@ -1,0 +1,3 @@
+question_id,question_text,language,option_a,option_a_correctness,option_b,option_b_correctness,option_c,option_c_correctness,correct_answer
+1528,"How many people worldwide have their basic needs met when it comes to food, water, toilets, electricity, schooling and healthcare?",en-US,Around 20%,Very Wrong,Around 50%,Wrong,Around 80%,Correct,Around 80%
+13,What share of the world’s population lives in megacities (cities with at least 10 million people)?,en-US,Around 8%,Correct,Around 28%,Wrong,Around 48%,Very Wrong,Around 8%
