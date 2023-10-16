@@ -22,6 +22,8 @@ cp ../automation-api/.env ./
 python fetch_question.py
 ```
 
+This will fetch all enabled questions in the AI eval spreadsheet and create data/questions.csv.
+
 Note: I tried to create a custom data reader to read data from AI eval
 spreadsheet directly, but then yival failed to run the experiment. I
 checked and found that Yival requires a dataset to have a local
@@ -36,6 +38,8 @@ The full experiment configuration is [here](https://github.com/Gapminder/gapmind
 ``` shell
 yival run --output ./output experiment.yaml
 ```
+
+This will output a pickle file in output/ which include all Experiment Results objects.
 
 Note: After running the experiment, Yival normaly will run a web
 server to show the results. But somehow it doesn't start a web server
