@@ -31,6 +31,8 @@ file when the source type is set to "dataset". So we need to fetch it first.
 
 ## 4. run the experiment
 
+The full experiment configuration is [here](https://github.com/Gapminder/gapminder-ai/blob/yival/yival_experiments/experiment.yaml)
+
 ``` shell
 yival run --output ./output experiment.yaml
 ```
@@ -41,6 +43,8 @@ for our experiment. It just exits, though it is able to save the
 outputs to a pickle file.
 
 ## 5. generate a result csv from output
+
+Because of above issue, I created a script to generate a summary table:
 
 ``` shell
 cd output
