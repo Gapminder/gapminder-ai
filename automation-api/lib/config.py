@@ -24,7 +24,7 @@ def read_config() -> dict[str, str]:
         "AI_EVAL_SPREADSHEET_ID",
         "AI_EVAL_DEV_SPREADSHEET_ID",
         "HUGGINGFACEHUB_API_TOKEN",
-        "GOOGLE_API_KEY",
+        "PALM_API_KEY",
         "IFLYTEK_APPID",
         "IFLYTEK_API_KEY",
         "IFLYTEK_API_SECRET",
