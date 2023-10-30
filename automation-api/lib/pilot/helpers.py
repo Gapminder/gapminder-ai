@@ -13,6 +13,7 @@ from pandera.errors import SchemaError
 from lib.ai_eval_spreadsheet.schemas import (
     GenAiModel,
     GenAiModelConfig,
+    Metric,
     PromptVariation,
     Question,
     QuestionOption,
@@ -230,6 +231,11 @@ def get_model_configs(sheet: AiEvalData) -> List[ModelAndConfig]:
         model = class_objects_from_df(model_df, GenAiModel)[0]
         result.append((model, mc))
     return result
+
+
+def get_metrics(sheet: AiEvalData) -> List[Metric]:
+    res = class_objects_from_df(sheet.metrics.data.df, Metric)
+    return res
 
 
 def get_survey_hash(questions: List[QuestionAndOptions]) -> str:

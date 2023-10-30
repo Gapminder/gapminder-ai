@@ -10,6 +10,8 @@ from lib.ai_eval_spreadsheet.schemas import (
     GenAiModelConfig,
     GenAiModelConfigsDf,
     GenAiModelsDf,
+    Metric,
+    MetricsDf,
     PromptVariation,
     PromptVariationsDf,
     Question,
@@ -36,6 +38,7 @@ class AiEvalData:
     gen_ai_model_configs: Optional[
         GsheetsWorksheetEditor[GenAiModelConfigsDf, GenAiModelConfig]
     ] = None
+    metrics: Optional[GsheetsWorksheetEditor[MetricsDf, Metric]] = None
     evaluation_results: Optional[
         GsheetsWorksheetEditor[EvalResult, EvalResultsDf]
     ] = None
@@ -50,6 +53,7 @@ sheet_names = {
     "prompt_variations": "Prompt variations",
     "gen_ai_models": "Models",
     "gen_ai_model_configs": "Model configurations",
+    "metrics": "Metrics",
     "evaluation_results": "Latest Results",
     "session_results": "Sessions",
 }
@@ -110,6 +114,15 @@ def read_ai_eval_data(
         evaluate_formulas=True,
     )
 
+    metrics = GsheetsWorksheetEditor(
+        sh=ai_eval_spreadsheet,
+        df_schema=MetricsDf,
+        row_schema=Metric,
+        worksheet_name=sheet_names["metrics"],
+        header_row_number=0,
+        evaluate_formulas=True,
+    )
+
     evaluation_results = GsheetsWorksheetEditor(
         sh=ai_eval_spreadsheet,
         df_schema=EvalResultsDf,
@@ -134,6 +147,7 @@ def read_ai_eval_data(
         prompt_variations=prompt_variations,
         gen_ai_models=gen_ai_models,
         gen_ai_model_configs=gen_ai_model_configs,
+        metrics=metrics,
         evaluation_results=evaluation_results,
         session_results=session_results,
     )

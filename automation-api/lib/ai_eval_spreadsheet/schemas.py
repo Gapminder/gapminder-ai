@@ -117,6 +117,20 @@ class GenAiModelConfigsDf(pa.DataFrameModel):
         coerce = True
 
 
+class Metric(BaseModel):
+    name: Optional[str] = Field(None, title="Name")
+    description: Optional[str] = Field(None, title="Description")
+    prompt: Optional[str] = Field(None, title="Prompt")
+    choices: Optional[str] = Field(None, title="Choices")
+    choice_scores: Optional[str] = Field(None, title="Choice Scores")
+
+
+class MetricsDf(pa.DataFrameModel):
+    class Config:
+        dtype = PydanticModel(Metric)
+        coerce = True
+
+
 class EvalResult(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
 
