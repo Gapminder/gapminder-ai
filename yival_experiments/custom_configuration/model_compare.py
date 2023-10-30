@@ -7,6 +7,7 @@ from yival.wrappers.string_wrapper import StringWrapper
 from model_config_wrapper import ModelConfigWrapper
 from llms.alibaba_complete import llm_complete as alibaba_llm_complete
 from llms.palm_completion import safety_settings
+import litellm
 from litellm import completion
 
 # load env vars
@@ -16,6 +17,9 @@ read_config()
 
 
 default_model_config = dict(model_name="gpt-3.5-turbo", params={"temperature": 0.5})
+
+# I have to set this to make google plam work!
+litellm.failure_callback = ["sentry"]
 
 
 def model_compare(
