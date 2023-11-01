@@ -29,6 +29,7 @@ def read_config() -> dict[str, str]:
         "IFLYTEK_API_KEY",
         "IFLYTEK_API_SECRET",
         "DASHSCOPE_API_KEY",
+        "REPLICATE_API_KEY",
     ]:
         config[key] = os.getenv(key=key, default="")
     return config
