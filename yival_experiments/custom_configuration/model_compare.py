@@ -18,8 +18,9 @@ read_config()
 
 default_model_config = dict(model_name="gpt-3.5-turbo", params={"temperature": 0.5})
 
-# I have to set this to make google plam work!
-litellm.failure_callback = ["sentry"]
+
+# set this to see verbose outputs
+litellm.set_verbose = True
 
 
 def model_compare(
