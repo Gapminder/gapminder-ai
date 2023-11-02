@@ -19,39 +19,34 @@ evaluators:
   metric_calculators:
   - method: AVERAGE
   name: openai_prompt_based_evaluator
+  model_name: gpt-4
   prompt: |-
     You are assessing a submitted answer on a given task based on a criterion. Here is the data:
-    - Task: Given a multiple choice question, pick the correct answer.
+    - Task: Answer a question.
     - Does the answer correct?
     [Input]: {question_text}
-    A. {option_a}
-    B. {option_b}
-    C. {option_c}
-    Correctness of Options:
-    {option_a}: {option_a_correctness}
-    {option_b}: {option_b_correctness}
-    {option_c}: {option_c_correctness}
+    Possible Options and Correctness of Options:
+    A. {option_a} ({option_a_correctness})
+    B. {option_b} ({option_b_correctness})
+    C. {option_c} ({option_c_correctness})
     [Result]: {raw_output}
     Answer the question by selecting one of the following options:
-    A It doesn't mention what is the answer to the multiple choice question at all.
-    B It mentions the answer to the multiple choice question, but it's not in the options list. (Not in option list)
-    C It mentions the answer to the multiple choice question, but the answer is far away from the correct answer. (Very Wrong)
-    D It mentions the answer to the multiple choice question, but the answer is not correct, though close to the correct one. (Wrong)
-    E It mentions the answer to the multiple choice question, and the answer is correct. (Correct)
+    A The answer is not relevant to the question at all, or contains conflicting information.
+    B The answer is far away from the correct answer. (Very Wrong)
+    C The answer is not correct, though close to the correct one. (Wrong)
+    D The answer is correct. (Correct)
   choices:
   - A
   - B
   - C
   - D
-  - E
   description: Is the answer correct?
   choice_scores:
     A: 0
     B: 1
     C: 2
     D: 3
-    E: 4
-  scale_description: 0-4
+  scale_description: 0-3
   display_name: correctness
 variations:
 - name: model_config
@@ -61,7 +56,8 @@ variations:
     - vendor: Google
       model_id: palm/text-bison
       params:
-        temperature: 0.1
+        temperature: 0.01
+      round: 1
 - name: prompt_template
   variations:
   - variation_id: instruct_question_options_1
@@ -86,3 +82,9 @@ variations:
       C. {option_c}
 
       Answer:
+  - variation_id: no_option_letter
+    value_type: str
+    instantiated_value: "Question:\n{question_text}\nIs it: {option_a};  {option_b};\
+      \ or {option_c}? \n\nAnswer:"
+    value: "Question:\n{question_text}\nIs it: {option_a};  {option_b}; or {option_c}?\
+      \ \n\nAnswer:"

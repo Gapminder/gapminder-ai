@@ -56,11 +56,13 @@ def get_model_variations(ai_eval_sheet: AiEvalData):
     res["generator_name"] = "model_config_generator"
     variant_list = list()
     for model, config in model_configs:
-        model_dict = dict()
-        model_dict["vendor"] = model.vendor
-        model_dict["model_id"] = model.model_id
-        model_dict["params"] = load_model_parameters(config.model_parameters)
-        variant_list.append(model_dict)
+        for t in range(config.repeat_times):
+            model_dict = dict()
+            model_dict["vendor"] = model.vendor
+            model_dict["model_id"] = model.model_id
+            model_dict["params"] = load_model_parameters(config.model_parameters)
+            model_dict["round"] = t + 1
+            variant_list.append(model_dict)
 
     res["generator_config"] = {"models": variant_list}
     return res
