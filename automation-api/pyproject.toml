@@ -55,8 +55,11 @@ websocket-client = "^1.6.1"
 # for alibaba
 dashscope = "^1.6.0"
 
+# yival
+yival = {git = "https://github.com/semio/YiVal.git#master"}
+
 # unsorted (new deps gets listed here)
-yival = "^0.1.0a7"
+
 
 
 [tool.poetry.dev-dependencies]
