@@ -1,7 +1,6 @@
-from yival.common.model_utils import llm_completion
 from yival.logger.token_logger import TokenLogger
 from yival.schemas.experiment_config import MultimodalOutput
-from yival.schemas.model_configs import Request, Response
+from yival.schemas.model_configs import Response
 from yival.states.experiment_state import ExperimentState
 from yival.wrappers.string_wrapper import StringWrapper
 from model_config_wrapper import ModelConfigWrapper
@@ -14,13 +13,13 @@ from litellm import completion
 from lib.config import read_config
 
 read_config()
-
-
+# default model config if not provided
 default_model_config = dict(model_name="gpt-3.5-turbo", params={"temperature": 0.5})
-
-
 # set this to see verbose outputs
 litellm.set_verbose = True
+# enable caching in the evaluator.
+# litellm.cache = litellm.Cache()
+litellm.cache = litellm.Cache(type="redis", host="127.0.0.1", port=6379)
 
 
 def model_compare(
@@ -50,18 +49,6 @@ def model_compare(
 
     Answer:"""
     # TODO: there might be better way to handle variables in prompt variations.
-    # NOTE: we can use template in StringWrapper.
-    # str(
-    # StringWrapper(
-    #     template="""
-    #     Generate a landing page headline for {tech_startup_business}
-    #     """,
-    #     variables={
-    #         "tech_startup_business": tech_startup_business,
-    #     },
-    #     name="task"
-    #     )
-    # )
     prompt_template = str(StringWrapper("", name="prompt_template", state=state))
     if prompt_template == "":
         prompt_template = prompt_template_default
@@ -72,26 +59,46 @@ def model_compare(
         option_b=option_b,
         option_c=option_c,
     )
+    # system_prompt = """..."""
 
     if model["vendor"] == "Alibaba":
+        # FIXME: alibaba's complete function doesn't support system prompt.
         output = alibaba_llm_complete(
             model_name=model["model_id"], prompt=prompt, **model["params"]
         )
         response = Response(output=output).output
     elif model["vendor"] == "Google":
         # google allows changing content filters. We will disable all
-        messages = [{"content": prompt, "role": "user"}]
+        messages = [
+            # {"content": system_prompt, "role": "system"},
+            {"content": prompt, "role": "user"}
+        ]
         response = Response(
             output=completion(
                 model=model["model_id"],
                 messages=messages,
                 safety_settings=safety_settings,
+                caching=False,
+                num_retries=10,
+                request_timeout=60,
+                **model["params"],
             )
         ).output
         # print(response)
     else:
-        response = llm_completion(
-            Request(model_name=model["model_id"], prompt=prompt, params=model["params"])
+        messages = [
+            # {"content": system_prompt, "role": "system"},
+            {"content": prompt, "role": "user"}
+        ]
+        response = Response(
+            output=completion(
+                model=model["model_id"],
+                messages=messages,
+                caching=False,
+                num_retries=10,
+                request_timeout=60,
+                **model["params"],
+            )
         ).output
 
     res = MultimodalOutput(
