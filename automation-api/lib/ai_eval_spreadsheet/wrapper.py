@@ -75,7 +75,7 @@ def read_ai_eval_data(
         row_schema=Question,
         worksheet_name=sheet_names["questions"],
         header_row_number=0,
-        evaluate_formulas=True,
+        evaluate_formulas=False,
     )
 
     question_options = GsheetsWorksheetEditor(
@@ -84,7 +84,7 @@ def read_ai_eval_data(
         row_schema=QuestionOption,
         worksheet_name=sheet_names["question_options"],
         header_row_number=0,
-        evaluate_formulas=True,
+        evaluate_formulas=False,
     )
 
     prompt_variations = GsheetsWorksheetEditor(
@@ -93,7 +93,7 @@ def read_ai_eval_data(
         row_schema=PromptVariation,
         worksheet_name=sheet_names["prompt_variations"],
         header_row_number=0,
-        evaluate_formulas=True,
+        evaluate_formulas=False,
     )
 
     gen_ai_models = GsheetsWorksheetEditor(
@@ -102,7 +102,7 @@ def read_ai_eval_data(
         row_schema=GenAiModel,
         worksheet_name=sheet_names["gen_ai_models"],
         header_row_number=0,
-        evaluate_formulas=True,
+        evaluate_formulas=False,
     )
 
     gen_ai_model_configs = GsheetsWorksheetEditor(
@@ -111,7 +111,7 @@ def read_ai_eval_data(
         row_schema=GenAiModelConfig,
         worksheet_name=sheet_names["gen_ai_model_configs"],
         header_row_number=0,
-        evaluate_formulas=True,
+        evaluate_formulas=False,
     )
 
     metrics = GsheetsWorksheetEditor(
@@ -120,7 +120,7 @@ def read_ai_eval_data(
         row_schema=Metric,
         worksheet_name=sheet_names["metrics"],
         header_row_number=0,
-        evaluate_formulas=True,
+        evaluate_formulas=False,
     )
 
     evaluation_results = GsheetsWorksheetEditor(
