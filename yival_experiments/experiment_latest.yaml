@@ -23,7 +23,7 @@ evaluators:
   prompt: |-
     You are assessing a submitted answer on a given task based on a criterion. Here is the data:
     - Task: Answer a question.
-    - Does the answer correct?
+    - Is the answer correct?
     [Input]: {question_text}
     Possible Options and Correctness of Options:
     A. {option_a} ({option_a_correctness})
@@ -31,10 +31,10 @@ evaluators:
     C. {option_c} ({option_c_correctness})
     [Result]: {raw_output}
     Answer the question by selecting one of the following options:
-    A The answer is not relevant to the question at all, or contains conflicting information.
-    B The answer is far away from the correct answer. (Very Wrong)
-    C The answer is not correct, though close to the correct one. (Wrong)
-    D The answer is correct. (Correct)
+    A The answer is not relevant to the question at all or indecisive about what the correct answer is.
+    B The answer is not correct, and matches/is close to the Very Wrong answer.
+    C The answer is not correct, and matches/is close to the Wrong answer.
+    D The answer is correct, i.e. matches the Correct answer.
   choices:
   - A
   - B
@@ -58,6 +58,181 @@ variations:
       params:
         temperature: 0.01
       round: 1
+    - vendor: Google
+      model_id: palm/text-bison
+      params:
+        temperature: 0.01
+      round: 2
+    - vendor: Google
+      model_id: palm/text-bison
+      params:
+        temperature: 0.01
+      round: 3
+    - vendor: Google
+      model_id: palm/text-bison
+      params:
+        temperature: 0.01
+      round: 4
+    - vendor: Google
+      model_id: palm/text-bison
+      params:
+        temperature: 0.01
+      round: 5
+    - vendor: Alibaba
+      model_id: qwen-plus
+      params:
+        top_p: 0.1
+        top_k: 100
+      round: 1
+    - vendor: Alibaba
+      model_id: qwen-plus
+      params:
+        top_p: 0.1
+        top_k: 100
+      round: 2
+    - vendor: Alibaba
+      model_id: qwen-plus
+      params:
+        top_p: 0.1
+        top_k: 100
+      round: 3
+    - vendor: Alibaba
+      model_id: qwen-plus
+      params:
+        top_p: 0.1
+        top_k: 100
+      round: 4
+    - vendor: Alibaba
+      model_id: qwen-plus
+      params:
+        top_p: 0.1
+        top_k: 100
+      round: 5
+    - vendor: Meta
+      model_id: replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3
+      params:
+        temperature: 0.01
+      round: 1
+    - vendor: Meta
+      model_id: replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3
+      params:
+        temperature: 0.01
+      round: 2
+    - vendor: Meta
+      model_id: replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3
+      params:
+        temperature: 0.01
+      round: 3
+    - vendor: Meta
+      model_id: replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3
+      params:
+        temperature: 0.01
+      round: 4
+    - vendor: Meta
+      model_id: replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3
+      params:
+        temperature: 0.01
+      round: 5
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 1
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 2
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 3
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 4
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 5
+    - vendor: OpenAI
+      model_id: gpt-4
+      params:
+        temperature: 0.01
+      round: 1
+    - vendor: OpenAI
+      model_id: gpt-4
+      params:
+        temperature: 0.01
+      round: 2
+    - vendor: OpenAI
+      model_id: gpt-4
+      params:
+        temperature: 0.01
+      round: 3
+    - vendor: OpenAI
+      model_id: gpt-4
+      params:
+        temperature: 0.01
+      round: 4
+    - vendor: OpenAI
+      model_id: gpt-4
+      params:
+        temperature: 0.01
+      round: 5
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 1
+      round: 1
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 1
+      round: 2
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 1
+      round: 3
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 1
+      round: 4
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 1
+      round: 5
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 1
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 2
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 3
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 4
+    - vendor: OpenAI
+      model_id: gpt-3.5-turbo-0613
+      params:
+        temperature: 0.01
+      round: 5
 - name: prompt_template
   variations:
   - variation_id: instruct_question_options_1
