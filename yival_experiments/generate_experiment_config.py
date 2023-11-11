@@ -34,6 +34,7 @@ def get_evaluators(ai_eval_sheet: AiEvalData):
         metric["evaluator_type"] = "individual"
         metric["metric_calculators"] = [{"method": "AVERAGE"}]
         metric["name"] = "openai_prompt_based_evaluator"
+        metric["model_name"] = "gpt-4"
         metric["prompt"] = m.prompt
         metric["choices"] = m.choices.split(", ")
         metric["description"] = m.description
