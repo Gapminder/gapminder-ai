@@ -14,7 +14,7 @@ def main():
     for q, opts in questions:
         output_item = {
             "question_id": q.question_id,
-            "question_text": q.published_version_of_question,
+            "question_text": q.published_version_of_question.strip(),
             "language": q.language,
         }
 
