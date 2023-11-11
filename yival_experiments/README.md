@@ -33,26 +33,28 @@ file when the source type is set to "dataset". So we need to fetch it first.
 
 ## 4. run the experiment
 
-The full experiment configuration is [here](https://github.com/Gapminder/gapminder-ai/blob/yival/yival_experiments/experiment.yaml)
+The full experiment configuration is [here](https://github.com/Gapminder/gapminder-ai/blob/yival/yival_experiments/latest_experiment.yaml)
+
+To run it:
 
 ``` shell
-yival run --output ./output experiment.yaml
+yival run --output ./output/experiment_name experiment_latest.yaml
+# You can replace experiment_name with other names.
 ```
 
-This will output a pickle file in output/ which include all Experiment Results objects.
+This will output a pickle file in `output/experiment_name_0.pkl` which include all Experiment Results objects.
 
-Note: After running the experiment, Yival normaly will run a web
-server to show the results. But somehow it doesn't start a web server
-for our experiment. It just exits, though it is able to save the
-outputs to a pickle file.
+When the experiment is completed, Yival will start a web server to show the results.
 
 ## 5. generate a result csv from output
 
-Because of above issue, I created a script to generate a summary table:
+To convert the pickle to excel file and create csv files for summary report, you can run the script in output/.
 
 ``` shell
 cd output
 python generate_result.py
 ```
 
-This will generate a `results.csv` file in the output directory.
+This will generate `results.xlsx`, `result_comb_prompt.csv`, and `result_comb.csv` files in the output directory.
+
+TODO: We can add a custom evaluator in Yival to calculate the final scores.
