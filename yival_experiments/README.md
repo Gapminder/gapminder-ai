@@ -33,7 +33,7 @@ file when the source type is set to "dataset". So we need to fetch it first.
 
 ## 4. run the experiment
 
-The full experiment configuration is [here](https://github.com/Gapminder/gapminder-ai/blob/yival/yival_experiments/latest_experiment.yaml)
+The full experiment configuration is [here](https://github.com/Gapminder/gapminder-ai/blob/yival/yival_experiments/experiment_latest.yaml)
 
 To run it:
 
@@ -45,6 +45,15 @@ yival run --output ./output/experiment_name experiment_latest.yaml
 This will output a pickle file in `output/experiment_name_0.pkl` which include all Experiment Results objects.
 
 When the experiment is completed, Yival will start a web server to show the results.
+
+### Use Redis for caching
+
+The model compare function will cache LLM call results for the
+evaluator, and by default the cache is dictionary in memory. You can
+also use Redis to caching, so that it won't loss the cache when Yival
+exits. To do this, uncomment the line for redis cache in the top of
+`custom_configuration/model_compare.py` and set the host and password
+to your redis server.
 
 ## 5. generate a result csv from output
 
