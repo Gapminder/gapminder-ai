@@ -140,5 +140,11 @@ def llm_complete(
 if __name__ == "__main__":
     # NOTE: currently there is qwen-turbo and qwen-plus.
     # qwen-plus is stronger than qwen-turbo
-    q = "世界人口从 60 亿增长到 70 亿用了 12 年。从 70 亿增加到 80 亿用了多长时间？"
-    print(llm_complete("qwen-plus", q))
+    q = """请回答以下的选择题，如果你不确定也要根据你知道的信息选择一个答案。\n\
+    问题：全世界有多少大学生在自己的本国（而不是国外）获得学位？\n\
+    A. 大约 77%\n\
+    B. 大约 87%\n\
+    C. 大约 97%\n\
+
+    回答："""
+    print(llm_complete("qwen-plus", q, top_p=0.1, top_k=100))
