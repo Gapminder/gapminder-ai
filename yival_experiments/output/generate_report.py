@@ -18,6 +18,7 @@ from yival.experiment.experiment_runner import Experiment
 # rs[1].asdict()
 
 # We will combine all pickle files in output dir and calculate final scores.
+# TODO: follow the format in `Latest Results` sheet of AI eval spreadsheet
 # 1. Store all responses into excel file.
 output_list = []
 
@@ -45,6 +46,7 @@ output_df.to_excel("./results.xlsx", index=False)
 
 
 # 2. calculate a final score per model configuration
+# TODO: I think it's possible to convert these into a Yival Evaluator.
 def is_correct_p(round_results):
     c = Counter(round_results)
     top2 = c.most_common(2)
