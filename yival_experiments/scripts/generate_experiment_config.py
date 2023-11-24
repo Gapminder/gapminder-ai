@@ -23,7 +23,9 @@ def str_presenter(dumper, data):
 yaml.add_representer(str, str_presenter)
 # -
 
-base_configs_path = "./experiment_defaults.yaml"
+base_configs_path = "../experiment_defaults.yaml"
+experiment_archive_path = "../experiment_archive/"
+latest_experiment_path = "../experiment_latest.yaml"
 
 
 def get_evaluators(ai_eval_sheet: AiEvalData):
@@ -99,10 +101,10 @@ def main():
     config["variations"] = [get_model_variations(sheet), get_prompt_variations(sheet)]
 
     # create archive
-    os.makedirs("./experiment_archive/", exist_ok=True)
+    os.makedirs(experiment_archive_path, exist_ok=True)
     now = datetime.now()
     file_name = os.path.join(
-        "./experiment_archive/", "experiment_{}.yaml".format(now.strftime("%Y%m%d%H%M"))
+        experiment_archive_path, "experiment_{}.yaml".format(now.strftime("%Y%m%d%H%M"))
     )
 
     with open(file_name, "w") as f:
@@ -110,7 +112,7 @@ def main():
         f.close()
 
     # also create one for latest experiment
-    with open("./experiment_latest.yaml", "w") as f:
+    with open(latest_experiment_path, "w") as f:
         yaml.dump(config, stream=f, sort_keys=False, allow_unicode=True)
         f.close()
 

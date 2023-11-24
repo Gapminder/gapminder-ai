@@ -3,6 +3,7 @@ from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions
 
 
 correctness_map = {1: "Correct", 2: "Wrong", 3: "Very Wrong"}
+output_file = "../data/questions.csv"
 
 
 def main():
@@ -30,7 +31,7 @@ def main():
         output_list.append(output_item)
 
     output_df = pd.DataFrame.from_records(output_list)
-    output_df.to_csv("data/questions.csv", index=False)
+    output_df.to_csv(output_file, index=False)
 
 
 if __name__ == "__main__":
