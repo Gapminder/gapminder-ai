@@ -61,6 +61,7 @@ yival = {git = "https://github.com/semio/YiVal.git#master"}
 redis = "^5.0.1"
 
 # unsorted (new deps gets listed here)
+langdetect = "^1.0.9"
 
 
 
