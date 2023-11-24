@@ -220,9 +220,14 @@ def get_prompt_variants(
     return res
 
 
-def get_model_configs(sheet: AiEvalData) -> List[ModelAndConfig]:
+def get_model_configs(
+    sheet: AiEvalData, include_all: bool = False
+) -> List[ModelAndConfig]:
     models_df = sheet.gen_ai_models.data.df
-    model_configs_df = filter_included_rows(sheet.gen_ai_model_configs.data.df)
+    if include_all:
+        model_configs_df = sheet.gen_ai_model_configs.data.df
+    else:
+        model_configs_df = filter_included_rows(sheet.gen_ai_model_configs.data.df)
 
     model_configs = class_objects_from_df(model_configs_df, GenAiModelConfig)
     result = []
