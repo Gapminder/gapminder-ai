@@ -8,6 +8,11 @@ custom_variation_generators:
     class: ./custom_configuration/model_config_variation_generator.ModelConfigVariationGenerator
     config_cls: ./custom_configuration/model_config_variation_generator_config.ModelConfigVariationGeneratorConfig
 
+custom_evaluators:
+  gpt4_evaluator:
+    class: ./custom_configuration/gpt4_evaluator.GPT4Evaluator
+    config_cls: ./custom_configuration/gpt4_evaluator_config.GPT4EvaluatorConfig
+
 custom_function: model_compare.model_compare
 
 dataset:

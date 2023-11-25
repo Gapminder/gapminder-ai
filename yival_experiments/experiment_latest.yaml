@@ -6,6 +6,10 @@ custom_variation_generators:
   model_config_generator:
     class: ./custom_configuration/model_config_variation_generator.ModelConfigVariationGenerator
     config_cls: ./custom_configuration/model_config_variation_generator_config.ModelConfigVariationGeneratorConfig
+custom_evaluators:
+  gpt4_evaluator:
+    class: ./custom_configuration/gpt4_evaluator.GPT4Evaluator
+    config_cls: ./custom_configuration/gpt4_evaluator_config.GPT4EvaluatorConfig
 custom_function: model_compare.model_compare
 dataset:
   source_type: dataset
@@ -18,7 +22,7 @@ evaluators:
 - evaluator_type: individual
   metric_calculators:
   - method: AVERAGE
-  name: openai_prompt_based_evaluator
+  name: gpt4_evaluator
   model_name: gpt-4
   prompt: |-
     You are assessing a submitted answer on a given task based on a criterion. Here is the data:
@@ -263,3 +267,33 @@ variations:
       \ or {option_c}? \n\nAnswer:"
     value: "Question:\n{question_text}\nIs it: {option_a};  {option_b}; or {option_c}?\
       \ \n\nAnswer:"
+  - variation_id: zh_instruct_1
+    value_type: str
+    instantiated_value: |
+      请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。
+      问题：
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+      答案：
+    value: |
+      请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。
+      问题：
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+      答案：
+  - variation_id: zh_no_option_letter
+    value_type: str
+    instantiated_value: |
+      问题：
+      {question_text}
+      是 {option_a}，{option_b}，还是 {option_c}？
+      答案：
+    value: |
+      问题：
+      {question_text}
+      是 {option_a}，{option_b}，还是 {option_c}？
+      答案：

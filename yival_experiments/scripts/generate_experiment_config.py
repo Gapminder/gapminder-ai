@@ -35,7 +35,7 @@ def get_evaluators(ai_eval_sheet: AiEvalData):
         metric: Dict[str, Any] = dict()
         metric["evaluator_type"] = "individual"
         metric["metric_calculators"] = [{"method": "AVERAGE"}]
-        metric["name"] = "openai_prompt_based_evaluator"
+        metric["name"] = "gpt4_evaluator"
         metric["model_name"] = "gpt-4"
         metric["prompt"] = m.prompt
         metric["choices"] = m.choices.split(", ")
@@ -109,11 +109,13 @@ def main():
 
     with open(file_name, "w") as f:
         yaml.dump(config, stream=f, sort_keys=False, allow_unicode=True)
+        print("experiment saved to", file_name)
         f.close()
 
     # also create one for latest experiment
     with open(latest_experiment_path, "w") as f:
         yaml.dump(config, stream=f, sort_keys=False, allow_unicode=True)
+        print("experiment saved to", latest_experiment_path)
         f.close()
 
 
