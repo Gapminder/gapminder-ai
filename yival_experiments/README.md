@@ -19,10 +19,12 @@ poetry shell
 cd ../yival_experiment/
 cp ../automation-api/.env ./
 
+cd scripts
 python fetch_question.py
 ```
 
 This will fetch all enabled questions in the AI eval spreadsheet and create data/questions.csv.
+We also included all questions in data/questions_cn.csv and data/questions_en.csv
 
 Note: I tried to create a custom data reader to read data from AI eval
 spreadsheet directly, but then yival failed to run the experiment. I
@@ -46,6 +48,13 @@ This will output a pickle file in `output/experiment_name_0.pkl` which include a
 
 When the experiment is completed, Yival will start a web server to show the results.
 
+To update the experiment with the settings in AI Eval Spreadsheet, run the generate_experiment_config.py script.
+
+``` shell
+cd scripts
+python generate_experiment_config.py
+```
+
 ### Use Redis for caching
 
 The model compare function will cache LLM call results for the
@@ -55,15 +64,22 @@ exits. To do this, uncomment the line for redis cache in the top of
 `custom_configuration/model_compare.py` and set the host and password
 to your redis server.
 
-## 5. generate a result csv from output
+## 5. generate a result xlsx from output
 
-To convert the pickle to excel file and create csv files for summary report, you can run the script in output/.
+To convert the pickle files to excel file:
 
 ``` shell
-cd output
+cd scripts
 python generate_result.py
 ```
 
-This will generate `results.xlsx`, `result_comb_prompt.csv`, and `result_comb.csv` files in the output directory.
+This will read all pickles in output/ directory and will generate `results.xlsx` in output/ directory.
 
 TODO: We can add a custom evaluator in Yival to calculate the final scores.
+
+## 6. Calculate scores, upload results to AI Eval Spreadsheet
+
+Two notebooks in notebooks/ directory are provided for calculating scores.
+
+- final_scores.py: calculate a final score for each model and prompt
+- upload_to_ai_eval_sheet.py: generate the result table and upload to the `Latest Results` sheet in AI Eval Spreadsheet
