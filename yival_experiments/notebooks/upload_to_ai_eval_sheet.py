@@ -41,9 +41,9 @@ ai_eval_sheet = read_ai_eval_spreadsheet()
 questions = get_questions(ai_eval_sheet, include_all=True)
 
 
-# Possible Issue: the question is gone in Ai Eval spreadsheet, but it's there when we
-# ran the experiment.
-# so here is a function to detect if an input string is English or Chinese
+# Possible Issue: the question is gone or changed in Ai Eval spreadsheet
+# so we need to detect the language if we can't find that question.
+# Here is a function to detect if an input string is English or Chinese
 def suggest_language(q_text):
     lang = detect(q_text)
     if lang == 'en':
@@ -51,20 +51,29 @@ def suggest_language(q_text):
     else:
         return 'zh-CN'
 
+
 q_text_to_q_id_mapping = {}
 
 for _, row in raw_results[['question_id', 'question']].drop_duplicates().iterrows():
     q_text = row['question']
     q_id = row['question_id']
     for q, _ in questions:
-        if q_text.strip() == q.published_version_of_question.strip():
-            q_text_to_q_id_mapping[q_text] = (q.question_id, q.language)
+        if q_id == q.question_id:
+            if q_text.strip() == q.published_version_of_question.strip():
+                q_text_to_q_id_mapping[q_text] = (q.question_id, q.language)
+            else:
+                lang = suggest_language(q_text)
+                if lang == q.language:
+                    q_text_to_q_id_mapping[q_text] = (q.question_id, q.language)
+                    print(f"Q{q_id} have different question text.")
+                    print(q_text.strip())
+                    print(q.published_version_of_question.strip())
             break
     else:
-        print(q_id, q_text[:10], '...')
         lang = suggest_language(q_text)
-        print(lang)
+        print(q_id, q_text[:10], '...', 'does not exist, detected lang:', lang)
         q_text_to_q_id_mapping[q_text] = (q_id, lang)
+
 
 # q_text_to_q_id_mapping
 # len(q_text_to_q_id_mapping)
