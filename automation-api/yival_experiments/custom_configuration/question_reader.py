@@ -4,7 +4,7 @@ from question_reader_config import QuestionReaderConfig
 from yival.data.base_reader import BaseReader
 from yival.schemas.common_structures import InputData
 
-from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions
+from lib.pilot.helpers import get_questions, read_ai_eval_spreadsheet
 
 
 class QuestionReader(BaseReader):

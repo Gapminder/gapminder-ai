@@ -1,16 +1,18 @@
 # encoding: utf-8
 
+import random
+from http import HTTPStatus
+
+import dashscope
+from dashscope import Generation
 from tenacity import (
     retry,
     retry_if_exception_type,
     retry_if_not_result,
     stop_after_attempt,
 )
-from http import HTTPStatus
-import dashscope
-from dashscope import Generation
+
 from lib.config import read_config
-import random
 
 
 def response_is_ok(response):

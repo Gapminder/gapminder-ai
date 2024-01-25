@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Union
+
 from yival.schemas.evaluator_config import EvaluatorConfig, EvaluatorType
 
 
