@@ -25,7 +25,7 @@ Note: Yival requires a dataset to have a local file when the source type is set 
 
 ## 4. Generate experiment config
 
-To update the experiment with the settings in AI Eval Spreadsheet, run the generate_experiment_config.py script.
+To generate experiment configuration based on the current settings in the AI Eval Spreadsheet:
 
 ``` shell
 poe generate_experiment_config
