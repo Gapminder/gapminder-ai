@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict
 
 import yaml
@@ -13,6 +14,7 @@ from lib.pilot.helpers import (
     read_ai_eval_spreadsheet,
 )
 
+current_script_path = Path(__file__).parent
 
 # to make pyyaml's dumper generate good looking strings
 # https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data
@@ -25,9 +27,9 @@ def str_presenter(dumper, data):
 yaml.add_representer(str, str_presenter)
 # -
 
-base_configs_path = "../experiment_defaults.yaml"
-experiment_archive_path = "../experiment_archive/"
-latest_experiment_path = "../experiment_latest.yaml"
+base_configs_path = current_script_path / "../experiment_defaults.yaml"
+experiment_archive_path = current_script_path / "../experiment_archive/"
+latest_experiment_path = current_script_path / "../experiment_latest.yaml"
 
 
 def get_evaluators(ai_eval_sheet: AiEvalData):
@@ -92,7 +94,7 @@ def get_prompt_variations(ai_eval_sheet: AiEvalData):
 
 
 def main():
-    # load ai eval spreadsheet
+    print("Reading AI eval spreadsheet")
     sheet = read_ai_eval_spreadsheet()
     # load default config
     config = yaml.load(open(base_configs_path, "r"), Loader=yaml.Loader)

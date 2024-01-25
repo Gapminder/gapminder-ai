@@ -90,6 +90,8 @@ pytest = "pytest --cov=lib --verbose tests/"
 lint = { shell = "find . -type d -name '.venv*' -prune -o -type f -name '*.py' -print0 | xargs -0 pre-commit run --files" }
 install_kernel = "python -m ipykernel install --user --name gapminder-ai-automation-api"
 fetch_questions = "python yival_experiments/scripts/fetch_questions.py"
+generate_experiment_config = "python yival_experiments/scripts/generate_experiment_config.py"
+generate_results_file = "python yival_experiments/scripts/generate_results.py"
 
 [tool.poe]
 envfile = ".env"

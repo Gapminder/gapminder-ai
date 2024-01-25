@@ -1,9 +1,12 @@
 import os.path as osp
 import pickle
 from glob import glob
+from pathlib import Path
 
 import pandas as pd
 from yival.experiment.experiment_runner import Experiment
+
+current_script_path = Path(__file__).parent
 
 # all Yival experiment results are exported into pickle files.
 # you can use follow code to explore the structure.
@@ -18,7 +21,7 @@ from yival.experiment.experiment_runner import Experiment
 
 # We will combine all pickle files in output dir and calculate final scores.
 # In this script, we store all responses into an excel file.
-output_dir = "../output"
+output_dir = current_script_path / "../output"
 
 if __name__ == "__main__":
     output_list = []
