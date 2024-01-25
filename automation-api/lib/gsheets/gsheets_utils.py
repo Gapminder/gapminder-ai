@@ -3,7 +3,7 @@ from typing import Type
 import pandas as pd
 from gspread import Spreadsheet, Worksheet, WorksheetNotFound
 from gspread_dataframe import set_with_dataframe
-from pydantic.main import BaseModel
+from pydantic import BaseModel
 
 from lib.app_singleton import app_logger
 

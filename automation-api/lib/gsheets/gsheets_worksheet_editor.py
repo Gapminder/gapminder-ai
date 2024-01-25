@@ -5,7 +5,7 @@ import pandas as pd
 from gspread import Spreadsheet, Worksheet
 from gspread.utils import rowcol_to_a1
 from pandera import DataFrameModel
-from pydantic.main import BaseModel
+from pydantic import BaseModel
 
 from lib.gsheets.gsheets_utils import get_worksheet
 from lib.gsheets.gsheets_worksheet_data import GsheetsWorksheetData

@@ -4,7 +4,7 @@ from typing import Generic, Type, TypeVar
 import numpy as np
 import pandera as pa
 from pandera import DataFrameModel
-from pydantic.main import BaseModel
+from pydantic import BaseModel
 
 from lib.gsheets.gsheets_utils import get_pydantic_model_field_titles
 
@@ -36,11 +36,13 @@ class GsheetsWorksheetData(Generic[DfSchemaModel, RowSchemaModel]):
         self.df_schema = df_schema
         self.row_schema = row_schema
         self.header_row_number = header_row_number
+
         self.attributes_to_columns_map = get_pydantic_model_field_titles(
             self.row_schema
         )
         df = df.rename(columns=inv_dict(self.attributes_to_columns_map))
         df = self.replace_current_row_numbers_in_formulas(df)
+        # import ipdb; ipdb.set_trace()
         self.df = df_schema(df)
 
     def replace_current_row_numbers_in_formulas(

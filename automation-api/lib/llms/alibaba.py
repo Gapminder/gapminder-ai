@@ -6,7 +6,7 @@ import dashscope
 from dashscope import Generation
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms.base import LLM
-from pydantic import root_validator
+from langchain.pydantic_v1 import root_validator
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -71,7 +71,7 @@ class Alibaba(LLM):
         dashscope.api_key = dashscope_api_key
 
         if values["top_p"] is not None and not 0.0 <= values["top_p"] <= 1.0:
-            raise ValueError("max_output_tokens must be between 0 and 1")
+            raise ValueError("top_p must be between 0 and 1")
 
         if values["top_k"] is not None and not 1 <= values["top_k"] <= 100:
             raise ValueError("top_k must be between 1 and 100")
