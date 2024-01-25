@@ -31,30 +31,35 @@ To update the experiment with the settings in AI Eval Spreadsheet, run the gener
 poe generate_experiment_config
 ```
 
-This generates one experiment configuration per language and stores them in in `./yival_experiments/experiment_configurations/`.
+This generates one experiment configuration per language and stores them in `./yival_experiments/experiment_configurations/`.
 
-## 5. Run an experiment
+## 5. Start Redis for caching
 
-To run a particular experiment:
+The model compare function will cache LLM call results for the
+evaluator, and by default the cache is dictionary in memory.
+Redis is used by default for caching, so that it won't lose the cache when Yival
+exits. start a local redis server:
 
 ``` shell
-yival run --output ./yival_experiments/output/experiment_20231104_en ./yival_experiments/experiment_20231104_en.yaml
+poe start_redis
 ```
 
-This will output a pickle file in `output/experiment_20231104_en_0.pkl` which include all Experiment Results objects.
+Note: To not use Redis, comment the line for redis cache in the top
+of `custom_configuration/model_compare.py` and
+
+## 6. Run an experiment
+
+To run a particular experiment configuration (in `./yival_experiments/experiment_configurations/`):
+
+``` shell
+poe run_experiment --experiment=experiment_202401251706_en-US
+```
+
+This will output a pickle file in `./yival_experiments/output/experiment_202401251706_en-US_0.pkl` which includes all Experiment Results objects.
 
 When the experiment is completed, Yival will start a web server to show the results.
 
-### Use Redis for caching
-
-The model compare function will cache LLM call results for the
-evaluator, and by default the cache is dictionary in memory. You can
-also use Redis to caching, so that it won't lose the cache when Yival
-exits. To do this, uncomment the line for redis cache in the top of
-`custom_configuration/model_compare.py` and set the host and password
-to your redis server.
-
-## 6. Generate a result xlsx from output
+## 7. Generate a result xlsx from output
 
 To convert the pickle files to Excel file:
 
@@ -66,7 +71,7 @@ This will read all pickles in output/ directory and will generate `results.xlsx`
 
 TODO: We can add a custom evaluator in Yival to calculate the final scores.
 
-## 7. Calculate scores, upload results to AI Eval Spreadsheet
+## 8. Calculate scores, upload results to AI Eval Spreadsheet
 
 Two notebooks in notebooks/ directory are provided for calculating scores.
 

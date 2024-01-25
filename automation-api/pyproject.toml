@@ -92,6 +92,16 @@ install_kernel = "python -m ipykernel install --user --name gapminder-ai-automat
 fetch_questions = "python yival_experiments/scripts/fetch_questions.py"
 generate_experiment_config = "python yival_experiments/scripts/generate_experiment_config.py"
 generate_results_file = "python yival_experiments/scripts/generate_results.py"
+start_redis = "docker run --rm -p 26379:6379 --name local-redis redis redis-server --save 60 1 --loglevel warning"
+
+[tool.poe.tasks.run_experiment]
+shell = "cd yival_experiments && yival run --output ./output/$experiment ./experiment_configurations/$experiment.yaml"
+help = "Run a yival experiment with a given name."
+
+  [[tool.poe.tasks.run_experiment.args]]
+  name = "experiment"
+  help = "Name of the experiment to run"
+  options = ["-e", "--experiment"]
 
 [tool.poe]
 envfile = ".env"

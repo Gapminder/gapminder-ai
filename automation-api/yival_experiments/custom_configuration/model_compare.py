@@ -18,9 +18,9 @@ default_model_config = dict(model_name="gpt-3.5-turbo", params={"temperature": 0
 # set this to see verbose outputs
 litellm.set_verbose = True
 # enable caching in the evaluator.
-litellm.cache = litellm.Cache()
-# use Redis for caching: comment the line above and uncomment the line below.
-# litellm.cache = litellm.Cache(type="redis", host="127.0.0.1", port=6379)
+# litellm.cache = litellm.Cache()
+# to not use Redis for caching: uncomment the line above and comment the line below.
+litellm.cache = litellm.Cache(type="redis", host="127.0.0.1", port=26379)
 
 
 def model_compare(
