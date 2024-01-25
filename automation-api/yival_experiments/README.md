@@ -16,8 +16,8 @@ poetry shell
 ## 3. copy .env and fetch questions
 
 ``` shell
-cd ../yival_experiment/
-cp ../automation-api/.env ./
+cd yival_experiment/
+cp ../.env ./
 
 cd scripts
 python fetch_question.py
