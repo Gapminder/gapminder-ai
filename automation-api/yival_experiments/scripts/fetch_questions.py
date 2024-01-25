@@ -8,7 +8,6 @@ current_script_path = Path(__file__).parent
 
 
 correctness_map = {1: "Correct", 2: "Wrong", 3: "Very Wrong"}
-output_file = current_script_path / "../data/questions.csv"
 
 
 def main():
@@ -53,8 +52,16 @@ def main():
         output_list.append(output_item)
 
     output_df = pd.DataFrame.from_records(output_list)
-    output_df.to_csv(output_file, index=False)
-    print("Questions saved to", output_file)
+
+    # Grouping the DataFrame by 'language'
+    grouped = output_df.groupby("language")
+
+    for language, group in grouped:
+        # Constructing the filename for each language
+        output_file = current_script_path / f"../data/questions_{language}.csv"
+        # Saving each group to a separate CSV file
+        group.to_csv(output_file, index=False)
+        print(f"Questions in '{language}' language saved to {output_file}")
 
 
 if __name__ == "__main__":

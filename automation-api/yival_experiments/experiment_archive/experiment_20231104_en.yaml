@@ -9,7 +9,7 @@ custom_variation_generators:
 custom_function: model_compare.model_compare
 dataset:
   source_type: dataset
-  file_path: data/questions_en.csv
+  file_path: data/questions_en-US.csv
   reader: csv_reader
   reader_config:
     expected_result_column: correct_answer

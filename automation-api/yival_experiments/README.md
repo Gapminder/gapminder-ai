@@ -19,8 +19,7 @@ poetry shell
 poe fetch_questions
 ```
 
-This will fetch all enabled questions in the AI eval spreadsheet and create data/questions.csv.
-We also included all questions in data/questions_cn.csv and data/questions_en.csv
+This will fetch all enabled questions in the AI eval spreadsheet and create data/questions_{language}.csv files, one per language.
 
 Note: Yival requires a dataset to have a local file when the source type is set to "dataset". So we need to fetch it first.
 
