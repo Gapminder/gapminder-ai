@@ -1,39 +1,31 @@
 # How to run experiment
 
-## 1. install automation-api library
+## 1. Install automation-api library dependencies
 
 ``` shell
 cd /path/to/gapminder-ai/automation-api
 poetry install
 ```
 
-## 2. enable poetry shell
+## 2. Enable poetry shell
 
 ``` shell
 poetry shell
 ```
 
-## 3. copy .env and fetch questions
+## 3. Fetch questions
 
 ``` shell
-cd yival_experiment/
-cp ../.env ./
-
-cd scripts
-python fetch_question.py
+poe fetch_questions
 ```
 
 This will fetch all enabled questions in the AI eval spreadsheet and create data/questions.csv.
 We also included all questions in data/questions_cn.csv and data/questions_en.csv
 
-Note: I tried to create a custom data reader to read data from AI eval
-spreadsheet directly, but then yival failed to run the experiment. I
-checked and found that Yival requires a dataset to have a local
-file when the source type is set to "dataset". So we need to fetch it first.
+Note: Yival requires a dataset to have a local file when the source type is set to "dataset". So we need to fetch it first.
 
-(Maybe, we can solve it by changing the source type to "machine generated")
+## 4. Generate experiment config
 
-## 4. run the experiment
 
 The full experiment configuration is [here](https://github.com/Gapminder/gapminder-ai/blob/yival/yival_experiments/experiment_latest.yaml)
 
