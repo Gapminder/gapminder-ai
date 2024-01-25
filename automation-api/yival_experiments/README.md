@@ -52,10 +52,11 @@ of `custom_configuration/model_compare.py` and
 To run a particular experiment configuration (in `./yival_experiments/experiment_configurations/`):
 
 ``` shell
-poe run_experiment --experiment=experiment_202401251706_en-US
+poe run_experiment --experiment=experiment_name
 ```
 
-This will output a pickle file in `./yival_experiments/output/experiment_202401251706_en-US_0.pkl` which includes all Experiment Results objects.
+This will use the configuration experiment_name.yaml in `./yival_experiments/experiment_configurations/`
+and output a pickle file in `./yival_experiments/output/experiment_name_en-US_0.pkl` which includes all Experiment Results objects.
 
 When the experiment is completed, Yival will start a web server to show the results.
 
