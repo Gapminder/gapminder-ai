@@ -38,7 +38,7 @@ The full experiment configuration is [here](https://github.com/Gapminder/gapmind
 To run it:
 
 ``` shell
-yival run --output ./yival_experiments/output/experiment_name ./yival_experiments/experiment_latest.yaml
+yival run --output ./yival_experiments/output/experiment_20231104_en ./yival_experiments/experiment_20231104_en.yaml
 # You can replace experiment_name with other names.
 ```
 
