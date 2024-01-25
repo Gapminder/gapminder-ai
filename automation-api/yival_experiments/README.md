@@ -31,18 +31,17 @@ To update the experiment with the settings in AI Eval Spreadsheet, run the gener
 poe generate_experiment_config
 ```
 
-## 5. Run the experiment
+This generates one experiment configuration per language and stores them in in `./yival_experiments/experiment_configurations/`.
 
-The full experiment configuration is [here](https://github.com/Gapminder/gapminder-ai/blob/yival/yival_experiments/experiment_latest.yaml)
+## 5. Run an experiment
 
-To run it:
+To run a particular experiment:
 
 ``` shell
 yival run --output ./yival_experiments/output/experiment_20231104_en ./yival_experiments/experiment_20231104_en.yaml
-# You can replace experiment_name with other names.
 ```
 
-This will output a pickle file in `output/experiment_name_0.pkl` which include all Experiment Results objects.
+This will output a pickle file in `output/experiment_20231104_en_0.pkl` which include all Experiment Results objects.
 
 When the experiment is completed, Yival will start a web server to show the results.
 
