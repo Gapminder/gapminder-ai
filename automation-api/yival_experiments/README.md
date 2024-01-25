@@ -73,7 +73,15 @@ TODO: We can add a custom evaluator in Yival to calculate the final scores.
 
 ## 8. Calculate scores, upload results to AI Eval Spreadsheet
 
-Two notebooks in notebooks/ directory are provided for calculating scores.
+Two notebooks in `./yival_experiments/notebooks/` directory are provided for calculating scores.
 
 - final_scores.py: calculate a final score for each model and prompt
 - upload_to_ai_eval_sheet.py: generate the result table and upload to the `Latest Results` sheet in AI Eval Spreadsheet
+
+Start Jupyter:
+
+```shell
+poe notebooks
+```
+
+Then open the notebooks in the browser and run them.
