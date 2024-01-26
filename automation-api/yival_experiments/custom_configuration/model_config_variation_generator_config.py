@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from yival.schemas.varation_generator_configs import BaseVariationGeneratorConfig
+from typing import Any, Dict, List, Optional
 
-from typing import Optional, List, Dict, Any
+from yival.schemas.varation_generator_configs import BaseVariationGeneratorConfig
 
 
 @dataclass

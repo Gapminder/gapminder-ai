@@ -60,6 +60,9 @@ dashscope = "^1.6.0"
 yival = {git = "https://github.com/semio/YiVal.git#master"}
 redis = "^5.0.1"
 
+# gemini
+google-cloud-aiplatform = "^1.39.0"
+
 # unsorted (new deps gets listed here)
 langdetect = "^1.0.9"
 
@@ -86,6 +89,22 @@ test = ["pytest", "lint"]
 pytest = "pytest --cov=lib --verbose tests/"
 lint = { shell = "find . -type d -name '.venv*' -prune -o -type f -name '*.py' -print0 | xargs -0 pre-commit run --files" }
 install_kernel = "python -m ipykernel install --user --name gapminder-ai-automation-api"
+set_jupytext_as_default_viewer = "jupytext-config set-default-viewer"
+jupyter = 'jupyter-notebook'
+notebooks = ["install_kernel", "set_jupytext_as_default_viewer", "jupyter"]
+fetch_questions = "python yival_experiments/scripts/fetch_questions.py"
+generate_experiment_config = "python yival_experiments/scripts/generate_experiment_config.py"
+generate_results_file = "python yival_experiments/scripts/generate_results.py"
+start_redis = "docker run --rm -p 26379:6379 --name local-redis redis redis-server --save 60 1 --loglevel warning"
+
+[tool.poe.tasks.run_experiment]
+shell = "cd yival_experiments && yival run --output ./output/$experiment ./experiment_configurations/$experiment.yaml"
+help = "Run a yival experiment with a given name."
+
+  [[tool.poe.tasks.run_experiment.args]]
+  name = "experiment"
+  help = "Name of the experiment to run"
+  options = ["-e", "--experiment"]
 
 [tool.poe]
 envfile = ".env"

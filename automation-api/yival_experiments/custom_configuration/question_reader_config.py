@@ -1,4 +1,5 @@
 from dataclasses import asdict, dataclass
+
 from yival.data.base_reader import BaseReaderConfig
 
 

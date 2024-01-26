@@ -1,8 +1,8 @@
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from model_config_wrapper_config import ModelConfigWrapperConfig
-from yival.wrappers.base_wrapper import BaseWrapper
 from yival.experiment.experiment_runner import ExperimentState
+from yival.wrappers.base_wrapper import BaseWrapper
 
 
 class ModelConfigWrapper(BaseWrapper):

@@ -13,9 +13,8 @@ from typing import Any, Dict, Iterable, List, Optional, Union
 
 # for exponential backoff
 import litellm
-from tenacity import before_sleep_log, retry, stop_after_attempt, wait_random
-
 from gpt4_evaluator_config import GPT4EvaluatorConfig
+from tenacity import before_sleep_log, retry, stop_after_attempt, wait_random
 from yival.evaluators.base_evaluator import BaseEvaluator
 from yival.schemas.evaluator_config import (
     EvaluatorOutput,

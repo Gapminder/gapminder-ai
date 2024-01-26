@@ -1,12 +1,11 @@
 from dataclasses import asdict, dataclass, field
 from typing import Any, Iterator, List, Optional
 
+from model_config_variation_generator_config import ModelConfigVariationGeneratorConfig
+
 # from yival.schemas.experiment_config import WrapperVariation
 # ^ this is not working for dict so I write my own version
-
 from yival.variation_generators.base_variation_generator import BaseVariationGenerator
-
-from model_config_variation_generator_config import ModelConfigVariationGeneratorConfig
 
 
 @dataclass

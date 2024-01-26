@@ -233,7 +233,13 @@ def get_model_configs(
     result = []
     for mc in model_configs:
         model_df = models_df.loc[models_df["model_id"] == mc.model_id]
-        model = class_objects_from_df(model_df, GenAiModel)[0]
+        try:
+            model = class_objects_from_df(model_df, GenAiModel)[0]
+        except IndexError as e:
+            logger.warning(
+                f"model {mc.model_id} not found in gen_ai_models sheet. Add it an retry."
+            )
+            raise e
         result.append((model, mc))
     return result
 

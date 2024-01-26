@@ -6,14 +6,10 @@ custom_variation_generators:
   model_config_generator:
     class: ./custom_configuration/model_config_variation_generator.ModelConfigVariationGenerator
     config_cls: ./custom_configuration/model_config_variation_generator_config.ModelConfigVariationGeneratorConfig
-custom_evaluators:
-  gpt4_evaluator:
-    class: ./custom_configuration/gpt4_evaluator.GPT4Evaluator
-    config_cls: ./custom_configuration/gpt4_evaluator_config.GPT4EvaluatorConfig
 custom_function: model_compare.model_compare
 dataset:
   source_type: dataset
-  file_path: data/questions.csv
+  file_path: data/questions_en-US.csv
   reader: csv_reader
   reader_config:
     expected_result_column: correct_answer
@@ -22,7 +18,7 @@ evaluators:
 - evaluator_type: individual
   metric_calculators:
   - method: AVERAGE
-  name: gpt4_evaluator
+  name: openai_prompt_based_evaluator
   model_name: gpt-4
   prompt: |-
     You are assessing a submitted answer on a given task based on a criterion. Here is the data:
@@ -81,36 +77,6 @@ variations:
       model_id: palm/text-bison
       params:
         temperature: 0.01
-      round: 5
-    - vendor: Alibaba
-      model_id: qwen-plus
-      params:
-        top_p: 0.1
-        top_k: 100
-      round: 1
-    - vendor: Alibaba
-      model_id: qwen-plus
-      params:
-        top_p: 0.1
-        top_k: 100
-      round: 2
-    - vendor: Alibaba
-      model_id: qwen-plus
-      params:
-        top_p: 0.1
-        top_k: 100
-      round: 3
-    - vendor: Alibaba
-      model_id: qwen-plus
-      params:
-        top_p: 0.1
-        top_k: 100
-      round: 4
-    - vendor: Alibaba
-      model_id: qwen-plus
-      params:
-        top_p: 0.1
-        top_k: 100
       round: 5
     - vendor: Meta
       model_id: replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3
@@ -267,33 +233,3 @@ variations:
       \ or {option_c}? \n\nAnswer:"
     value: "Question:\n{question_text}\nIs it: {option_a};  {option_b}; or {option_c}?\
       \ \n\nAnswer:"
-  - variation_id: zh_instruct_1
-    value_type: str
-    instantiated_value: |
-      请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。
-      问题：
-      {question_text}
-      A. {option_a}
-      B. {option_b}
-      C. {option_c}
-      答案：
-    value: |
-      请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。
-      问题：
-      {question_text}
-      A. {option_a}
-      B. {option_b}
-      C. {option_c}
-      答案：
-  - variation_id: zh_no_option_letter
-    value_type: str
-    instantiated_value: |
-      问题：
-      {question_text}
-      是 {option_a}，{option_b}，还是 {option_c}？
-      答案：
-    value: |
-      问题：
-      {question_text}
-      是 {option_a}，{option_b}，还是 {option_c}？
-      答案：

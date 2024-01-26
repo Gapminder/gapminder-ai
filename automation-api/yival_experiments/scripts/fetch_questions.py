@@ -1,13 +1,19 @@
+from pathlib import Path
+
 import pandas as pd
-from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions
+
+from lib.pilot.helpers import get_questions, read_ai_eval_spreadsheet
+
+current_script_path = Path(__file__).parent
 
 
 correctness_map = {1: "Correct", 2: "Wrong", 3: "Very Wrong"}
-output_file = "../data/questions.csv"
 
 
 def main():
+    print("Reading AI eval spreadsheet")
     sheet = read_ai_eval_spreadsheet()
+    print("Getting questions")
     questions = get_questions(sheet)
 
     output_list = []
@@ -46,8 +52,16 @@ def main():
         output_list.append(output_item)
 
     output_df = pd.DataFrame.from_records(output_list)
-    output_df.to_csv(output_file, index=False)
-    print("questions saved to", output_file)
+
+    # Grouping the DataFrame by 'language'
+    grouped = output_df.groupby("language")
+
+    for language, group in grouped:
+        # Constructing the filename for each language
+        output_file = current_script_path / f"../data/questions_{language}.csv"
+        # Saving each group to a separate CSV file
+        group.to_csv(output_file, index=False)
+        print(f"Questions in '{language}' language saved to {output_file}")
 
 
 if __name__ == "__main__":
