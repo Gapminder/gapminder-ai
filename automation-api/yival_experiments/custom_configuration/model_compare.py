@@ -1,7 +1,6 @@
 import litellm
 from litellm import completion
 from llms.alibaba_complete import llm_complete as alibaba_llm_complete
-from llms.palm_completion import safety_settings
 from model_config_wrapper import ModelConfigWrapper
 from yival.logger.token_logger import TokenLogger
 from yival.schemas.experiment_config import MultimodalOutput
@@ -78,7 +77,7 @@ def model_compare(
             output=completion(
                 model=model["model_id"],
                 messages=messages,
-                safety_settings=safety_settings,
+                # safety_settings=safety_settings,
                 caching=False,
                 num_retries=10,
                 request_timeout=60,
