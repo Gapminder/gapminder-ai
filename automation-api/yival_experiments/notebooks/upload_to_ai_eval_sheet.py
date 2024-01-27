@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: gapminder-ai-automation-api
 #     language: python
@@ -27,7 +27,7 @@ from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions, get_model
 from lib.config import read_config
 
 # load env
-read_config()
+config = read_config()
 
 
 raw_results = pd.read_excel('../output/results.xlsx')
@@ -163,7 +163,7 @@ def get_grade(dictionary):
         return max_keys[0]
 
 # FIXME: remove date from result
-date = datetime(2023, 11, 4)
+date = datetime(2024, 1, 26)
 
 result_full = result_pct.with_columns(
     pl.struct(pl.col(['fail', 'very_wrong', 'wrong', 'correct'])).map_elements(get_grade).alias('result'),
@@ -187,3 +187,5 @@ backup.columns
 result_full_df = result_full_df[backup.columns]
 
 ai_eval_sheet.evaluation_results.replace_data(result_full_df)
+
+
