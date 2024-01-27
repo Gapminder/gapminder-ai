@@ -65,7 +65,7 @@ When the experiment is completed, Yival will start a web server to show the resu
 To convert the pickle files to Excel file:
 
 ``` shell
-poe generate_results_file
+poe generate_result
 ```
 
 This will read all pickles in output/ directory and will generate `results.xlsx` in output/ directory.
