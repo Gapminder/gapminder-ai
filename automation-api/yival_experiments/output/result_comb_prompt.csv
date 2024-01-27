@@ -1,0 +1,24 @@
+model_id,model_params,prompt_template,correctness_with_indecisive,correctness_without_indecisive
+gemini/gemini-pro,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",63.66906474820144,63.898916967509024
+gemini/gemini-pro,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",53.23741007194245,53.23741007194245
+gemini/gemini-pro,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",50.0,50.0
