@@ -1,32 +1,63 @@
-import google.generativeai as palm
+from google import generativeai
 
-safety_settings = [
+safety_settings_old_categories = [
     {
-        "category": palm.types.HarmCategory.HARM_CATEGORY_TOXICITY,
-        "threshold": palm.types.HarmBlockThreshold.BLOCK_NONE,
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_TOXICITY,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
     },
     {
-        "category": palm.types.HarmCategory.HARM_CATEGORY_SEXUAL,
-        "threshold": palm.types.HarmBlockThreshold.BLOCK_NONE,
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_SEXUAL,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
     },
     {
-        "category": palm.types.HarmCategory.HARM_CATEGORY_MEDICAL,
-        "threshold": palm.types.HarmBlockThreshold.BLOCK_NONE,
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_MEDICAL,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
     },
     {
-        "category": palm.types.HarmCategory.HARM_CATEGORY_DEROGATORY,
-        "threshold": palm.types.HarmBlockThreshold.BLOCK_NONE,
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_DEROGATORY,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
     },
     {
-        "category": palm.types.HarmCategory.HARM_CATEGORY_DANGEROUS,
-        "threshold": palm.types.HarmBlockThreshold.BLOCK_NONE,
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_DANGEROUS,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
     },
     {
-        "category": palm.types.HarmCategory.HARM_CATEGORY_UNSPECIFIED,
-        "threshold": palm.types.HarmBlockThreshold.BLOCK_NONE,
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_UNSPECIFIED,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
     },
     {
-        "category": palm.types.HarmCategory.HARM_CATEGORY_VIOLENCE,
-        "threshold": palm.types.HarmBlockThreshold.BLOCK_NONE,
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_VIOLENCE,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
+    },
+]
+
+safety_settings_new_categories = [
+    {
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_TOXICITY,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_SEXUAL,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_MEDICAL,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_DEROGATORY,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_DANGEROUS,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_UNSPECIFIED,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        "category": generativeai.types.HarmCategory.HARM_CATEGORY_VIOLENCE,
+        "threshold": generativeai.types.HarmBlockThreshold.BLOCK_NONE,
     },
 ]
