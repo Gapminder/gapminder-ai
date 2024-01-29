@@ -135,7 +135,7 @@ class GPT4Evaluator(BaseEvaluator):
             choices=choices_to_string(self.config.choices)
         )
         response = completion_with_backpff(
-            model="gpt-4",
+            model=self.config.model_name,
             messages=prompt,
             temperature=0.0,
             n=1,
