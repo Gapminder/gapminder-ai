@@ -1,4 +1,55 @@
 model_id,model_params,prompt_template,correctness_with_indecisive,correctness_without_indecisive
+gpt-4-1106-preview,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",82.37410071942446,84.50184501845018
+gpt-4-0125-preview,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",84.17266187050359,84.47653429602889
+gpt-4-0125-preview,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",79.85611510791367,79.85611510791367
+gpt-4-1106-preview,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",78.77697841726618,79.34782608695652
+gpt-4-1106-preview,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",76.61870503597122,76.61870503597122
+gpt-4-0125-preview,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",74.46043165467626,74.46043165467626
+gpt-3.5-turbo-1106,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",65.10791366906474,65.81818181818181
 gemini/gemini-pro,{'temperature': 0.01},"Question:
 {question_text}
 Is it: {option_a};  {option_b}; or {option_c}? 
@@ -22,3 +73,21 @@ B. {option_b}
 C. {option_c}
 
 Answer:",50.0,50.0
+gpt-3.5-turbo-1106,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",37.05035971223021,37.18411552346571
+gpt-3.5-turbo-1106,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",35.25179856115108,35.25179856115108
