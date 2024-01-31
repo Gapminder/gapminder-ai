@@ -36,7 +36,9 @@ raw_results
 
 # double check the numbers
 n = raw_results.groupby('question_id')['question'].count()
-n.describe()  # the count should be same for all questions
+# if we asked the question to all models, the
+# count should be same for all questions
+n.describe()
 
 
 # load AI Eval Spreadsheet
@@ -94,15 +96,10 @@ en_ids = [x[0] for x in en]
 cn = list(filter(lambda v: v[1] == 'zh-CN', q_text_to_q_id_mapping.values()))
 cn_ids = [x[0] for x in cn]
 
+# this should output an empty set if English question set
+# and Chinese question set are the same.
+# if it's not, there's possible an issue.
 set(en_ids) - set(cn_ids)
-# => {'55'}.
-# I checked and found the issue: question 55 was translated but
-# somehow it was still english in Contentful.
-
-raw_results[raw_results.question_id == '55']['question']
-
-# we don't need to fix that I think, the language of the question will be en-US
-# and we will have a datapoint for asking English question to Qwen model.
 
 
 # create a mapping from model_id, parameters -> model_config id
@@ -119,7 +116,7 @@ for model_id, params in raw_results[['model_id', 'model_params']].drop_duplicate
          print(model_id, params, "not found")
 
 
-# model_id_params_to_model_config_mapping
+model_id_params_to_model_config_mapping
 
 # create a mapping from prompt_variant_text -> prompt_variant_id
 prompt_variants = get_prompt_variants(ai_eval_sheet, include_all=True)
@@ -137,7 +134,7 @@ for prompt_text in raw_results['prompt_template'].unique():
             prompt_text_to_prompt_id_mapping[prompt_text] = prompt.variation_id
             break
 
-# prompt_text_to_prompt_id_mapping
+prompt_text_to_prompt_id_mapping
 
 # convert the raw result to a dataframe with labelled data.
 result = raw_results.copy()
@@ -157,11 +154,13 @@ result['model_conf_id'] = [model_id_params_to_model_config_mapping[
 result = pl.DataFrame(result)
 result
 
+# +
 # result.group_by(
 #     ['question_id', 'language', 'prompt_variant_id', 'model_conf_id']
 # ).agg(
 #     pl.col('correctness').value_counts()
 # )
+# -
 
 result_counts = result.group_by(
     ['question_id', 'language', 'prompt_variant_id', 'model_conf_id']
