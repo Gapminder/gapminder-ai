@@ -1,14 +1,14 @@
-model_id,model_params,prompt_template,correctness_with_indecisive,correctness_without_indecisive
-gpt-4-1106-preview,{'temperature': 0.01},"Question:
-{question_text}
-Is it: {option_a};  {option_b}; or {option_c}? 
-
-Answer:",82.37410071942446,84.50184501845018
+model_id,model_params,prompt_template,correct_rate_with_indecisive
 gpt-4-0125-preview,{'temperature': 0.01},"Question:
 {question_text}
 Is it: {option_a};  {option_b}; or {option_c}? 
 
-Answer:",84.17266187050359,84.47653429602889
+Answer:",84.17266187050359
+gpt-4-1106-preview,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",82.37410071942446
 gpt-4-0125-preview,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
 
 Question:
@@ -17,7 +17,7 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 
-Answer:",79.85611510791367,79.85611510791367
+Answer:",79.85611510791367
 gpt-4-1106-preview,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
 
 Question:
@@ -26,7 +26,7 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 
-Answer:",78.77697841726618,79.34782608695652
+Answer:",78.77697841726618
 gpt-4-1106-preview,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
 
 Question:
@@ -35,12 +35,7 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 
-Answer:",76.61870503597122,76.61870503597122
-qwen-max-1201,{'temperature': 0.01},"问题：
-{question_text}
-是 {option_a}，{option_b}，还是 {option_c}？
-答案：
-",64.74820143884892,75.0
+Answer:",76.61870503597122
 gpt-4-0125-preview,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
 
 Question:
@@ -49,7 +44,17 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 
-Answer:",74.46043165467626,74.46043165467626
+Answer:",74.46043165467626
+gpt-3.5-turbo-1106,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",65.10791366906474
+qwen-max-1201,{'temperature': 0.01},"问题：
+{question_text}
+是 {option_a}，{option_b}，还是 {option_c}？
+答案：
+",64.74820143884892
 qwen-max-1201,{'temperature': 0.01},"请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。
 问题：
 {question_text}
@@ -57,7 +62,12 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 答案：
-",64.38848920863309,72.17741935483872
+",64.38848920863309
+gemini/gemini-pro,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",63.66906474820144
 qwen-max-1201,{'temperature': 0.01},"以下单选题，请你从 A，B，C 中选择一个正确的答案。如果你不知道哪个答案正确，请回答你认为最接近的答案。
 问题：
 {question_text}
@@ -65,17 +75,7 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 答案：
-",62.23021582733813,67.31517509727627
-gpt-3.5-turbo-1106,{'temperature': 0.01},"Question:
-{question_text}
-Is it: {option_a};  {option_b}; or {option_c}? 
-
-Answer:",65.10791366906474,65.81818181818181
-gemini/gemini-pro,{'temperature': 0.01},"Question:
-{question_text}
-Is it: {option_a};  {option_b}; or {option_c}? 
-
-Answer:",63.66906474820144,63.898916967509024
+",62.23021582733813
 gemini/gemini-pro,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
 
 Question:
@@ -84,7 +84,7 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 
-Answer:",53.23741007194245,53.23741007194245
+Answer:",53.23741007194245
 gemini/gemini-pro,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
 
 Question:
@@ -93,7 +93,7 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 
-Answer:",50.0,50.0
+Answer:",50.0
 gpt-3.5-turbo-1106,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
 
 Question:
@@ -102,7 +102,7 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 
-Answer:",37.05035971223021,37.18411552346571
+Answer:",37.05035971223021
 gpt-3.5-turbo-1106,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
 
 Question:
@@ -111,4 +111,4 @@ A. {option_a}
 B. {option_b}
 C. {option_c}
 
-Answer:",35.25179856115108,35.25179856115108
+Answer:",35.25179856115108
