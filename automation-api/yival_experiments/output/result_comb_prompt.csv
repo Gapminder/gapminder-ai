@@ -36,6 +36,11 @@ B. {option_b}
 C. {option_c}
 
 Answer:",76.61870503597122,76.61870503597122
+qwen-max-1201,{'temperature': 0.01},"问题：
+{question_text}
+是 {option_a}，{option_b}，还是 {option_c}？
+答案：
+",64.74820143884892,75.0
 gpt-4-0125-preview,{'temperature': 0.01},"Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.
 
 Question:
@@ -45,6 +50,22 @@ B. {option_b}
 C. {option_c}
 
 Answer:",74.46043165467626,74.46043165467626
+qwen-max-1201,{'temperature': 0.01},"请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。
+问题：
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+答案：
+",64.38848920863309,72.17741935483872
+qwen-max-1201,{'temperature': 0.01},"以下单选题，请你从 A，B，C 中选择一个正确的答案。如果你不知道哪个答案正确，请回答你认为最接近的答案。
+问题：
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+答案：
+",62.23021582733813,67.31517509727627
 gpt-3.5-turbo-1106,{'temperature': 0.01},"Question:
 {question_text}
 Is it: {option_a};  {option_b}; or {option_c}? 
