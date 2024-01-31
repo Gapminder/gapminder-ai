@@ -34,6 +34,11 @@ raw_results = pd.read_excel('../output/results.xlsx')
 
 raw_results
 
+# double check the numbers
+n = raw_results.groupby('question_id')['question'].count()
+n.describe()  # the count should be same for all questions
+
+
 # load AI Eval Spreadsheet
 ai_eval_sheet = read_ai_eval_spreadsheet()
 
@@ -57,26 +62,48 @@ q_text_to_q_id_mapping = {}
 for _, row in raw_results[['question_id', 'question']].drop_duplicates().iterrows():
     q_text = row['question']
     q_id = row['question_id']
+    matched = False
     for q, _ in questions:
         if q_id == q.question_id:
             if q_text.strip() == q.published_version_of_question.strip():
+                matched = True
                 q_text_to_q_id_mapping[q_text] = (q.question_id, q.language)
             else:
                 lang = suggest_language(q_text)
                 if lang == q.language:
+                    matched = True
                     q_text_to_q_id_mapping[q_text] = (q.question_id, q.language)
                     print(f"Q{q_id} have different question text.")
                     print(q_text.strip())
                     print(q.published_version_of_question.strip())
+        if matched:
             break
-    else:
+
+    if not matched:
         lang = suggest_language(q_text)
         print(q_id, q_text[:10], '...', 'does not exist, detected lang:', lang)
         q_text_to_q_id_mapping[q_text] = (q_id, lang)
 
 
 # q_text_to_q_id_mapping
-# len(q_text_to_q_id_mapping)
+len(q_text_to_q_id_mapping)
+
+# double check: numbers of english questions and chinese questions
+en = list(filter(lambda v: v[1] == 'en-US', q_text_to_q_id_mapping.values()))
+en_ids = [x[0] for x in en]
+cn = list(filter(lambda v: v[1] == 'zh-CN', q_text_to_q_id_mapping.values()))
+cn_ids = [x[0] for x in cn]
+
+set(en_ids) - set(cn_ids)
+# => {'55'}.
+# I checked and found the issue: question 55 was translated but
+# somehow it was still english in Contentful.
+
+raw_results[raw_results.question_id == '55']['question']
+
+# we don't need to fix that I think, the language of the question will be en-US
+# and we will have a datapoint for asking English question to Qwen model.
+
 
 # create a mapping from model_id, parameters -> model_config id
 model_configs = get_model_configs(ai_eval_sheet, include_all=False)
@@ -187,5 +214,3 @@ backup.columns
 result_full_df = result_full_df[backup.columns]
 
 ai_eval_sheet.evaluation_results.replace_data(result_full_df)
-
-
