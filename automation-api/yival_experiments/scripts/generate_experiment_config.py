@@ -144,7 +144,8 @@ def main():
             # create configuration yaml file
             os.makedirs(experiment_configurations_path, exist_ok=True)
             now = datetime.now()
-            experiment_name = f'experiment_{now.strftime("%Y%m%d%H%M")}_{model_id.replace("/", "_")}_{prompt_variation_language}'
+            yival_sanitized_model_id = model_id.replace("/", "_").replace(".", "-")
+            experiment_name = f'experiment_{now.strftime("%Y%m%d%H%M")}_{yival_sanitized_model_id}_{prompt_variation_language}'
             file_name = f"{experiment_name}.yaml"
             output_file = experiment_configurations_path / file_name
             with open(output_file, "w") as f:
