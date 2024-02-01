@@ -68,7 +68,8 @@ model_correctness = output_df.groupby(["question_id", "model_id", "model_params"
 # let's use polars. The syntax is easier than pandas
 model_correctness = pl.DataFrame(model_correctness.reset_index())
 
-# calculate model correctness
+# ## correct rate by model
+
 # TODO: I think it's possible to convert these into a Yival Evaluator.
 # 1. the correct rate for all answers
 out1 = (
@@ -125,7 +126,8 @@ out3
 
 out3.write_csv('../output/response_rate.csv')
 
-# break down the score by prompts
+# ## correct rates by prompts and model
+
 model_correctness_prompt = output_df.groupby(
     ["question_id", "model_id", "model_params", "prompt_template"]
 )["correctness"].apply(lambda x: correctness(x.values))
@@ -186,3 +188,58 @@ out3 = (
 out3
 
 out3.write_csv('../output/response_rate_prompt.csv')
+
+# ## correct rates break down by prompt.
+
+prompt_templates = output_df['prompt_template'].unique()
+
+prompt_templates
+
+prompt_id_mappings = dict(
+    zip(prompt_templates, ['prompt1', 'prompt3', 'prompt2', 'prompt1', 'prompt3', 'prompt2'])
+)
+
+prompt_id_mappings
+
+output_df['prompt_id'] = output_df['prompt_template'].map(prompt_id_mappings)
+
+prompt_correctness = output_df.groupby(
+    ["question_id", "prompt_id"]
+)["correctness"].apply(lambda x: correctness(x.values))
+
+
+prompt_correctness = pl.DataFrame(prompt_correctness.reset_index())
+
+prompt_correctness
+
+out1 = prompt_correctness.group_by(['prompt_id']).agg(
+    pl.col("correctness").filter(pl.col("correctness") == 3).count()
+    / pl.col("correctness").count()
+    * 100
+).select(
+    pl.col(['prompt_id']),
+    pl.col('correctness').alias("correct_rate_with_indecisive")
+)
+
+out1
+
+out1.write_csv('../output/correct_rate_with_indecisive_by_prompt.csv')
+
+
+out2 = (
+    prompt_correctness
+    .filter(pl.col("correctness") != 0)
+    .group_by(['prompt_id'])
+    .agg(
+        pl.col("correctness").filter(pl.col("correctness") == 3).count()
+        / pl.col("correctness").count()
+        * 100
+    )
+).select(
+    pl.col(['prompt_id']),
+    pl.col('correctness').alias("correct_rate_without_indecisive")
+)
+
+out2
+
+out2.write_csv('../output/correct_rate_without_indecisive_by_prompt.csv')
