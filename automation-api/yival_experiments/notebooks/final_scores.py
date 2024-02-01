@@ -193,7 +193,7 @@ out3.write_csv('../output/response_rate_prompt.csv')
 
 prompt_templates = output_df['prompt_template'].unique()
 
-prompt_templates
+prompt_templates.tolist()
 
 # copy
 prompt_templates_lst = [
@@ -216,7 +216,7 @@ prompt_id_mappings = dict(
 
 prompt_id_mappings
 
-output_df['prompt_id'] = output_df['prompt_template'].map(prompt_id_mappings)
+output_df['prompt_id'] = output_df['prompt_template'].map(lambda x: prompt_id_mappings[x])
 
 prompt_correctness = output_df.groupby(
     ["question_id", "prompt_id"]
