@@ -19,7 +19,6 @@ def read_config() -> dict[str, str]:
             raise Exception(f"The mandatory environment variable {key} is empty")
     # Optional configuration
     for key in [
-        "OPENAI_API_DEV_KEY",
         "SERVICE_ACCOUNT_CREDENTIALS",
         "AI_EVAL_SPREADSHEET_ID",
         "AI_EVAL_DEV_SPREADSHEET_ID",
