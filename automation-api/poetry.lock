@@ -3424,7 +3424,7 @@ proxy = ["apscheduler (>=3.10.4,<4.0.0)", "backoff", "fastapi (>=0.104.1,<0.105.
 type = "git"
 url = "https://github.com/Gapminder/litellm"
 reference = "gemini-provider-safety-settings"
-resolved_reference = "f2450c4b4c449fa5e098366102472ab7ae09c5d3"
+resolved_reference = "4b688e000468cd262a388dff7bfc8889cff7354b"
 
 [[package]]
 name = "lxml"
