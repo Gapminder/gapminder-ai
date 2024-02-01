@@ -196,8 +196,7 @@ prompt_templates = output_df['prompt_template'].unique()
 prompt_templates
 
 # copy
-prompt_templates_lst =
-[
+prompt_templates_lst = [
     "Please answer this multiple choices question. If you can't determine the answer please make your best guess:\n\nQuestion:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n\nAnswer:",
     "Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.\n\nQuestion:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n\nAnswer:",
     'Question:\n{question_text}\nIs it: {option_a};  {option_b}; or {option_c}? \n\nAnswer:',
@@ -207,12 +206,12 @@ prompt_templates_lst =
 ]
 
 prompt_id_mappings = dict(
-    zip(prompt_templates, ['prompt1',
-                           'prompt3',
-                           'prompt2',
-                           'prompt1',
-                           'prompt3',
-                           'prompt2'])
+    zip(prompt_templates_lst, ['prompt1',
+                               'prompt3',
+                               'prompt2',
+                               'prompt1',
+                               'prompt3',
+                               'prompt2'])
 )
 
 prompt_id_mappings
