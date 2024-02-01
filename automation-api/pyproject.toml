@@ -41,7 +41,7 @@ types-requests = "^2.28.11.6"
 bracelogger = "^1.1.0"
 
 # for access to AI models
-litellm = {git = "https://github.com/Gapminder/litellm#gemini-provider-safety-settings"}
+litellm = {git = "https://github.com/Gapminder/litellm", rev="gemini-provider-safety-settings"}
 langchain = "^0.0.275"
 
 # for hugging face

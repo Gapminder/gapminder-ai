@@ -3422,9 +3422,9 @@ proxy = ["apscheduler (>=3.10.4,<4.0.0)", "backoff", "fastapi (>=0.104.1,<0.105.
 
 [package.source]
 type = "git"
-url = "https://github.com/Gapminder/litellm#gemini-provider-safety-settings"
-reference = "HEAD"
-resolved_reference = "d90e04b531692dcb8672909f526c234d0f828595"
+url = "https://github.com/Gapminder/litellm"
+reference = "gemini-provider-safety-settings"
+resolved_reference = "f2450c4b4c449fa5e098366102472ab7ae09c5d3"
 
 [[package]]
 name = "lxml"
@@ -8004,4 +8004,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "2da1ae8c15d99fe47acb3802ee9985e517938badc9a83bbbfe9b5e0ec6bafcea"
+content-hash = "07d235301170a62af0e1220d4dec9c453901af978bef262c573b8ee1a7861484"
