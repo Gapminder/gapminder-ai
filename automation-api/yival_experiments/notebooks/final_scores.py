@@ -195,8 +195,24 @@ prompt_templates = output_df['prompt_template'].unique()
 
 prompt_templates
 
+# copy
+prompt_templates_lst =
+[
+    "Please answer this multiple choices question. If you can't determine the answer please make your best guess:\n\nQuestion:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n\nAnswer:",
+    "Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.\n\nQuestion:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n\nAnswer:",
+    'Question:\n{question_text}\nIs it: {option_a};  {option_b}; or {option_c}? \n\nAnswer:',
+    '请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。\n 问题：\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n 答案：\n',
+    '以下单选题，请你从 A，B，C 中选择一个正确的答案。如果你不知道哪个答案正确，请回答你认为最接近的答案。\n 问题：\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n 答案：\n',
+    '问题：\n{question_text}\n 是 {option_a}，{option_b}，还是 {option_c}？\n 答案：\n'
+]
+
 prompt_id_mappings = dict(
-    zip(prompt_templates, ['prompt1', 'prompt3', 'prompt2', 'prompt1', 'prompt3', 'prompt2'])
+    zip(prompt_templates, ['prompt1',
+                           'prompt3',
+                           'prompt2',
+                           'prompt1',
+                           'prompt3',
+                           'prompt2'])
 )
 
 prompt_id_mappings
