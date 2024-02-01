@@ -28,7 +28,7 @@ python-dotenv = "^0.20.0"
 
 # for gsheets import/export
 gspread = "^5.1.1"
-gspread-dataframe = {git = "https://github.com/robin900/gspread-dataframe.git#main"}
+gspread-dataframe = {git = "https://github.com/robin900/gspread-dataframe.git", rev="master"}
 
 # for gdrive API consumption
 google-auth = "^2.6.6"
@@ -57,7 +57,7 @@ websocket-client = "^1.6.1"
 dashscope = "^1.6.0"
 
 # yival
-yival = {git = "https://github.com/Gapminder/YiVal.git#gapminder-ai"}
+yival = {git = "https://github.com/Gapminder/YiVal.git", rev="gapminder-ai"}
 redis = "^5.0.1"
 
 # gemini
