@@ -34,13 +34,6 @@ raw_results = pd.read_excel('../output/results.xlsx')
 
 raw_results
 
-# double check the numbers
-n = raw_results.groupby('question_id')['question'].count()
-# if we asked the question to all models, the
-# count should be same for all questions
-n.describe()
-
-
 # load AI Eval Spreadsheet
 ai_eval_sheet = read_ai_eval_spreadsheet()
 
@@ -96,24 +89,42 @@ en_ids = [x[0] for x in en]
 cn = list(filter(lambda v: v[1] == 'zh-CN', q_text_to_q_id_mapping.values()))
 cn_ids = [x[0] for x in cn]
 
-# this should output an empty set if English question set
-# and Chinese question set are the same.
-# if it's not, there's possible an issue.
+# this should output an empty set
+# if English question set and Chinese question set are the same.
 set(en_ids) - set(cn_ids)
 
 
+# fix for experiment 20231104: the gpt-4 is gpt-4-0613
+raw_results.loc[raw_results['model_id'] == 'gpt-4', 'model_id'] = 'gpt-4-0613'
+
+
 # create a mapping from model_id, parameters -> model_config id
+# NOTE: because we only search for model_id and parameters,
+# we may found duplicates: same model_id and parameters,
+# but different rounds/memory settings.
+# That's why I don't include all rows here, we should manually ensure that
+# the model we actually tested are enabled in the AI eval sheet.
+# TODO: see if we can auto detect the correct model configuration.
 model_configs = get_model_configs(ai_eval_sheet, include_all=False)
 
-model_id_params_to_model_config_mapping = {}
 
+model_id_params_to_model_config_mapping = {}
 for model_id, params in raw_results[['model_id', 'model_params']].drop_duplicates().values:
+    matched = False
     for model, conf in model_configs:
         if model.model_id == model_id and params == str(json.loads(conf.model_parameters)):
+            if matched:  # we found a duplicate
+                print("duplicated rows found for model conf:",
+                      model_id,
+                      params)
+                raise ValueError("duplicated rows")
             model_id_params_to_model_config_mapping[(model_id, params)] = conf.model_config_id
-            break
-    else:
-         print(model_id, params, "not found")
+            matched = True
+    if not matched:
+        print(model_id,
+              params,
+              "not found. Please ensure it's enabled in the AI Eval Spreadsheet.")
+        raise KeyError("model configuration not exist")
 
 
 model_id_params_to_model_config_mapping
@@ -163,20 +174,27 @@ result
 # -
 
 result_counts = result.group_by(
-    ['question_id', 'language', 'prompt_variant_id', 'model_conf_id']
+    ['question_id', 'language', 'prompt_variant_id', 'model_conf_id', 'experiment_date']
 ).agg(
     pl.col('correctness').filter(pl.col('correctness') == 0).count().alias('fail'),
     pl.col('correctness').filter(pl.col('correctness') == 1).count().alias('very_wrong'),
     pl.col('correctness').filter(pl.col('correctness') == 2).count().alias('wrong'),
     pl.col('correctness').filter(pl.col('correctness') == 3).count().alias('correct'),
+    pl.col('correctness').count().alias('rounds')
 )
 
+result_counts
+
+result_counts['rounds'].max()
+
 result_pct = result_counts.with_columns(
-    pl.col('fail') / 5 * 100,
-    pl.col('very_wrong') / 5 * 100,
-    pl.col('wrong') / 5 * 100,
-    pl.col('correct') / 5 * 100,
+    pl.col('fail') / pl.col('rounds') * 100,
+    pl.col('very_wrong') / pl.col('rounds') * 100,
+    pl.col('wrong') / pl.col('rounds') * 100,
+    pl.col('correct') / pl.col('rounds') * 100,
 )
+
+result_pct
 
 # calculate the final grade
 def get_grade(dictionary):
@@ -188,13 +206,9 @@ def get_grade(dictionary):
     else:
         return max_keys[0]
 
-# FIXME: remove date from result
-date = datetime(2024, 1, 26)
 
 result_full = result_pct.with_columns(
     pl.struct(pl.col(['fail', 'very_wrong', 'wrong', 'correct'])).map_elements(get_grade).alias('result'),
-    pl.lit(5).alias('rounds'),
-    pl.lit(date).alias('last_evaluation')
 )
 
 result_full
@@ -203,8 +217,9 @@ result_full_df = result_full.to_pandas()
 result_full_df.columns
 
 result_full_df.columns = ['question_id', 'language', 'prompt_variation_id',
-                          'model_configuration_id', 'percent_eval_failed', 'percent_very_wrong', 'percent_wrong',
-                          'percent_correct', 'result', 'rounds', 'last_evaluation_datetime']
+                          'model_configuration_id', 'last_evaluation_datetime',
+                          'percent_eval_failed', 'percent_very_wrong', 'percent_wrong',
+                          'percent_correct', 'rounds', 'result']
 
 backup = ai_eval_sheet.evaluation_results.data.df.copy()
 
