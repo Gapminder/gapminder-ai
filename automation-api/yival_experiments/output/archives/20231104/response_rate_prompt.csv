@@ -1,0 +1,84 @@
+model_id,model_params,prompt_template,response_rate
+gpt-3.5-turbo-0613,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",100.0
+replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",98.06949806949807
+replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",96.91119691119691
+gpt-3.5-turbo-0613,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",93.84615384615384
+gpt-3.5-turbo-0613,{'temperature': 1},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",93.46153846153847
+palm/text-bison,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",93.05019305019306
+palm/text-bison,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",89.1891891891892
+gpt-4,{'temperature': 0.01},"Please answer this multiple choices question. If you can't determine the answer please make your best guess:
+
+Question:
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+
+Answer:",88.84615384615384
+gpt-3.5-turbo-0613,{'temperature': 1},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",85.0
+qwen-plus,"{'top_p': 0.1, 'top_k': 100}","请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。
+问题：
+{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}
+答案：
+",80.76923076923077
+gpt-4,{'temperature': 0.01},"Question:
+{question_text}
+Is it: {option_a};  {option_b}; or {option_c}? 
+
+Answer:",79.61538461538461
+qwen-plus,"{'top_p': 0.1, 'top_k': 100}","问题：
+{question_text}
+是 {option_a}，{option_b}，还是 {option_c}？
+答案：
+",75.0

@@ -1,7 +1,6 @@
 import litellm
 from litellm import completion
 from llms.alibaba_complete import llm_complete as alibaba_llm_complete
-from llms.palm_completion import safety_settings
 from model_config_wrapper import ModelConfigWrapper
 from yival.logger.token_logger import TokenLogger
 from yival.schemas.experiment_config import MultimodalOutput
@@ -11,6 +10,10 @@ from yival.wrappers.string_wrapper import StringWrapper
 
 # load env vars
 from lib.config import read_config
+from yival_experiments.custom_configuration.llms.palm_completion import (
+    safety_settings_new_categories,
+    safety_settings_old_categories,
+)
 
 read_config()
 # default model config if not provided
@@ -69,7 +72,6 @@ def model_compare(
         )
         response = Response(output=output).output
     elif model["vendor"] == "Google":
-        # google allows changing content filters. We will disable all
         messages = [
             # {"content": system_prompt, "role": "system"},
             {"content": prompt, "role": "user"}
@@ -78,7 +80,10 @@ def model_compare(
             output=completion(
                 model=model["model_id"],
                 messages=messages,
-                safety_settings=safety_settings,
+                # google allows changing content filters. We will disable all
+                safety_settings=safety_settings_old_categories
+                if model["model_id"].startswith("palm")
+                else safety_settings_new_categories,
                 caching=False,
                 num_retries=10,
                 request_timeout=60,

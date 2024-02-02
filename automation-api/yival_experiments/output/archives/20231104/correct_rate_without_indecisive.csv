@@ -1,0 +1,7 @@
+model_id,model_params,correct_rate_without_indecisive
+gpt-4,{'temperature': 0.01},79.25531914893617
+gpt-3.5-turbo-0613,{'temperature': 0.01},71.42857142857143
+gpt-3.5-turbo-0613,{'temperature': 1},61.97183098591549
+qwen-plus,"{'top_p': 0.1, 'top_k': 100}",55.55555555555556
+replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3,{'temperature': 0.01},44.0
+palm/text-bison,{'temperature': 0.01},41.27659574468085

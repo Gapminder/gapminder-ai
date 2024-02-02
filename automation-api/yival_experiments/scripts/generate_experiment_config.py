@@ -103,44 +103,61 @@ def main():
     config["evaluators"] = get_evaluators(sheet)
     # model configs and prompt variations
     model_configs = get_model_configs(sheet)
-    model_configs_yaml_dict = get_model_variations_yaml_dict(model_configs)
+    model_ids = {model.model_id for model, model_config in model_configs}
     prompt_variations = get_prompt_variants(sheet)
-
     prompt_variation_languages = {
         prompt_variation.language for prompt_variation in prompt_variations
     }
 
-    for prompt_variation_language in prompt_variation_languages:
-
-        # filter out prompt variations that are not in the current language
-        language_specific_prompt_variations = [
-            prompt_variation
-            for prompt_variation in prompt_variations
-            if prompt_variation.language == prompt_variation_language
+    experiment_names = []
+    for model_id in model_ids:
+        model_id_specific_model_configurations = [
+            (model, model_config)
+            for model, model_config in model_configs
+            if model.model_id == model_id
         ]
-
-        # compile the configuration
-        prompt_variations_yaml_dict = get_prompt_variations_yaml_dict(
-            language_specific_prompt_variations
+        model_configs_yaml_dict = get_model_variations_yaml_dict(
+            model_id_specific_model_configurations
         )
-        config["variations"] = [model_configs_yaml_dict, prompt_variations_yaml_dict]
-        config["dataset"][
-            "file_path"
-        ] = f"data/questions_{prompt_variation_language}.csv"
 
-        # create configuration yaml file
-        os.makedirs(experiment_configurations_path, exist_ok=True)
-        now = datetime.now()
-        file_name = (
-            f'experiment_{now.strftime("%Y%m%d%H%M")}_{prompt_variation_language}.yaml'
-        )
-        output_file = experiment_configurations_path / file_name
-        with open(output_file, "w") as f:
-            yaml.dump(config, stream=f, sort_keys=False, allow_unicode=True)
-            print(
-                f"Experiment configuration for language {prompt_variation_language} saved to {output_file}"
+        for prompt_variation_language in prompt_variation_languages:
+
+            # filter out prompt variations that are not in the current language
+            language_specific_prompt_variations = [
+                prompt_variation
+                for prompt_variation in prompt_variations
+                if prompt_variation.language == prompt_variation_language
+            ]
+
+            # compile the configuration
+            prompt_variations_yaml_dict = get_prompt_variations_yaml_dict(
+                language_specific_prompt_variations
             )
-            f.close()
+            config["variations"] = [
+                model_configs_yaml_dict,
+                prompt_variations_yaml_dict,
+            ]
+            config["dataset"][
+                "file_path"
+            ] = f"data/questions_{prompt_variation_language}.csv"
+
+            # create configuration yaml file
+            os.makedirs(experiment_configurations_path, exist_ok=True)
+            now = datetime.now()
+            yival_sanitized_model_id = model_id.replace("/", "_").replace(".", "-")
+            experiment_name = f'experiment_{now.strftime("%Y%m%d%H%M")}_{yival_sanitized_model_id}_{prompt_variation_language}'
+            file_name = f"{experiment_name}.yaml"
+            output_file = experiment_configurations_path / file_name
+            with open(output_file, "w") as f:
+                yaml.dump(config, stream=f, sort_keys=False, allow_unicode=True)
+                f.close()
+            experiment_names.append(experiment_name)
+
+    print(
+        f"Experiment configurations saved to {experiment_configurations_path}. To run them:"
+    )
+    for experiment_name in experiment_names:
+        print(f"  poe run_experiment --experiment={experiment_name}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,6 @@
+model_id,model_params,response_rate
+gpt-4-1106-preview,{'temperature': 0.01},100.0
+gpt-3.5-turbo-1106,{'temperature': 0.01},99.64028776978418
+gemini/gemini-pro,{'temperature': 0.01},99.28057553956835
+gpt-4-0125-preview,{'temperature': 0.01},98.92086330935251
+qwen-max-1201,{'temperature': 0.01},92.08633093525181

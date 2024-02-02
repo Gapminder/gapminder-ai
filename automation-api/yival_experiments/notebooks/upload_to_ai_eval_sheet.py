@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: gapminder-ai-automation-api
 #     language: python
@@ -27,12 +27,19 @@ from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions, get_model
 from lib.config import read_config
 
 # load env
-read_config()
+config = read_config()
 
 
 raw_results = pd.read_excel('../output/results.xlsx')
 
 raw_results
+
+# double check the numbers
+n = raw_results.groupby('question_id')['question'].count()
+# if we asked the question to all models, the
+# count should be same for all questions
+n.describe()
+
 
 # load AI Eval Spreadsheet
 ai_eval_sheet = read_ai_eval_spreadsheet()
@@ -57,26 +64,43 @@ q_text_to_q_id_mapping = {}
 for _, row in raw_results[['question_id', 'question']].drop_duplicates().iterrows():
     q_text = row['question']
     q_id = row['question_id']
+    matched = False
     for q, _ in questions:
         if q_id == q.question_id:
             if q_text.strip() == q.published_version_of_question.strip():
+                matched = True
                 q_text_to_q_id_mapping[q_text] = (q.question_id, q.language)
             else:
                 lang = suggest_language(q_text)
                 if lang == q.language:
+                    matched = True
                     q_text_to_q_id_mapping[q_text] = (q.question_id, q.language)
                     print(f"Q{q_id} have different question text.")
                     print(q_text.strip())
                     print(q.published_version_of_question.strip())
+        if matched:
             break
-    else:
+
+    if not matched:
         lang = suggest_language(q_text)
         print(q_id, q_text[:10], '...', 'does not exist, detected lang:', lang)
         q_text_to_q_id_mapping[q_text] = (q_id, lang)
 
 
 # q_text_to_q_id_mapping
-# len(q_text_to_q_id_mapping)
+len(q_text_to_q_id_mapping)
+
+# double check: numbers of english questions and chinese questions
+en = list(filter(lambda v: v[1] == 'en-US', q_text_to_q_id_mapping.values()))
+en_ids = [x[0] for x in en]
+cn = list(filter(lambda v: v[1] == 'zh-CN', q_text_to_q_id_mapping.values()))
+cn_ids = [x[0] for x in cn]
+
+# this should output an empty set if English question set
+# and Chinese question set are the same.
+# if it's not, there's possible an issue.
+set(en_ids) - set(cn_ids)
+
 
 # create a mapping from model_id, parameters -> model_config id
 model_configs = get_model_configs(ai_eval_sheet, include_all=False)
@@ -92,7 +116,7 @@ for model_id, params in raw_results[['model_id', 'model_params']].drop_duplicate
          print(model_id, params, "not found")
 
 
-# model_id_params_to_model_config_mapping
+model_id_params_to_model_config_mapping
 
 # create a mapping from prompt_variant_text -> prompt_variant_id
 prompt_variants = get_prompt_variants(ai_eval_sheet, include_all=True)
@@ -110,7 +134,7 @@ for prompt_text in raw_results['prompt_template'].unique():
             prompt_text_to_prompt_id_mapping[prompt_text] = prompt.variation_id
             break
 
-# prompt_text_to_prompt_id_mapping
+prompt_text_to_prompt_id_mapping
 
 # convert the raw result to a dataframe with labelled data.
 result = raw_results.copy()
@@ -130,11 +154,13 @@ result['model_conf_id'] = [model_id_params_to_model_config_mapping[
 result = pl.DataFrame(result)
 result
 
+# +
 # result.group_by(
 #     ['question_id', 'language', 'prompt_variant_id', 'model_conf_id']
 # ).agg(
 #     pl.col('correctness').value_counts()
 # )
+# -
 
 result_counts = result.group_by(
     ['question_id', 'language', 'prompt_variant_id', 'model_conf_id']
@@ -163,7 +189,7 @@ def get_grade(dictionary):
         return max_keys[0]
 
 # FIXME: remove date from result
-date = datetime(2023, 11, 4)
+date = datetime(2024, 1, 26)
 
 result_full = result_pct.with_columns(
     pl.struct(pl.col(['fail', 'very_wrong', 'wrong', 'correct'])).map_elements(get_grade).alias('result'),

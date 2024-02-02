@@ -48,7 +48,6 @@ Configure the environment variables in `.env` as per the configuration sections 
 
 The deployed cloud functions will use the access credentials of the current user and operate on the spreadsheet that is currently opened. During local development, we have neither active credentials or an open spreadsheet, so the following additional configuration is necessary:
 
-- `OPENAI_API_DEV_KEY` - An OpenAI API key to use for OpenAI model evaluations when running locally
 - `SERVICE_ACCOUNT_CREDENTIALS` - Service account credentials, base64-encoded, native to the above GCP project (see below for instructions on how to obtain these)
 - `GS_AI_EVAL_SPREADSHEET_ID` - Spreadsheet ID of the production AI Eval Spreadsheet (Note: the service account needs access to this spreadsheet)
 - `GS_AI_EVAL_DEV_SPREADSHEET_ID` - Spreadsheet ID of a development copy of the AI Eval Spreadsheet (Note: the service account needs access to this spreadsheet)

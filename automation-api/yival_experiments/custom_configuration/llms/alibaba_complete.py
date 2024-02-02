@@ -96,8 +96,9 @@ The only thing need to translate is the `output` key in alibaba
 def llm_complete(
     model_name,
     prompt,
+    temperature=1.0,
     top_p=0.8,
-    top_k=100,
+    top_k=None,
     enable_search=False,
     dashscope_api_key=None,
 ):
@@ -149,4 +150,4 @@ if __name__ == "__main__":
     C. 大约 97%\n\
 
     回答："""
-    print(llm_complete("qwen-plus", q, top_p=0.1, top_k=100))
+    print(llm_complete("qwen-max-1201", q, temperature=0.01, top_p=0.2, top_k=100))

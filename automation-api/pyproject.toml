@@ -28,7 +28,7 @@ python-dotenv = "^0.20.0"
 
 # for gsheets import/export
 gspread = "^5.1.1"
-gspread-dataframe = {git = "https://github.com/robin900/gspread-dataframe.git#main"}
+gspread-dataframe = {git = "https://github.com/robin900/gspread-dataframe.git", rev="master"}
 
 # for gdrive API consumption
 google-auth = "^2.6.6"
@@ -41,14 +41,14 @@ types-requests = "^2.28.11.6"
 bracelogger = "^1.1.0"
 
 # for access to AI models
-openai = "^0.27.6"
+litellm = {git = "https://github.com/Gapminder/litellm", rev="gemini-provider-safety-settings"}
 langchain = "^0.0.275"
 
 # for hugging face
 huggingface_hub = "^0.15.1"
 
 # for google PaLM
-google-generativeai = "^0.1.0"
+google-generativeai = "^0.3.2"
 
 # for iflytek
 websocket-client = "^1.6.1"
@@ -57,7 +57,7 @@ websocket-client = "^1.6.1"
 dashscope = "^1.6.0"
 
 # yival
-yival = {git = "https://github.com/semio/YiVal.git#master"}
+yival = {git = "https://github.com/Gapminder/YiVal.git", rev="gapminder-ai"}
 redis = "^5.0.1"
 
 # gemini
@@ -94,7 +94,7 @@ jupyter = 'jupyter-notebook'
 notebooks = ["install_kernel", "set_jupytext_as_default_viewer", "jupyter"]
 fetch_questions = "python yival_experiments/scripts/fetch_questions.py"
 generate_experiment_config = "python yival_experiments/scripts/generate_experiment_config.py"
-generate_results_file = "python yival_experiments/scripts/generate_results.py"
+generate_result = "python yival_experiments/scripts/generate_result.py"
 start_redis = "docker run --rm -p 26379:6379 --name local-redis redis redis-server --save 60 1 --loglevel warning"
 
 [tool.poe.tasks.run_experiment]
