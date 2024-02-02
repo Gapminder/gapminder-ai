@@ -1,7 +1,0 @@
-model_id,model_params,response_rate
-palm/text-bison,{'temperature': 0.01},90.73359073359073
-gpt-3.5-turbo-0613,{'temperature': 1},81.92307692307692
-gpt-4,{'temperature': 0.01},72.3076923076923
-replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3,{'temperature': 0.01},57.91505791505791
-gpt-3.5-turbo-0613,{'temperature': 0.01},48.46153846153846
-qwen-plus,"{'top_p': 0.1, 'top_k': 100}",43.269230769230774
