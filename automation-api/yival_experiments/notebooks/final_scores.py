@@ -19,270 +19,152 @@
 from collections import Counter
 import polars as pl
 import pandas as pd
+from lib.config import read_config
+from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions, get_model_configs, get_prompt_variants
+
+# load env
+config = read_config()
+
+# load ai eval spreadsheet
+ai_eval_sheet = read_ai_eval_spreadsheet()
+
+results = ai_eval_sheet.evaluation_results.data.df.copy()
+
+# use polars
+results = pl.DataFrame(results)
+
+results.columns
+
+# rename the prompt_variation_id to match our report
+results.select(pl.col(['prompt_variation_id']).unique())
 
 
-# read the raw responses
-# also read the last experiment
-results1 = pd.read_excel('../output/archives/20231104/results.xlsx')
-results2 = pd.read_excel('../output/results.xlsx')
+prompt_id_mapping = {
+    'instruct_question_options_1': 'prompt1',
+    'instruct_question_options_2': 'prompt3',
+    'no_option_letter': 'prompt2',
+    'zh_no_option_letter': 'prompt2',
+    'zh_instruct_2': 'prompt3',
+    'zh_instruct_1': 'prompt1'
+}
 
-# concat them
-output_df = pd.concat([results1, results2], ignore_index=True)
-
-output_df
-
-
-# function to check if the model answered correctly considering all responses.
-# it's correct when the most common answer in all responses is correct.
-def is_correct_p(round_results):
-    c = Counter(round_results)
-    top2 = c.most_common(2)
-    if len(top2) == 1:
-        if top2[0][0] == 3:
-            return True
-        else:
-            return False
-    else:
-        if top2[0][1] != top2[1][1] and top2[0][0] == 3:
-            return True
-        else:
-            return False
-
-
-def correctness(lst):
-    c = Counter(lst)
-    top2 = c.most_common(2)
-
-    if len(top2) > 1 and top2[0][1] == top2[1][1]:
-        return 0
-
-    return top2[0][0]
-
-
-# +
-# output_df.columns
-# for g, df in output_df.groupby(['question_id', 'model_id', 'model_params']):
-#     print(g)
-#     print(is_correct_p(df['correctness'].values))
-# -
-
-output_df.columns
-
-output_df.model_id.unique()
-
-# table 1. how many answers, per question and model?
-df = pl.DataFrame(output_df)
-
-# df.group_by(['question_id', 'model_id', 'model_params', 'prompt_template']).agg(
-#     pl.col('correctness').count()
-# )['correctness'].max()
-
-model_answers = df.group_by(['question_id', 'model_id', 'model_params', 'prompt_template']).agg(
-    pl.col('correctness').unique().count()
-).group_by(['model_id', 'model_params', 'prompt_template']).agg(
-    pl.col('correctness').mean()
-)
-model_answers.write_csv('../output/answer_num.csv')
-
-
-model_correctness = output_df.groupby(["question_id", "model_id", "model_params"])[
-    "correctness"
-].apply(lambda x: correctness(x.values))
-
-
-# let's use polars. The syntax is easier than pandas
-model_correctness = pl.DataFrame(model_correctness.reset_index())
-
-# ## correct rate by model
-
-# TODO: I think it's possible to convert these into a Yival Evaluator.
-# 1. the correct rate for all answers
-out1 = (
-    model_correctness.group_by(["model_id", "model_params"])
-    .agg(
-        pl.col("correctness").filter(pl.col("correctness") == 3).count()
-        / pl.col("correctness").count()
-        * 100
-    )
-    .sort("correctness", descending=True)
-).select(
-    pl.col(['model_id', 'model_params']),
-    pl.col('correctness').alias("correct_rate_with_indecisive")
+results = results.with_columns(
+    pl.col('prompt_variation_id').replace(prompt_id_mapping)
 )
 
-out1
+# double check
+results['prompt_variation_id'].unique()
 
-out1.write_csv('../output/correct_rate_with_indecisive.csv')
+# create a mapping for model_id -> the actual brand, name and parameters
+model_configs = get_model_configs(ai_eval_sheet, include_all=True)
 
-# 2. the correct rate when excluding all cases where correctness == 0
-out2 = (
-    model_correctness.filter(pl.col("correctness") != 0)
-    .group_by(["model_id", "model_params"])
-    .agg(
-        pl.col("correctness").filter(pl.col("correctness") == 3).count()
-        / pl.col("correctness").count()
-        * 100
-    )
-    .sort("correctness", descending=True)
-).select(
-    pl.col(['model_id', 'model_params']),
-    pl.col('correctness').alias("correct_rate_without_indecisive")
+
+def search_model(model_config_id):
+    for model, model_config in model_configs:
+        if model_config.model_config_id == model_config_id:
+            return ' '.join([
+                model.vendor, model.model_name, model_config.model_parameters])
+    raise ValueError(f'{model_config_id} not found!')
+
+
+model_config_ids = results['model_configuration_id'].unique().to_list()
+model_config_names = [search_model(x) for x in model_config_ids]
+model_config_id_mapping = dict(zip(model_config_ids, model_config_names))
+
+
+# replace nan to indecisive in result
+results = results.with_columns(
+    pl.col('result').replace({'nan': 'indecisive'})
 )
 
-out2
+# double check
+results['model_configuration_id'].unique()
 
-out2.write_csv('../output/correct_rate_without_indecisive.csv')
 
-# 3. the respond rate: (count correctness!=0) / (count total answers)
-out3 = (
-    model_correctness
-    .group_by(["model_id", "model_params"])
-    .agg(
-        pl.col("correctness").filter(pl.col("correctness") != 0).count()
-        / pl.col("correctness").count()
-        * 100
-    )
+# Table 1. The number of different answers by model and prompt
+table1 = results.with_columns(
+    pl.concat_list(pl.col([
+        'percent_correct',
+        'percent_wrong',
+        'percent_very_wrong',
+        'percent_eval_failed'])).alias('tmp')
+).with_columns(
+    pl.col('tmp').map_elements(
+        lambda x: len(list(filter(lambda e: e != 0, x)))
+    ).alias('number_of_answers')
 ).select(
-    pl.col(['model_id', 'model_params']),
-    pl.col('correctness').alias('response_rate')
-).sort("response_rate", descending=True)
-
-out3
-
-out3.write_csv('../output/response_rate.csv')
-
-# ## correct rates by prompts and model
-
-model_correctness_prompt = output_df.groupby(
-    ["question_id", "model_id", "model_params", "prompt_template"]
-)["correctness"].apply(lambda x: correctness(x.values))
-
-model_correctness_prompt = pl.DataFrame(model_correctness_prompt.reset_index())
-
-model_correctness_prompt
-
-out1 = (
-    model_correctness_prompt.group_by(["model_id", "model_params", "prompt_template"])
-    .agg(
-        pl.col("correctness").filter(pl.col("correctness") == 3).count()
-        / pl.col("correctness").count()
-        * 100
-    )
-    .sort("correctness", descending=True)
-).select(
-    pl.col(['model_id', 'model_params', 'prompt_template']),
-    pl.col('correctness').alias("correct_rate_with_indecisive")
+    pl.exclude('tmp')
+).group_by(['model_configuration_id', 'prompt_variation_id']).agg(
+    pl.col('number_of_answers').mean()
 )
 
-out1
-
-out1.write_csv('../output/correct_rate_with_indecisive_prompt.csv')
-
-
-out2 = (
-    model_correctness_prompt.filter(pl.col("correctness") != 0)
-    .group_by(["model_id", "model_params", "prompt_template"])
-    .agg(
-        pl.col("correctness").filter(pl.col("correctness") == 3).count()
-        / pl.col("correctness").count()
-        * 100
-    )
-    .sort("correctness", descending=True)
-).select(
-    pl.col(['model_id', 'model_params', 'prompt_template']),
-    pl.col('correctness').alias("correct_rate_without_indecisive")
+table1 = table1.with_columns(
+    pl.col('model_configuration_id').replace(model_config_id_mapping).alias('model_name')
 )
 
-out2
+table1
 
-out2.write_csv('../output/correct_rate_without_indecisive_prompt.csv')
+table1.write_csv('../output/report_tables/1_number_of_average_answers.csv')
 
-out3 = (
-    model_correctness_prompt
-    .group_by(["model_id", "model_params", 'prompt_template'])
-    .agg(
-        pl.col("correctness").filter(pl.col("correctness") != 0).count()
-        / pl.col("correctness").count()
-        * 100
-    )
-).select(
-    pl.col(['model_id', 'model_params', 'prompt_template']),
-    pl.col('correctness').alias('response_rate')
-).sort("response_rate", descending=True)
-
-out3
-
-out3.write_csv('../output/response_rate_prompt.csv')
-
-# ## correct rates break down by prompt.
-
-prompt_templates = output_df['prompt_template'].unique()
-
-prompt_templates.tolist()
-
-# NOTE:
-# if you encounter error in the cell below:
-# output_df['prompt_id'] = output_df['prompt_template'].map(lambda x: prompt_id_mappings[x])
-# please copy the output of above cell, and replace the list below with it.
-prompt_templates_lst = [
-    "Please answer this multiple choices question. If you can't determine the answer please make your best guess:\n\nQuestion:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n\nAnswer:",
-    "Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.\n\nQuestion:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n\nAnswer:",
-    'Question:\n{question_text}\nIs it: {option_a};  {option_b}; or {option_c}? \n\nAnswer:',
-    '请回答以下单选题。如果你不知道哪个答案正确，请回答你认为最接近的答案。\n 问题：\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n 答案：\n',
-    '以下单选题，请你从 A，B，C 中选择一个正确的答案。如果你不知道哪个答案正确，请回答你认为最接近的答案。\n 问题：\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n 答案：\n',
-    '问题：\n{question_text}\n 是 {option_a}，{option_b}，还是 {option_c}？\n 答案：\n'
-]
-
-prompt_id_mappings = dict(
-    zip(prompt_templates_lst, ['prompt1',
-                               'prompt3',
-                               'prompt2',
-                               'prompt1',
-                               'prompt3',
-                               'prompt2'])
+# Table 2. Correct / Wrong / Very Wrong / Indecisive Rates
+table2 = results.group_by(
+    ['model_configuration_id', 'prompt_variation_id']
+).agg(
+    pl.col('result').count().alias('total_questions_asked'),
+    (pl.col('result').filter(pl.col('result') == 'correct').count()
+     / pl.col('result').count()
+     * 100).alias("Correct Rate %"),
+    (pl.col('result').filter(pl.col('result') == 'wrong').count()
+     / pl.col('result').count()
+     * 100).alias("Wrong Rate %"),
+    (pl.col('result').filter(pl.col('result') == 'very_wrong').count()
+     / pl.col('result').count()
+     * 100).alias("Very Wrong Rate %"),
+    (pl.col('result').filter(pl.col('result').is_in(['indecisive', 'fail'])).count()
+     / pl.col('result').count()
+     * 100).alias("Indecisive Rate %")
 )
 
-prompt_id_mappings
+# double check
+table2.with_columns(
+    (pl.col('Correct Rate %') +
+     pl.col('Wrong Rate %') +
+     pl.col('Very Wrong Rate %') +
+     pl.col('Indecisive Rate %')).alias('total')
+)['total'].min()  # should be about 100
 
-output_df['prompt_id'] = output_df['prompt_template'].map(lambda x: prompt_id_mappings[x])
-
-prompt_correctness = output_df.groupby(
-    ["question_id", "prompt_id"]
-)["correctness"].apply(lambda x: correctness(x.values))
-
-
-prompt_correctness = pl.DataFrame(prompt_correctness.reset_index())
-
-prompt_correctness
-
-out1 = prompt_correctness.group_by(['prompt_id']).agg(
-    pl.col("correctness").filter(pl.col("correctness") == 3).count()
-    / pl.col("correctness").count()
-    * 100
-).select(
-    pl.col(['prompt_id']),
-    pl.col('correctness').alias("correct_rate_with_indecisive")
+table2 = table2.with_columns(
+    pl.col('model_configuration_id').replace(model_config_id_mapping).alias('model_name')
 )
 
-out1
+table2
 
-out1.write_csv('../output/correct_rate_with_indecisive_by_prompt.csv')
+table2.write_csv('../output/report_tables/2_average_rates.csv')
 
 
-out2 = (
-    prompt_correctness
-    .filter(pl.col("correctness") != 0)
-    .group_by(['prompt_id'])
-    .agg(
-        pl.col("correctness").filter(pl.col("correctness") == 3).count()
-        / pl.col("correctness").count()
-        * 100
-    )
-).select(
-    pl.col(['prompt_id']),
-    pl.col('correctness').alias("correct_rate_without_indecisive")
+# Table 3. correct rate by prompt
+# don't use 20231104 result in this table. Because in that experiment
+# we didn't test prompt3.
+table3 = results.filter(
+    ~pl.col('last_evaluation_datetime').is_in(['20231104'])
+).group_by(
+    ['prompt_variation_id']
+).agg(
+    pl.col('result').count().alias('total_questions_asked'),
+    (pl.col('result').filter(pl.col('result') == 'correct').count()
+     / pl.col('result').count()
+     * 100).alias("Correct Rate %"),
+    (pl.col('result').filter(pl.col('result') == 'wrong').count()
+     / pl.col('result').count()
+     * 100).alias("Wrong Rate %"),
+    (pl.col('result').filter(pl.col('result') == 'very_wrong').count()
+     / pl.col('result').count()
+     * 100).alias("Very Wrong Rate %"),
+    (pl.col('result').filter(pl.col('result').is_in(['indecisive', 'fail'])).count()
+     / pl.col('result').count()
+     * 100).alias("Indecisive Rate %")
 )
 
-out2
+table3
 
-out2.write_csv('../output/correct_rate_without_indecisive_by_prompt.csv')
+table3.write_csv('../output/report_tables/3_correct_rate_by_prompt.csv')
