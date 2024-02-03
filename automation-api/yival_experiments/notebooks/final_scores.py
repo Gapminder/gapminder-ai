@@ -22,7 +22,14 @@ import pandas as pd
 
 
 # read the raw responses
-output_df = pd.read_excel('../output/results.xlsx')
+# also read the last experiment
+results1 = pd.read_excel('../output/archives/20231104/results.xlsx')
+results2 = pd.read_excel('../output/results.xlsx')
+
+# concat them
+output_df = pd.concat([results1, results2], ignore_index=True)
+
+output_df
 
 
 # function to check if the model answered correctly considering all responses.
@@ -58,6 +65,24 @@ def correctness(lst):
 #     print(g)
 #     print(is_correct_p(df['correctness'].values))
 # -
+
+output_df.columns
+
+output_df.model_id.unique()
+
+# table 1. how many answers, per question and model?
+df = pl.DataFrame(output_df)
+
+# df.group_by(['question_id', 'model_id', 'model_params', 'prompt_template']).agg(
+#     pl.col('correctness').count()
+# )['correctness'].max()
+
+model_answers = df.group_by(['question_id', 'model_id', 'model_params', 'prompt_template']).agg(
+    pl.col('correctness').unique().count()
+).group_by(['model_id', 'model_params', 'prompt_template']).agg(
+    pl.col('correctness').mean()
+)
+model_answers.write_csv('../output/answer_num.csv')
 
 
 model_correctness = output_df.groupby(["question_id", "model_id", "model_params"])[
@@ -195,7 +220,10 @@ prompt_templates = output_df['prompt_template'].unique()
 
 prompt_templates.tolist()
 
-# copy
+# NOTE:
+# if you encounter error in the cell below:
+# output_df['prompt_id'] = output_df['prompt_template'].map(lambda x: prompt_id_mappings[x])
+# please copy the output of above cell, and replace the list below with it.
 prompt_templates_lst = [
     "Please answer this multiple choices question. If you can't determine the answer please make your best guess:\n\nQuestion:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n\nAnswer:",
     "Pick the correct answer: A, B or C. If you can't determine the answer please make your best guess.\n\nQuestion:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}\n\nAnswer:",
