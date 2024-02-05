@@ -27,10 +27,14 @@ if __name__ == "__main__":
     output_list = []
 
     for fp in glob(f"{output_dir}/*.pkl"):
+        # Note: we assumed that the filenames are begging with "experiment_${date}_"
+        # so that we can extract the date from result files.
+        expr_date = osp.basename(fp).split("_")[1][:8]
         data: Experiment = pickle.load(open(fp, "rb"))
         for group_results in data.group_experiment_results:
             for result in group_results.experiment_results:
                 result_dict = dict(
+                    experiment_date=expr_date,
                     question_id=result.input_data.content["question_id"],
                     model_id=result.combination["model_config"]["model_id"],
                     model_params=str(result.combination["model_config"]["params"]),

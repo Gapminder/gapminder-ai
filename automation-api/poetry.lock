@@ -3398,7 +3398,7 @@ rapidfuzz = ">=2.3.0,<4.0.0"
 
 [[package]]
 name = "litellm"
-version = "1.20.9"
+version = "1.21.2"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = ">=3.8.1,<3.9.7 || >3.9.7"
@@ -3418,13 +3418,13 @@ tokenizers = "*"
 
 [package.extras]
 extra-proxy = ["streamlit (>=1.29.0,<2.0.0)"]
-proxy = ["apscheduler (>=3.10.4,<4.0.0)", "backoff", "fastapi (>=0.104.1,<0.105.0)", "gunicorn (>=21.2.0,<22.0.0)", "orjson (>=3.9.7,<4.0.0)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
+proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "fastapi (>=0.104.1,<0.105.0)", "fastapi-sso (>=0.10.0,<0.11.0)", "gunicorn (>=21.2.0,<22.0.0)", "orjson (>=3.9.7,<4.0.0)", "python-multipart (>=0.0.6,<0.0.7)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/Gapminder/litellm"
 reference = "gemini-provider-safety-settings"
-resolved_reference = "4b688e000468cd262a388dff7bfc8889cff7354b"
+resolved_reference = "e219896c1bbe1cea8c1b122c7720bd6a8cdf98f1"
 
 [[package]]
 name = "lxml"

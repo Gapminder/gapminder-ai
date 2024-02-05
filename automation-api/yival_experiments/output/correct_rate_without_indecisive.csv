@@ -1,6 +1,0 @@
-model_id,model_params,correct_rate_without_indecisive
-gpt-4-0125-preview,{'temperature': 0.01},80.0
-gpt-4-1106-preview,{'temperature': 0.01},79.49640287769785
-qwen-max-1201,{'temperature': 0.01},72.65625
-gemini/gemini-pro,{'temperature': 0.01},54.710144927536234
-gpt-3.5-turbo-1106,{'temperature': 0.01},38.26714801444043
