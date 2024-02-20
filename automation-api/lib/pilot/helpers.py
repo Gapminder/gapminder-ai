@@ -90,6 +90,9 @@ def get_questions(
     else:
         questions = filter_included_rows(sheet.questions.data.df)
 
+    if questions.empty:
+        return []
+
     if language is not None:
         questions = questions.loc[questions["language"] == language]
 
