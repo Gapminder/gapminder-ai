@@ -71,26 +71,33 @@ def model_compare(
             model_name=model["model_id"], prompt=prompt, **model["params"]
         )
         response = Response(output=output).output
+        response_text = response["choices"][0]["message"]["content"]
     elif model["vendor"] == "Google":
         messages = [
             # {"content": system_prompt, "role": "system"},
             {"content": prompt, "role": "user"}
         ]
-        response = Response(
-            output=completion(
-                model=model["model_id"],
-                messages=messages,
-                # google allows changing content filters. We will disable all
-                safety_settings=safety_settings_old_categories
-                if model["model_id"].startswith("palm")
-                else safety_settings_new_categories,
-                caching=False,
-                num_retries=10,
-                request_timeout=60,
-                **model["params"],
-            )
-        ).output
-        # print(response)
+        try:
+            response = Response(
+                output=completion(
+                    model=model["model_id"],
+                    messages=messages,
+                    # google allows changing content filters. We will disable all
+                    safety_settings=safety_settings_old_categories
+                    if model["model_id"].startswith("palm")
+                    else safety_settings_new_categories,
+                    caching=False,
+                    num_retries=10,
+                    request_timeout=60,
+                    **model["params"],
+                )
+            ).output
+            response_text = response["choices"][0]["message"]["content"]
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:
+            print(str(e))
+            response_text = "No Answer. Reason:\n" + str(e)
     else:
         messages = [
             # {"content": system_prompt, "role": "system"},
@@ -106,13 +113,16 @@ def model_compare(
                 **model["params"],
             )
         ).output
+        response_text = response["choices"][0]["message"]["content"]
 
     res = MultimodalOutput(
-        text_output=response["choices"][0]["message"]["content"],
+        text_output=response_text,
     )
-    # print(response["choices"][0]["message"]["content"])
-    token_usage = response["usage"]["total_tokens"]
-    logger.log(token_usage)
+    if type(response) is Response:
+        token_usage = response["usage"]["total_tokens"]
+        logger.log(token_usage)
+    else:
+        logger.log(0)
     return res
 
 
