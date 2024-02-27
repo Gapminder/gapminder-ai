@@ -97,6 +97,7 @@ def model_compare(
             raise
         except Exception as e:
             print(str(e))
+            response = None
             response_text = "No Answer. Reason:\n" + str(e)
     else:
         messages = [
