@@ -32,6 +32,9 @@ config = read_config()
 
 raw_results = pd.read_excel('../output/results.xlsx')
 
+# set question_id field to string
+raw_results['question_id'] = raw_results['question_id'].astype(str)
+
 raw_results
 
 # load AI Eval Spreadsheet
@@ -92,7 +95,6 @@ cn_ids = [x[0] for x in cn]
 # this should output an empty set
 # if English question set and Chinese question set are the same.
 set(en_ids) - set(cn_ids)
-
 
 # fix for experiment 20231104: the gpt-4 is gpt-4-0613
 raw_results.loc[raw_results['model_id'] == 'gpt-4', 'model_id'] = 'gpt-4-0613'

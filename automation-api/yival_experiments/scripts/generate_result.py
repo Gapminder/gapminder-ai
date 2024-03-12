@@ -35,7 +35,7 @@ if __name__ == "__main__":
             for result in group_results.experiment_results:
                 result_dict = dict(
                     experiment_date=expr_date,
-                    question_id=result.input_data.content["question_id"],
+                    question_id=str(result.input_data.content["question_id"]),
                     model_id=result.combination["model_config"]["model_id"],
                     model_params=str(result.combination["model_config"]["params"]),
                     prompt_template=result.combination["prompt_template"],
