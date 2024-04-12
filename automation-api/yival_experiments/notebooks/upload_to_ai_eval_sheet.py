@@ -29,8 +29,9 @@ from lib.config import read_config
 # load env
 config = read_config()
 
-
 raw_results = pd.read_excel('../output/results.xlsx')
+# also, save it as parquet, for easier loading into other tools
+raw_results.to_parquet('../notebooks/data/raw_results_experiment_3.parquet')
 
 # set question_id field to string
 raw_results['question_id'] = raw_results['question_id'].astype(str)
@@ -95,6 +96,7 @@ cn_ids = [x[0] for x in cn]
 # this should output an empty set
 # if English question set and Chinese question set are the same.
 set(en_ids) - set(cn_ids)
+set(cn_ids) - set(en_ids)
 
 # fix for experiment 20231104: the gpt-4 is gpt-4-0613
 raw_results.loc[raw_results['model_id'] == 'gpt-4', 'model_id'] = 'gpt-4-0613'
@@ -134,9 +136,23 @@ model_id_params_to_model_config_mapping
 # create a mapping from prompt_variant_text -> prompt_variant_id
 prompt_variants = get_prompt_variants(ai_eval_sheet, include_all=True)
 
+
+# FIX: there was a few issues in the prompts, and the issue was not fixed until we finished running the first experiment.
+# so we need to fix the prompt manually here to get correct prompt id.
+def fix_prompt_issue(p):
+    # 1. tailing "
+    if p.endswith('"'):
+        return p[:-1]
+    # 2. typo
+    return p.replace('oppinions', 'opinions').replace('realtes', 'relates')
+
+
+raw_results['prompt_template_fix'] = raw_results['prompt_template'].map(fix_prompt_issue)
+
+
 prompt_text_to_prompt_id_mapping = {}
 
-for prompt_text in raw_results['prompt_template'].unique():
+for prompt_text in raw_results['prompt_template_fix'].unique():
     for prompt in prompt_variants:
         try:
             prompt_full = prompt.question_prompt_template.format(question=prompt.question_template)
@@ -156,7 +172,7 @@ result = raw_results.copy()
 result['language'] = result['question'].map(lambda x: q_text_to_q_id_mapping[x][1])
 
 # convert to prompt variant id
-result['prompt_variant_id'] = result['prompt_template'].map(lambda x: prompt_text_to_prompt_id_mapping[x])
+result['prompt_variant_id'] = result['prompt_template_fix'].map(lambda x: prompt_text_to_prompt_id_mapping[x])
 
 # convert to model_conf_id
 result['model_conf_id'] = [model_id_params_to_model_config_mapping[
@@ -175,6 +191,13 @@ result
 # )
 # -
 
+# FIX: In experiment on 2024-04, due to issue in prompt we tested the ideology-capitalist_zh prompt for alibaba twice.
+# we will just keep one.
+result = result.group_by(
+    ['question_id', 'language', 'prompt_variant_id', 'model_conf_id', 'experiment_date']
+).agg(pl.all().first())
+
+
 result_counts = result.group_by(
     ['question_id', 'language', 'prompt_variant_id', 'model_conf_id', 'experiment_date']
 ).agg(
@@ -188,6 +211,7 @@ result_counts = result.group_by(
 result_counts
 
 result_counts['rounds'].max()
+
 
 result_pct = result_counts.with_columns(
     pl.col('fail') / pl.col('rounds') * 100,
