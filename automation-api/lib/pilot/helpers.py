@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from langchain.chains import LLMChain
@@ -178,9 +178,13 @@ def create_question_dataset_for_test(
     return [create_question_data_for_test(question_tmpl, q) for q in question_list]
 
 
-def create_question_data_for_eval(question: QuestionAndOptions) -> Dict[str, str]:
+def create_question_data_for_eval(
+    question: QuestionAndOptions,
+) -> Dict[str, Union[str, int]]:
     q, options = question
-    question_dict = {"question": q.published_version_of_question}
+    question_dict: Dict[str, Union[str, int]] = {
+        "question": q.published_version_of_question
+    }
     for opt in options:
         if opt.letter == "A":
             question_dict["option_a"] = opt.question_option
@@ -196,7 +200,7 @@ def create_question_data_for_eval(question: QuestionAndOptions) -> Dict[str, str
 
 def create_question_dataset_for_eval(
     question_list: List[QuestionAndOptions],
-) -> List[Dict[str, str]]:
+) -> List[Dict[str, Union[str, int]]]:
     return [create_question_data_for_eval(q) for q in question_list]
 
 

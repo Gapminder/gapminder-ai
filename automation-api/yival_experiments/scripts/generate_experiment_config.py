@@ -65,7 +65,7 @@ def get_model_variations_yaml_dict(model_configs: List[ModelAndConfig]):
     variant_list = list()
     for model, config in model_configs:
         for t in range(config.repeat_times):
-            model_dict = dict()
+            model_dict: Dict[str, Any] = dict()
             model_dict["vendor"] = model.vendor
             model_dict["model_id"] = model.model_id
             model_dict["params"] = load_model_parameters(config.model_parameters)

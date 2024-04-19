@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Type
 
 from gspread import Spreadsheet
 
@@ -27,24 +27,20 @@ from lib.gsheets.gsheets_worksheet_editor import GsheetsWorksheetEditor
 
 @dataclass
 class AiEvalData:
-    questions: Optional[GsheetsWorksheetEditor[QuestionsDf, Question]] = None
-    question_options: Optional[
-        GsheetsWorksheetEditor[QuestionOptionsDf, QuestionOption]
-    ] = None
-    prompt_variations: Optional[
-        GsheetsWorksheetEditor[PromptVariationsDf, PromptVariation]
-    ] = None
-    gen_ai_models: Optional[GsheetsWorksheetEditor[GenAiModelsDf, GenAiModel]] = None
-    gen_ai_model_configs: Optional[
-        GsheetsWorksheetEditor[GenAiModelConfigsDf, GenAiModelConfig]
-    ] = None
-    metrics: Optional[GsheetsWorksheetEditor[MetricsDf, Metric]] = None
-    evaluation_results: Optional[
-        GsheetsWorksheetEditor[EvalResult, EvalResultsDf]
-    ] = None
-    session_results: Optional[
-        GsheetsWorksheetEditor[SessionResult, SessionResultsDf]
-    ] = None
+    prompt_variations: GsheetsWorksheetEditor[
+        Type[PromptVariationsDf], Type[PromptVariation]
+    ]
+    questions: GsheetsWorksheetEditor[Type[QuestionsDf], Type[Question]]
+    question_options: GsheetsWorksheetEditor[
+        Type[QuestionOptionsDf], Type[QuestionOption]
+    ]
+    gen_ai_models: GsheetsWorksheetEditor[Type[GenAiModelsDf], Type[GenAiModel]]
+    gen_ai_model_configs: GsheetsWorksheetEditor[
+        Type[GenAiModelConfigsDf], Type[GenAiModelConfig]
+    ]
+    metrics: GsheetsWorksheetEditor[Type[MetricsDf], Type[Metric]]
+    evaluation_results: GsheetsWorksheetEditor[Type[EvalResult], Type[EvalResultsDf]]
+    session_results: GsheetsWorksheetEditor[Type[SessionResult], Type[SessionResultsDf]]
 
 
 sheet_names = {
