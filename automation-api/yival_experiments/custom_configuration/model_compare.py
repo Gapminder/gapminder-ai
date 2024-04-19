@@ -1,4 +1,11 @@
 import litellm
+from custom_configuration.llms.alibaba_complete import (
+    llm_complete as alibaba_llm_complete,
+)
+from custom_configuration.llms.palm_completion import (
+    safety_settings_new_categories,
+    safety_settings_old_categories,
+)
 from litellm import completion
 from model_config_wrapper import ModelConfigWrapper
 from yival.logger.token_logger import TokenLogger
@@ -9,13 +16,6 @@ from yival.wrappers.string_wrapper import StringWrapper
 
 # load env vars
 from lib.config import read_config
-from yival_experiments.custom_configuration.llms.alibaba_complete import (
-    llm_complete as alibaba_llm_complete,
-)
-from yival_experiments.custom_configuration.llms.palm_completion import (
-    safety_settings_new_categories,
-    safety_settings_old_categories,
-)
 
 read_config()
 # default model config if not provided
