@@ -10,7 +10,7 @@ from yival.wrappers.string_wrapper import StringWrapper
 
 # load env vars
 from lib.config import read_config
-from yival_experiments.custom_configuration.llms.palm_completion import (
+from llms.palm_completion import (
     safety_settings_new_categories,
     safety_settings_old_categories,
 )
@@ -136,11 +136,11 @@ def main():
             q,
             "en_US",
             "Around 20%",
-            3,
+            "3",
             "Around 50%",
-            2,
+            "2",
             "Around 80%",
-            1,
+            "1",
             ExperimentState(),
         )
     )
