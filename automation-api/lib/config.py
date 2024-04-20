@@ -54,7 +54,7 @@ def read_config() -> dict[str, str]:
         "REPLICATE_API_KEY",
         "GEMINI_API_KEY",
         "VERTEXAI_PROJECT",
-        "VERTEXAI_LOCATION",
+        "VERTEXAI_LOCATIONS",
         "VERTEX_SERVICE_ACCOUNT_CREDENTIALS",
     ]:
         config[key] = os.getenv(key=key, default="")
