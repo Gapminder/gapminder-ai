@@ -1,11 +1,7 @@
+import os
+import random
+
 import litellm
-from custom_configuration.llms.alibaba_complete import (
-    llm_complete as alibaba_llm_complete,
-)
-from custom_configuration.llms.palm_completion import (
-    safety_settings_new_categories,
-    safety_settings_old_categories,
-)
 from litellm import completion
 from model_config_wrapper import ModelConfigWrapper
 from yival.logger.token_logger import TokenLogger
@@ -16,16 +12,25 @@ from yival.wrappers.string_wrapper import StringWrapper
 
 # load env vars
 from lib.config import read_config
+from yival_experiments.custom_configuration.llms.alibaba_complete import (
+    llm_complete as alibaba_llm_complete,
+)
+from yival_experiments.custom_configuration.llms.palm_completion import safety_settings
 
 read_config()
+
 # default model config if not provided
-default_model_config = dict(model_name="gpt-3.5-turbo", params={"temperature": 0.5})
+default_model_config = dict(
+    model_id="vertex_ai/gemini-1.5-pro-preview-0409",
+    params={"temperature": 0.5},
+    vendor="Google",
+)
 # set this to see verbose outputs
 litellm.set_verbose = True
 # enable caching in the evaluator.
 # litellm.cache = litellm.Cache()
 # to not use Redis for caching: uncomment the line above and comment the line below.
-litellm.cache = litellm.Cache(type="redis", host="127.0.0.1", port=26379)
+litellm.cache = litellm.Cache(type="redis", host="127.0.0.1", port=6379)
 
 
 def model_compare(
@@ -75,6 +80,10 @@ def model_compare(
         response = Response(output=output).output
         response_text = response["choices"][0]["message"]["content"]
     elif model["vendor"] == "Google":
+        # choose a vertex project location
+        litellm.vertex_location = random.choice(
+            os.environ["VERTEXAI_LOCATIONS"].split(",")
+        )
         messages = [
             # {"content": system_prompt, "role": "system"},
             {"content": prompt, "role": "user"}
@@ -85,9 +94,7 @@ def model_compare(
                     model=model["model_id"],
                     messages=messages,
                     # google allows changing content filters. We will disable all
-                    safety_settings=safety_settings_old_categories
-                    if model["model_id"].startswith("palm")
-                    else safety_settings_new_categories,
+                    safety_settings=safety_settings,
                     caching=False,
                     num_retries=10,
                     request_timeout=60,
@@ -129,7 +136,7 @@ def model_compare(
     return res
 
 
-def main():
+def main() -> None:
     q = "How many people worldwide have their basic needs met when it comes to food, "
     "water, toilets, electricity, schooling and healthcare?"
     print(
