@@ -59,6 +59,8 @@ class PromptVariation(BaseModel):
 
     include_in_next_evaluation: bool = Field(False, title="Include in next evaluation")
     variation_id: str = Field("", title="Variation ID")
+    prompt_family: str = Field("", title="Prompt Family")
+    prompt_variation: str = Field("", title="Prompt Variation")
     language: str = Field("", title="Language")
     question_template: str = Field("", title="Question template")
     question_prefix: str = Field("", title="Question prefix")
