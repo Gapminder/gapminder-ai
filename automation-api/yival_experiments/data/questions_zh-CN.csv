@@ -16,7 +16,7 @@ question_id,question_text,language,option_a,option_a_correctness,option_b,option
 1757,1900 年，全世界约有 40%的儿童在 5 岁前死亡。今天这个数字是多少？,zh-CN,大约 4%,Correct,大约 14%,Wrong,大约 4%,大约 24％,Very Wrong
 1756,与世界上最贫穷的 50%人口相比，高收入国家的人口平均每人排放的二氧化碳量怎样？,zh-CN,差不多,Very Wrong,多 20%,Wrong,多 5 倍,多 5 倍,Correct
 1755,全世界 6 至 11 岁的女孩中，有多少人上学？,zh-CN,少于 30%,Very Wrong,大约 60%,Wrong,大约 90％,大约 90％,Correct
-1753,1950 年，有多少国家的奴隶仍然合法？（也就是没有法律禁止对他人的拥有权）,zh-CN,58,Very Wrong,98,Wrong,138,138,Correct
+1753,1950 年，有多少国家仍然没有法律禁止对他人的拥有权？,zh-CN,58,Very Wrong,98,Wrong,138,138,Correct
 1749,如果我们今天停止所有碳排放（二氧化碳），大概需要多长时间大气中的二氧化碳浓度才能恢复到 1750 年的水平？,zh-CN,少于 100 年,Very Wrong,大约 500 年,Wrong,大于 1000 年,大于 1000 年,Correct
 1747,在 2004 年全球排放的所有温室气体中，约有 1%需要缴纳某种碳税或碳费。2022 年的数字是多少？,zh-CN,大约 3％,Very Wrong,大约 13％,Wrong,大约 23％,大约 23％,Correct
 1738,从 2015 年到 2021 年，世界人口每年增加 8000 万。在同一时期，能够用上电的人口每年增加多少？,zh-CN,约 1500 万,Very Wrong,约 4000 万,Wrong,约 1.2 亿,约 1.2 亿,Correct
@@ -58,7 +58,7 @@ question_id,question_text,language,option_a,option_a_correctness,option_b,option
 1662,2018 年，有多大比例的难民收容国允许难民享有工作权？,zh-CN,大约 10％,Very Wrong,大约 30％,Wrong,大约 50%,大约 50%,Correct
 1661,目前有多少难民生活在世界上最大的难民营中？,zh-CN,"大约 9,000",Very Wrong,"大约 90,000",Wrong,"大约 900,000","大约 900,000",Correct
 1660,在全球最富有的 250 家公司中，有多少家已经制定了减少碳排放的目标？,zh-CN,大约 20%,Very Wrong,大约 50%,Wrong,大约 80%,大约 80%,Correct
-1570,哪种风险因素会导致更多死亡？,zh-CN,不干净的水源,Very Wrong,受污染的空气,Correct,受污染的空气,受污染的食物,Wrong
+1570,以下哪种风险因素会导致更多死亡？,zh-CN,不干净的水源,Very Wrong,受污染的空气,Correct,受污染的空气,受污染的食物,Wrong
 1568,在全世界所有枪支中，平民拥有的比例是多少？,zh-CN,大约 25%,Very Wrong,大约 55%,Wrong,大约 85%,大约 85%,Correct
 1567,联合国专家预计，从现在到 2050 年，世界 195 个国家中有多少国家的人口会减少？,zh-CN,10 个国家左右,Very Wrong,30 个国家左右,Wrong,50 个国家左右,50 个国家左右,Correct
 1562,全世界有多少人口可以使用与下水道相连的厕所？,zh-CN,大约 40％,Correct,大约 55%,Wrong,大约 40％,大约 70％,Very Wrong
