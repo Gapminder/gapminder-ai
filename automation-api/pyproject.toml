@@ -66,6 +66,9 @@ google-cloud-aiplatform = "^1.39.0"
 
 # unsorted (new deps gets listed here)
 langdetect = "^1.0.9"
+duckdb = "^0.10.2"
+duckdb-engine = "^0.12.0"
+jupysql = "^0.10.10"
 
 
 
