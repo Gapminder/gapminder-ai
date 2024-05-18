@@ -20,10 +20,20 @@ from yival_experiments.custom_configuration.llms.palm_completion import safety_s
 read_config()
 
 # default model config if not provided
+# default_model_config = dict(
+#     model_id="gpt-4o-2024-05-13",
+#     params={"temperature": 0.5},
+#     vendor="OpenAI"
+# )
+# default_model_config = dict(
+#     model_id="vertex_ai/gemini-1.5-pro-preview-0409",
+#     params={"temperature": 0.5},
+#     vendor="Google",
+# )
 default_model_config = dict(
-    model_id="vertex_ai/gemini-1.5-pro-preview-0409",
+    model_id="vertex_ai/claude-3-opus@20240229",
     params={"temperature": 0.5},
-    vendor="Google",
+    vendor="Anthropic",
 )
 # set this to see verbose outputs
 litellm.set_verbose = True
@@ -72,58 +82,51 @@ def model_compare(
     )
     # system_prompt = """..."""
 
-    if model["vendor"] == "Alibaba":
-        # FIXME: alibaba's complete function doesn't support system prompt.
-        output = alibaba_llm_complete(
-            model_name=model["model_id"], prompt=prompt, **model["params"]
-        )
-        response = Response(output=output).output
-        response_text = response["choices"][0]["message"]["content"]
-    elif model["vendor"] == "Google":
+    # prepare model call parameters
+    litellm_messages = [
+        # {"content": system_prompt, "role": "system"},
+        {"content": prompt, "role": "user"}
+    ]
+
+    litellm_params = dict(
+        model=model["model_id"],
+        messages=litellm_messages,
+        caching=False,
+        num_retries=10,
+        request_timeout=60,
+        **model["params"]
+    )
+    if model["vendor"] == "Google":
         # choose a vertex project location
         litellm.vertex_location = random.choice(
             os.environ["VERTEXAI_LOCATIONS"].split(",")
         )
-        messages = [
-            # {"content": system_prompt, "role": "system"},
-            {"content": prompt, "role": "user"}
-        ]
-        try:
-            response = Response(
-                output=completion(
-                    model=model["model_id"],
-                    messages=messages,
-                    # google allows changing content filters. We will disable all
-                    safety_settings=safety_settings,
-                    caching=False,
-                    num_retries=10,
-                    request_timeout=60,
-                    **model["params"],
-                )
-            ).output
-            response_text = response["choices"][0]["message"]["content"]
-        except KeyboardInterrupt:
-            raise
-        except Exception as e:
-            print(str(e))
-            response = None
-            response_text = "No Answer. Reason:\n" + str(e)
-    else:
-        messages = [
-            # {"content": system_prompt, "role": "system"},
-            {"content": prompt, "role": "user"}
-        ]
-        response = Response(
-            output=completion(
-                model=model["model_id"],
-                messages=messages,
-                caching=False,
-                num_retries=10,
-                request_timeout=60,
-                **model["params"],
+        # google allows changing content filters. We will disable all
+        litellm_params["safety_settings"] = safety_settings
+    elif model["vendor"] == "Anthropic":
+        if "opus" in model["model_id"]:
+            # there is only one location where claude Opus is available.
+            litellm.vertex_location = "us-east5"
+        else:
+            litellm.vertex_location = "us-central1"
+
+    try:
+        if model["vendor"] == "Alibaba":
+            # FIXME: alibaba's complete function doesn't support system prompt.
+            output = alibaba_llm_complete(
+                model_name=model["model_id"], prompt=prompt, **model["params"]
             )
-        ).output
-        response_text = response["choices"][0]["message"]["content"]
+            response = Response(output=output).output
+            response_text = response["choices"][0]["message"]["content"]
+        else:
+            response = Response(output=completion(**litellm_params)).output
+            response_text = response["choices"][0]["message"]["content"]
+    except KeyboardInterrupt:
+        raise
+    except Exception as e:
+        print(str(e))
+        response = None
+        response_text = "No Answer. Reason:\n" + str(e)
 
     res = MultimodalOutput(
         text_output=response_text,
