@@ -69,6 +69,7 @@ langdetect = "^1.0.9"
 duckdb = "^0.10.2"
 duckdb-engine = "^0.12.0"
 jupysql = "^0.10.10"
+anthropic = {extras = ["vertex"], version = "^0.25.9"}
 
 
 
@@ -97,7 +98,6 @@ set_jupytext_as_default_viewer = "jupytext-config set-default-viewer"
 jupyter = 'jupyter-notebook'
 notebooks = ["install_kernel", "set_jupytext_as_default_viewer", "jupyter"]
 fetch_questions = "python yival_experiments/scripts/fetch_questions.py"
-generate_experiment_config = "python yival_experiments/scripts/generate_experiment_config.py"
 generate_result = "python yival_experiments/scripts/generate_result.py"
 start_redis = "docker run --rm -p 26379:6379 --name local-redis redis redis-server --save 60 1 --loglevel warning"
 
@@ -109,6 +109,17 @@ help = "Run a yival experiment with a given name."
   name = "experiment"
   help = "Name of the experiment to run"
   options = ["-e", "--experiment"]
+
+[tool.poe.tasks.generate_experiment_config]
+shell = "python yival_experiments/scripts/generate_experiment_config.py --evaluator $evaluator"
+help = "generate experiment config, and set evaluator"
+
+  [[tool.poe.tasks.generate_experiment_config.args]]
+  name = "evaluator"
+  help = "Name of the evaluator"
+  options = ["-e", "--evaluator"]
+  default = "gpt4"
+
 
 [tool.poe]
 envfile = ".env"

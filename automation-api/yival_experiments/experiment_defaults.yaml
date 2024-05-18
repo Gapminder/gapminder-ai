@@ -13,6 +13,11 @@ custom_evaluators:
     class: ./custom_configuration/gpt4_evaluator.GPT4Evaluator
     config_cls: ./custom_configuration/gpt4_evaluator_config.GPT4EvaluatorConfig
 
+  vertex_ai_evaluator:
+    class: ./custom_configuration/vertex_ai_evaluator.VertexAIEvaluator
+    config_cls: ./custom_configuration/vertex_ai_evaluator_config.VertexAIEvaluatorConfig
+
+
 custom_function: model_compare.model_compare
 
 dataset:
