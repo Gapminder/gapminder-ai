@@ -139,7 +139,7 @@ class GPT4Evaluator(BaseEvaluator):
             messages=prompt,
             temperature=0.0,
             n=1,
-            max_tokens=1000,
+            max_tokens=2000,
             request_timeout=60,
             caching=True,
         )

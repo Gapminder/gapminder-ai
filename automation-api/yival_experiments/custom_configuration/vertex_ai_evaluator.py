@@ -143,7 +143,7 @@ class VertexAIEvaluator(BaseEvaluator):
             messages=prompt,
             temperature=0.0,
             n=1,
-            max_tokens=1000,
+            max_tokens=2000,
             request_timeout=60,
             caching=True,
             vertex_ai_location=VERTEX_LOCATION,
