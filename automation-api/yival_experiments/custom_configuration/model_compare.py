@@ -35,6 +35,11 @@ default_model_config = dict(
     params={"temperature": 0.5},
     vendor="Anthropic",
 )
+default_model_config = dict(
+    model_id="replicate/meta/meta-llama-3-70b-instruct",
+    params={"temperature": 0.5},
+    vendor="Meta",
+)
 # set this to see verbose outputs
 litellm.set_verbose = True
 # enable caching in the evaluator.
