@@ -22,11 +22,9 @@ config = read_config()
 
 # ## prepare data
 
-# +
 # results to be analyzed
 # manually download from AI eval spreadsheet.
 result = pd.read_csv('./data/Gapminder AI evaluations - Master Output.csv')
-# -
 
 # load ai eval spreadsheet
 ai_eval_sheet = read_ai_eval_spreadsheet()
@@ -651,6 +649,36 @@ climate_raw_result.DataFrame().to_csv('./data/outputs/climate_raw.csv', index=Fa
 # -
 
 climate_res.DataFrame().to_csv("./data/outputs/climate_study.csv")
+
+# +
+# another way to calculate correctness
+
+# + magic_args="--save climate_question_correctness" language="sql"
+# select
+#     model_configuration_id,
+#     count(*) filter (result != 'fail') as total_count,
+#     count(*) filter (result = 'correct') as correct_count,
+#     correct_count / total_count * 100 as correct_rate,
+#     correct_rate * 15 / 100 as correct_num_average
+# from result_climate_questions
+# group by model_configuration_id
+
+# + language="sql"
+# select mean(correct_num_average) from climate_question_correctness;
+# -
+
+
+
+# + magic_args="--save climate_question_correctness" language="sql"
+# select
+#     count(*) filter (result != 'fail') as total_count,
+#     count(*) filter (result = 'correct') as correct_count,
+#     correct_count / total_count * 100 as correct_rate,
+#     correct_rate * 15 / 100 as correct_num_average
+# from result_climate_questions
+# -
+
+34/3
 
 
 

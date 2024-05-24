@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.16.2
 #   kernelspec:
 #     display_name: gapminder-ai-automation-api
 #     language: python
@@ -21,6 +21,7 @@ import json
 import numpy as np
 import pandas as pd
 import polars as pl
+import yaml
 from datetime import datetime
 from langdetect import detect
 from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions, get_model_configs, get_prompt_variants
@@ -31,7 +32,7 @@ config = read_config()
 
 raw_results = pd.read_excel('../output/results.xlsx')
 # also, save it as parquet, for easier loading into other tools
-raw_results.to_parquet('../notebooks/data/raw_results_experiment_3.parquet')
+# raw_results.to_parquet('../notebooks/data/raw_results_experiment_3.parquet')
 
 # set question_id field to string
 raw_results['question_id'] = raw_results['question_id'].astype(str)
@@ -98,8 +99,13 @@ cn_ids = [x[0] for x in cn]
 set(en_ids) - set(cn_ids)
 set(cn_ids) - set(en_ids)
 
+# +
 # fix for experiment 20231104: the gpt-4 is gpt-4-0613
 raw_results.loc[raw_results['model_id'] == 'gpt-4', 'model_id'] = 'gpt-4-0613'
+
+# fix for experiment 20240521: gpt-4o is gpt-4o-2024-05-13
+raw_results.loc[raw_results['model_id'] == 'gpt-4o', 'model_id'] = 'gpt-4o-2024-05-13'
+# -
 
 
 # create a mapping from model_id, parameters -> model_config id
@@ -133,35 +139,23 @@ for model_id, params in raw_results[['model_id', 'model_params']].drop_duplicate
 
 model_id_params_to_model_config_mapping
 
+raise Exception("Please check if file names are correct in next cell.")
+
 # create a mapping from prompt_variant_text -> prompt_variant_id
-prompt_variants = get_prompt_variants(ai_eval_sheet, include_all=True)
+# to get the most accurate mapping, we will load the prompts from the experiment files
+# be sure to change the name
+cn_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405162248_qwen-max-0403_zh-CN.yaml', 'r'))
+en_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405210902_gpt-4o-2024-05-13_en-US.yaml', 'r'))
 
+assert cn_exp_config['variations'][1]['name'] == 'prompt_template'
+assert en_exp_config['variations'][1]['name'] == 'prompt_template'
 
-# FIX: there was a few issues in the prompts, and the issue was not fixed until we finished running the first experiment.
-# so we need to fix the prompt manually here to get correct prompt id.
-def fix_prompt_issue(p):
-    # 1. tailing "
-    if p.endswith('"'):
-        return p[:-1]
-    # 2. typo
-    return p.replace('oppinions', 'opinions').replace('realtes', 'relates')
+cn_prompts = pd.DataFrame.from_records(cn_exp_config['variations'][1]['variations'])
+en_prompts = pd.DataFrame.from_records(en_exp_config['variations'][1]['variations'])
 
+all_prompts = pd.concat([cn_prompts, en_prompts], ignore_index=True)
 
-raw_results['prompt_template_fix'] = raw_results['prompt_template'].map(fix_prompt_issue)
-
-
-prompt_text_to_prompt_id_mapping = {}
-
-for prompt_text in raw_results['prompt_template_fix'].unique():
-    for prompt in prompt_variants:
-        try:
-            prompt_full = prompt.question_prompt_template.format(question=prompt.question_template)
-        except KeyError:
-            # ignore when the prompt template need more than the question to format.
-            continue
-        if prompt_text == prompt_full:
-            prompt_text_to_prompt_id_mapping[prompt_text] = prompt.variation_id
-            break
+prompt_text_to_prompt_id_mapping = all_prompts.set_index('value')['variation_id'].to_dict()
 
 prompt_text_to_prompt_id_mapping
 
@@ -172,7 +166,7 @@ result = raw_results.copy()
 result['language'] = result['question'].map(lambda x: q_text_to_q_id_mapping[x][1])
 
 # convert to prompt variant id
-result['prompt_variant_id'] = result['prompt_template_fix'].map(lambda x: prompt_text_to_prompt_id_mapping[x])
+result['prompt_variant_id'] = result['prompt_template'].map(lambda x: prompt_text_to_prompt_id_mapping[x])
 
 # convert to model_conf_id
 result['model_conf_id'] = [model_id_params_to_model_config_mapping[
@@ -254,3 +248,5 @@ backup.columns
 result_full_df = result_full_df[backup.columns]
 
 ai_eval_sheet.evaluation_results.replace_data(result_full_df)
+
+
