@@ -18,7 +18,7 @@ from evaluator_common import (
     extract_choice_from_response,
     format_template,
 )
-from gpt4_evaluator_config import GPT4EvaluatorConfig
+from llama3_evaluator_config import Llama3EvaluatorConfig
 from yival.evaluators.base_evaluator import BaseEvaluator
 from yival.schemas.evaluator_config import (
     EvaluatorOutput,
@@ -36,18 +36,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class GPT4Evaluator(BaseEvaluator):
+class Llama3Evaluator(BaseEvaluator):
     """Evaluator using OpenAI's prompt-based evaluation."""
 
-    default_config = GPT4EvaluatorConfig(name="gpt4_evaluator")  # type: ignore
+    default_config = Llama3EvaluatorConfig(name="llama3_evaluator")  # type: ignore
 
-    def __init__(self, config: GPT4EvaluatorConfig):
+    def __init__(self, config: Llama3EvaluatorConfig):
         super().__init__(config)
         self.config = config
 
     def evaluate(self, experiment_result: ExperimentResult) -> EvaluatorOutput:
         """Evaluate the experiment result using OpenAI's prompt-based evaluation."""
-        assert isinstance(self.config, GPT4EvaluatorConfig)
+        assert isinstance(self.config, Llama3EvaluatorConfig)
         format_dict = copy.deepcopy(experiment_result.input_data.content)
         format_dict["raw_output"] = experiment_result.raw_output.text_output
 
@@ -80,7 +80,9 @@ class GPT4Evaluator(BaseEvaluator):
         )
 
 
-BaseEvaluator.register_evaluator("gpt4_evaluator", GPT4Evaluator, GPT4EvaluatorConfig)
+BaseEvaluator.register_evaluator(
+    "llama3_evaluator", Llama3Evaluator, Llama3EvaluatorConfig
+)
 
 
 def main():
@@ -93,10 +95,14 @@ def main():
         raw_output,
     )
 
+    from lib.config import read_config
+
+    read_config()
+
     litellm.set_verbose = True
 
-    evaluator_config = GPT4EvaluatorConfig(
-        name="gpt4_evaluator",
+    evaluator_config = Llama3EvaluatorConfig(
+        name="llama3_evaluator",
         display_name="correctness test",
         metric_calculators=[
             MetricCalculatorConfig(
@@ -118,7 +124,7 @@ def main():
         token_usage=50,
     )
 
-    evaluator = GPT4Evaluator(evaluator_config)
+    evaluator = Llama3Evaluator(evaluator_config)
     result = evaluator.evaluate(experiment_result_example)
     print("Result: ", result.result)
 
