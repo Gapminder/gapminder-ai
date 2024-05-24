@@ -45,6 +45,9 @@ def get_evaluators(ai_eval_sheet: AiEvalData, evaluator_model="gpt4"):
     elif evaluator_model == "claude":
         evaluator_name = "vertex_ai_evaluator"
         model_name = "vertex_ai/claude-3-opus@20240229"
+    elif evaluator_model == "llama":
+        evaluator_name = "llama3_evaluator"
+        model_name = "replicate/meta/meta-llama-3-70b-instruct"
 
     for m in metrics:
         metric: Dict[str, Any] = dict()

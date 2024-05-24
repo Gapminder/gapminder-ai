@@ -17,6 +17,10 @@ custom_evaluators:
     class: ./custom_configuration/vertex_ai_evaluator.VertexAIEvaluator
     config_cls: ./custom_configuration/vertex_ai_evaluator_config.VertexAIEvaluatorConfig
 
+  llama3_evaluator:
+    class: ./custom_configuration/llama3_evaluator.Llama3Evaluator
+    config_cls: ./custom_configuration/llama3_evaluator_config.Llama3EvaluatorConfig
+
 
 custom_function: model_compare.model_compare
 
