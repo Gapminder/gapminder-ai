@@ -1,4 +1,8 @@
 question_id,question_text,language,option_a,option_a_correctness,option_b,option_b_correctness,option_c,option_c_correctness,correct_answer
+40,"Worldwide, what share of seats in national parliaments are held by women today?",en-US,Around 5%,Very Wrong,Around 15%,Wrong,Around 25%,Correct,Around 25%
+60,How many people in the world have a mobile phone subscription?,en-US,Close to 70%,Correct,Close to 80%,Wrong,Close to 90%,Very Wrong,Close to 70%
+1,What happened to the global suicide rate in the last 20 years?,en-US,Decreased about 25%,Correct,Stayed about the same,Wrong,Increased about 25%,Very Wrong,Decreased about 25%
+4,What share of the population in high-income countries (like Germany and the USA) live in extreme poverty (with less than $2/day)?,en-US,Less than 1%,Correct,Around 11%,Wrong,Around 21%,Very Wrong,Less than 1%
 1737,How many people in high-income countries see climate change as a threat to their country over the next 20 years?,en-US,Around 20%,Very Wrong,Around 50%,Wrong,Around 80%,Correct,Around 80%
 59,During the past 40 years the amount of oil and natural gas remaining in known reserves:,en-US,Reduced to less than half,Very Wrong,Remained about the same,Wrong,More than doubled,Correct,More than doubled
 1691,"Of all energy used in the world, what share is electricity?",en-US,Around 20%,Correct,Around 50%,Wrong,Around 80%,Very Wrong,Around 20%
@@ -45,7 +49,6 @@ question_id,question_text,language,option_a,option_a_correctness,option_b,option
 1715,What is it all greenhouse gases do?,en-US,Pollute air,Very Wrong,Absorb heat,Correct,Reflect light and heat,Wrong,Absorb heat
 1689,"Of all energy used in the world in 2000, around 86% came from burning fossil fuels (oil, coal and gas). What is the number today?",en-US,Around 52%,Very Wrong,Around 64%,Wrong,Around 82%,Correct,Around 82%
 2,How did the number of deaths per year from natural disasters change over the last hundred years?,en-US,More than doubled,Very Wrong,Remained about the same,Wrong,Decreased to less than half,Correct,Decreased to less than half
-1,What happened to the global suicide rate in the last 20 years?,en-US,Decreased about 25%,Correct,Stayed about the same,Wrong,Increased about 25%,Very Wrong,Decreased about 25%
 23,"Of all people aged 65 or older in high-income countries, how many live below the poverty line?",en-US,14%,Correct,29%,Wrong,44%,Very Wrong,14%
 57,What share of people above retirement age worldwide are entitled to a pension?,en-US,Around 25%,Very Wrong,Around 45%,Wrong,Around 75%,Correct,Around 75%
 52,"In 1990, 19% of people aged 65 and older in the world still worked. What is the share expected to be in 2030?",en-US,Around 21%,Correct,Around 41%,Wrong,Around 61%,Very Wrong,Around 21%
@@ -73,7 +76,6 @@ How much did the United Nations spend per refugee per day on average, in the res
 109,"In 2000, low- and middle-income countries on average spent almost 6% of their annual income on their loans. What was this number in 2022?",en-US,Around 4%,Correct,Around 8%,Wrong,Around 12%,Very Wrong,Around 4%
 1753,In how many countries was slavery still legal in 1950? (Meaning there was no law or constitution banning the ownership of another person.),en-US,58,Very Wrong,98,Wrong,138,Correct,138
 1757,"In 1900, around 40% of children worldwide died before they reached age 5. What is that number today?",en-US,Around 4%,Correct,Around 14%,Wrong,Around 24%,Very Wrong,Around 4%
-60,How many people in the world have a mobile phone subscription?,en-US,Close to 70%,Correct,Close to 80%,Wrong,Close to 90%,Very Wrong,Close to 70%
 103,How many people in the world say they have confidence in their local police?,en-US,Less than 15%,Very Wrong,Around 25%,Wrong,More than 50%,Correct,More than 50%
 104,Which group of countries sent the most troops on UN peacekeeping missions during the past 5 years?,en-US,"Germany, Sweden, Netherlands, Ireland",Wrong,"Ethiopia, Rwanda, Bangladesh, India, Nepal",Correct,"France, USA, Japan, S Korea, Switzerland, UK",Very Wrong,"Ethiopia, Rwanda, Bangladesh, India, Nepal"
 106,How many people in the world feel safe walking alone at night where they live?,en-US,Less than 30%,Very Wrong,Around 45%,Wrong,More than 60%,Correct,More than 60%
@@ -91,7 +93,6 @@ How much did the United Nations spend per refugee per day on average, in the res
 1510,"Of all children aged 6 to 11 in the world, how many go to school?",en-US,Less than 25%,Very Wrong,Around 60%,Wrong,More than 85%,Correct,More than 85%
 18,"How much of the world's economy comes from agriculture, forestry and fishing?",en-US,Around 5%,Correct,Around 25%,Wrong,Around 45%,Very Wrong,Around 5%
 1633,"70% of Europeans said they were planning to switch to a more environmentally friendly energy provider to fight climate change, in 2020. What was this number in China?",en-US,34%,Very Wrong,64%,Wrong,94%,Correct,94%
-4,What share of the population in high-income countries (like Germany and the USA) live in extreme poverty (with less than $2/day)?,en-US,Less than 1%,Correct,Around 11%,Wrong,Around 21%,Very Wrong,Less than 1%
 1765,"Compared to the year 2000, how many species of animals, plants and fungi have been assessed in the wild and given a conservation status?",en-US,7% more,Very Wrong,70% more,Wrong,700% more,Correct,700% more
 55,"Compared to 1980, the cost of energy from solar panels today is roughly:",en-US,1% of the 1980 cost,Correct,21% of the 1980 cost,Wrong,41% of the 1980 cost,Very Wrong,1% of the 1980 cost
 1669,"Out of 195 countries, how many have banned gasoline containing lead?",en-US,75 countries,Very Wrong,135 countries,Wrong,195 countries,Correct,195 countries
@@ -100,7 +101,6 @@ How much did the United Nations spend per refugee per day on average, in the res
 1726,"Between 2001 and today, how many countries progressed from low-income to middle-income status?",en-US,Fewer than 5,Very Wrong,Around 15,Wrong,More than 30,Correct,More than 30
 1646,"How much of all the money earned in low-income countries comes from agriculture, forestry and fishing?",en-US,Around 25%,Correct,Around 50%,Wrong,Around 75%,Very Wrong,Around 25%
 1611,What share of the world's population lives in middle-income countries today?,en-US,Around 25%,Very Wrong,Around 50%,Wrong,Around 75%,Correct,Around 75%
-40,"Worldwide, what share of seats in national parliaments are held by women today?",en-US,Around 5%,Very Wrong,Around 15%,Wrong,Around 25%,Correct,Around 25%
 44,"Of 195 countries, how many have signed the UN Convention on the Elimination of All Forms of Discrimination against Women?",en-US,50,Very Wrong,120,Wrong,190,Correct,190
 1574,In how many countries (out of 195) do married men and women NOT have equal legal rights to own land or houses?,en-US,Around 20,Correct,Around 80,Wrong,Around 140,Very Wrong,Around 20
 1619,How many women are married before the age of 18 in Sub-Saharan Africa?,en-US,Around 30%,Correct,Around 50%,Wrong,Around 70%,Very Wrong,Around 30%

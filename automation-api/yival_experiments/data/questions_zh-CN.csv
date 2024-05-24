@@ -1,4 +1,8 @@
 question_id,question_text,language,option_a,option_a_correctness,option_b,option_b_correctness,option_c,option_c_correctness,correct_answer
+40,在世界范围内，妇女在国家议会中所占的席位比例是多少？,zh-CN,大约 5%,Very Wrong,大约 15%,Wrong,大约 25%,Correct,大约 25%
+60,世界上有多少人拥有移动电话（和电话号码）？,zh-CN,接近 70%,Correct,接近 80%,Wrong,接近 90%,Very Wrong,接近 70%
+1,全球自杀率在近 20 年里有什么变化？,zh-CN,减少了大约 25%,Correct,基本没有变化,Wrong,增加了大约 25%,Very Wrong,减少了大约 25%
+4,在高收入国家（如德国和美国），生活在极端贫困（每天的收入低于 2 美元）中的人口占总人口的比例为多少？,zh-CN,少于 1%,Correct,大约 11％,Wrong,大约 21％,Very Wrong,少于 1%
 59,过去 40 年间，已知储量中剩余的石油和天然气数量：,zh-CN,减少到一半以下,Very Wrong,大致保持不变,Wrong,增加一倍以上,Correct,增加一倍以上
 1741,在人类活动排放的所有温室气体中，有多少来自燃烧化石燃料？,zh-CN,大约 25％,Very Wrong,大约 45％,Wrong,大约 65％,Correct,大约 65％
 1570,以下哪种风险因素会导致更多死亡？,zh-CN,不干净的水源,Very Wrong,受污染的空气,Correct,受污染的食物,Wrong,受污染的空气
@@ -19,7 +23,6 @@ question_id,question_text,language,option_a,option_a_correctness,option_b,option
 20_text,现在，世界上大概有八十亿人。哪个选项正确展示出当今的人口的分布？,zh-CN,美洲 10 亿，欧洲 10 亿，非洲 20 亿，亚洲 40 亿,Wrong,美洲 10 亿，欧洲 10 亿，非洲 10 亿，亚洲 50 亿,Correct,美洲 20 亿，欧洲 10 亿，非洲 10 亿，亚洲 40 亿,Very Wrong,美洲 10 亿，欧洲 10 亿，非洲 10 亿，亚洲 50 亿
 1758,在全世界赚到的所有钱中，有多少来自服务业，如行政、银行、护理、教学、交通和娱乐？,zh-CN,大约 30％,Very Wrong,大约 50%,Wrong,超过 60%,Correct,超过 60%
 9,世界上使用的所有能源，有多少是来自于天然气、煤炭和石油？,zh-CN,约 42％,Very Wrong,约 62％,Wrong,约 82％,Correct,约 82％
-4,在高收入国家（如德国和美国），生活在极端贫困（每天的收入低于 2 美元）中的人口占总人口的比例为多少？,zh-CN,少于 1%,Correct,大约 11％,Wrong,大约 21％,Very Wrong,少于 1%
 1771,2000 年至 2020 年间，全球孕产妇死亡率（母亲在分娩时或分娩后不久死亡的比率）发生了什么变化？,zh-CN,下降了约 30%,Correct,下降了约 10%,Wrong,大致保持不变,Very Wrong,下降了约 30%
 1770,1986 年，拥有核武器的国家储存了大约 64000 枚弹头。今天这个数字是多少？,zh-CN,少 80%,Correct,差不多,Wrong,多 50%,Very Wrong,少 80%
 1768,2010 年至 2021 年间，有多少个国家的谋杀率有所下降？(共有 195 个国家）。,zh-CN,小于 15 个,Very Wrong,大约 50 个,Wrong,超过 85 个,Correct,超过 85 个
@@ -96,11 +99,9 @@ question_id,question_text,language,option_a,option_a_correctness,option_b,option
 82,全球 250 家最富有的公司中，有多少家公司在其年度报告中将气候变化描述为一项风险？,zh-CN,约 10%,Very Wrong,约 30%,Wrong,约 60%,Correct,约 60%
 81,从发现消耗臭氧层的物质到签署禁止使用这些物质的国际协定用了多少年？,zh-CN,14 年,Correct,24 年,Wrong,34 年,Very Wrong,14 年
 71,如果以最富有的 10% 的人在所有收入中所占比例来衡量，世界上哪个地区的收入不平等程度最小？,zh-CN,中东,Very Wrong,欧洲,Correct,撒哈拉以南非洲,Wrong,欧洲
-60,世界上有多少人拥有移动电话（和电话号码）？,zh-CN,接近 70%,Correct,接近 80%,Wrong,接近 90%,Very Wrong,接近 70%
 55,与 1980 年相比，现今太阳能电池板的能源成本大约是：,zh-CN,1980 年成本的 1%,Correct,1980 年成本的 21%,Wrong,1980 年成本的 41%,Very Wrong,1980 年成本的 1%
 52,1990 年，世界上有 19% 的 65 岁及以上老年人仍在工作。预计 2030 年这一比例会是多少？,zh-CN,大约 21%,Correct,大约 41%,Wrong,大约 61%,Very Wrong,大约 21%
 46,在世界范围内，有多少人没有任何形式的厕所，而不得不使用灌木丛、田野或街道？,zh-CN,大约 10%,Correct,大约 30%,Wrong,大约 50%,Very Wrong,大约 10%
-40,在世界范围内，妇女在国家议会中所占的席位比例是多少？,zh-CN,大约 5%,Very Wrong,大约 15%,Wrong,大约 25%,Correct,大约 25%
 33,2021 年全球有多少 1 岁儿童接种了某种疾病的疫苗？,zh-CN,20% 以下,Very Wrong,约 50%,Wrong,80% 以上,Correct,80% 以上
 31,全世界有多少婴儿是在接受过训练的保健工作者在场的情况下出生的？,zh-CN,小于 30%,Very Wrong,大约 50%,Wrong,大于 80%,Correct,大于 80%
 27,全世界有多少个国家在基因库中的保存了植物遗传材料？,zh-CN,小于 10 个,Very Wrong,大约 50 个,Wrong,大约 100 个,Correct,大约 100 个
@@ -144,7 +145,6 @@ question_id,question_text,language,option_a,option_a_correctness,option_b,option
 1524,与 2000 年相比，2022 年全世界使用了多少化石燃料（石油、煤炭和天然气）？,zh-CN,95%（减少了一点）,Very Wrong,120%（增加了一点）,Wrong,145%（增加很多）,Correct,145%（增加很多）
 86,在联合国承认的 195 个国家中，有多少国家采纳了关于气候变化和环境的《巴黎协定》？,zh-CN,92 个,Very Wrong,142 个,Wrong,192 个,Correct,192 个
 1672,1990 年，全球约有 60% 的电力是用化石燃料生产的。今天这个数字是多少？,zh-CN,40%左右,Very Wrong,50%左右,Wrong,60%左右,Correct,60%左右
-1,全球自杀率在近 20 年里有什么变化？,zh-CN,减少了大约 25%,Correct,基本没有变化,Wrong,增加了大约 25%,Very Wrong,减少了大约 25%
 23,在高收入国家的所有 65 岁或以上人口中，有多少人生活在贫困线以下？,zh-CN,14%,Correct,29%,Wrong,44%,Very Wrong,14%
 57,全世界有多少超过退休年龄的人有权领取养老金？,zh-CN,大约 25%,Very Wrong,大约 45%,Wrong,大约 75%,Correct,大约 75%
 1678,2022 年，许多西欧国家政府为帮助新抵达的难民，为每个人每天花费超过 20 美元。 联合国在世界其他地方为每个难民平均每天花费多少钱？,zh-CN,大约 1 美元,Correct,大约 25 美元,Wrong,大约 45 美元,Very Wrong,大约 1 美元
