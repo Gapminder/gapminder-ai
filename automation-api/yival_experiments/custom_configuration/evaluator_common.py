@@ -12,12 +12,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CLASSIFY_STR = """
-First, write out in a step by step manner your reasoning to be sure that your
-conclusion is correct.
+First, write out in a step by step manner your reasoning to be sure that your conclusion is correct.
 Avoid simply stating the correct answer at the outset.
-Then print only a single choice from {choices} (without quotes or punctuation)
-on its own line corresponding to the correct answer.
-At the end, repeat just the answer by itself on a new line.
+Then print only a single choice from {choices} (including letter and option text) on its own line corresponding to the correct answer of your task.
+At the end, repeat just the choice (one letter, without quotes or punctuation) by itself on a new line.
 Reasoning:
 """
 
