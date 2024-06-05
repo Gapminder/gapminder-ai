@@ -13,7 +13,6 @@ import pandas as pd
 from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions, get_model_configs, get_prompt_variants
 from lib.config import read_config
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # load env
 config = read_config()
@@ -48,15 +47,31 @@ result
 #     WHEN ((Result = 'fail')) THEN (0)
 #     ELSE 0
 #   END AS score
-# from result where model_configuration_id not like 'mc026'
+# from result
+
+# + magic_args="--save result_to_analyze_latest_only" language="sql"
+# select * from result_to_analyze
+# where 
+#     model_configuration_id = 'mc030' 
+#     OR model_configuration_id = 'mc031' 
+#     OR model_configuration_id = 'mc032'
+#     OR model_configuration_id = 'mc033'
+#     OR model_configuration_id = 'mc034'
 
 # + magic_args="--with result_to_analyze --save result_chn_prompt_renamed" language="sql"
 # select
 #    * exclude (prompt_variation_id),
 #    replace(prompt_variation_id, '_zh', '') as prompt_variation_id
 # from result_to_analyze
+# + magic_args="--save result_chn_prompt_renamed_latest_only" language="sql"
+# select * from result_chn_prompt_renamed
+# where 
+#     model_configuration_id = 'mc030' 
+#     OR model_configuration_id = 'mc031' 
+#     OR model_configuration_id = 'mc032'
+#     OR model_configuration_id = 'mc033'
+#     OR model_configuration_id = 'mc034'
 # -
-
 
 
 
@@ -70,6 +85,11 @@ all_models.tail()
 all_prompts = ai_eval_sheet.prompt_variations.data.df
 
 all_prompts.tail()
+
+# all_prompts_filtered = %sql select variation_id, prompt_family, prompt_variation, language, question_template, question_prompt_template from all_prompts where prompt_family != 'none';
+all_prompts_filtered.DataFrame().to_csv('./data/outputs/prompts_table.csv', index=False)
+
+
 
 
 
@@ -88,7 +108,7 @@ all_questions = pd.read_csv('./data/contentful_questions_data.csv')
 #   e."language",
 #   l.wrongPercentage AS human_wrong_percentage,
 #   str_split (l.included_in_tests_within_these_topic_ids, ';') AS topic_list,
-#   filter (topic_list, (x -> contains (x, 'sdg'))) [1] AS sdg_topic,
+#   filter (topic_list, (x -> x like 'sdg-world-__')) [1] AS sdg_topic,
 #   filter (
 #     topic_list,
 #     (
@@ -98,12 +118,14 @@ all_questions = pd.read_csv('./data/contentful_questions_data.csv')
 #           'population',
 #           'sustainable-development-misconception-study-2020',
 #           '2017_gapminder_test',
-#           'climate-misconception-study-2024'
+#           'climate-misconception-study-2024',
+#           'sdg-world-un-goals'
 #         ),
 #         x
 #       )
 #     )
-#   ) AS other_topics
+#   ) AS other_topics_list,
+#   list_string_agg(other_topics_list) as other_topics
 # FROM
 #   eval_questions AS e
 #   LEFT JOIN all_questions AS l ON (
@@ -114,6 +136,17 @@ all_questions = pd.read_csv('./data/contentful_questions_data.csv')
 # ORDER BY
 #   e."language",
 #   l.globalId;
+# -
+
+# export a csv for supplement tables
+# question_table = %sql select * exclude (topic_list, other_topics_list) from questions_and_topics;
+question_table_df = question_table.DataFrame()
+
+question_table_df.to_csv('./data/outputs/question_table.csv', index=False)
+
+
+
+
 
 # + magic_args="--save q_and_t" language="sql"
 # -- only keep question id and topic list.
@@ -122,7 +155,7 @@ all_questions = pd.read_csv('./data/contentful_questions_data.csv')
 #     first(human_wrong_percentage) as human_wrong_percentage,
 #     first(topic_list) as topic_list,
 #     first(sdg_topic) as sdg_topic,
-#     first(other_topics) as other_topics
+#     first(other_topics_list) as other_topics
 # from questions_and_topics
 # group by question_id
 # -
@@ -145,12 +178,12 @@ all_questions = pd.read_csv('./data/contentful_questions_data.csv')
 #     count(*) filter (result = 'correct') / total_count_exclude_indecisive * 100 as correct_rate,
 #     100 - correct_rate as wrong_rate,
 #     count(*) filter (result = 'fail') / total_count * 100 as indecisive_rate
-# from result_to_analyze
+# from result_to_analyze_latest_only
 # -
 
 
 
-# ## Break down by Model
+# ### Break down by Model
 
 # + language="sql"
 # select
@@ -160,13 +193,14 @@ all_questions = pd.read_csv('./data/contentful_questions_data.csv')
 #     count(*) filter (result = 'correct') / total_count_exclude_indecisive * 100 as correct_rate,
 #     100 - correct_rate as wrong_rate,
 #     count(*) filter (result = 'fail') / total_count * 100 as indecisive_rate
-# from result_to_analyze r left join all_models m on r.model_configuration_id = m.model_config_id
+# from result_to_analyze_latest_only r left join all_models m on r.model_configuration_id = m.model_config_id
 # GROUP BY m.model_id
+# order by correct_rate desc
 # -
 
 
 
-# ## break down by prompt and prompt family
+# ### break down by prompt and prompt family
 
 # + magic_args="by_prompt_family <<" language="sql"
 # select
@@ -177,7 +211,7 @@ all_questions = pd.read_csv('./data/contentful_questions_data.csv')
 #     count(*) filter (result = 'correct') / total_count_exclude_indecisive * 100 as correct_rate,
 #     100 - correct_rate as wrong_rate,
 #     count(*) filter (result = 'fail') / total_count * 100 as indecisive_rate
-# from result_to_analyze r left join all_prompts p on r.prompt_variation_id = p.variation_id
+# from result_to_analyze_latest_only r left join all_prompts p on r.prompt_variation_id = p.variation_id
 # GROUP BY p.prompt_family
 # ORDER BY correct_rate desc
 # -
@@ -193,7 +227,7 @@ by_prompt_family.DataFrame().set_index('prompt_family')
 #     count(*) filter (result = 'correct') / total_count_exclude_indecisive * 100 as correct_rate,
 #     100 - correct_rate as wrong_rate,
 #     count(*) filter (result = 'fail') / total_count * 100 as indecisive_rate
-# from result_chn_prompt_renamed r left join all_prompts p on r.prompt_variation_id = p.variation_id
+# from result_chn_prompt_renamed_latest_only r left join all_prompts p on r.prompt_variation_id = p.variation_id
 # GROUP BY r.prompt_variation_id
 # ORDER BY correct_rate desc
 # -
@@ -204,7 +238,9 @@ by_prompt.DataFrame().to_csv('./data/outputs/new_total_by_prompts.csv', index=Fa
 
 
 
-# ## break down by topics
+
+
+# ### break down by topics
 
 # + magic_args="by_topics_1 <<" language="sql"
 # select
@@ -215,7 +251,7 @@ by_prompt.DataFrame().to_csv('./data/outputs/new_total_by_prompts.csv', index=Fa
 #     count(*) filter (result = 'correct') / total_count_exclude_indecisive * 100 as correct_rate,
 #     100 - correct_rate as wrong_rate,
 #     count(*) filter (result = 'fail') / total_count * 100 as indecisive_rate
-# from result_to_analyze r left join q_and_t q on r.question_id = q.question_id
+# from result_to_analyze_latest_only r left join q_and_t q on r.question_id = q.question_id
 # GROUP BY q.sdg_topic
 # ORDER BY sdg_topic
 # -
@@ -229,7 +265,7 @@ by_topics_1.DataFrame().set_index('sdg_topic')
 # select
 #     r.*,
 #     unnest(q.other_topics) as topic
-# from result_to_analyze r left join q_and_t q on r.question_id = q.question_id
+# from result_to_analyze_latest_only r left join q_and_t q on r.question_id = q.question_id
 # -
 
 
@@ -252,9 +288,49 @@ by_topics_2.DataFrame().set_index('topic')
 
 
 
+# ## The Top 5 and Bottom 5 prompts of a model
+
+# + magic_args="--save by_prompt_and_model" language="sql"
+# select
+#     model_configuration_id,
+#     prompt_variation_id,
+#     count(*) as total_count,
+#     count(*) filter (result != 'fail') as total_count_exclude_indecisive,
+#     count(*) filter (result = 'correct') / total_count_exclude_indecisive * 100 as correct_rate,
+#     100 - correct_rate as wrong_rate,
+#     count(*) filter (result = 'fail') / total_count * 100 as indecisive_rate,
+#     row_number() over (partition by model_configuration_id order by correct_rate desc) as rank
+# from result_chn_prompt_renamed
+# GROUP BY prompt_variation_id, model_configuration_id
+
+# + magic_args="--save by_prompt_and_model_with_rank by_prompt_and_model_with_rank_df <<" language="sql"
+# select *
+# from by_prompt_and_model
+# where
+#     list_contains([1,2,3,4,5, 108, 107, 106, 105, 104], rank)
+# order by model_configuration_id, rank
+# -
+
+by_prompt_and_model_with_rank_df = by_prompt_and_model_with_rank_df.DataFrame()
+
+by_prompt_and_model_with_rank_df
+
+by_prompt_and_model_with_rank_df.to_csv('./data/outputs/new_prompt_model_bottoms.csv')
+
+# + language="sql"
+# select model_configuration_id, mean(correct_rate)
+# from by_prompt_and_model
+# group by model_configuration_id
+# order by model_configuration_id
+# -
 
 
-# ## Model vs Prompt Family
+
+
+
+# ## Model, Prompt Family, Topic aggregations
+
+# ### Model vs Prompt Family
 
 # +
 # I need to check the variance cause by Prompt Family for each Model.
@@ -264,7 +340,7 @@ by_topics_2.DataFrame().set_index('topic')
 # select
 #     r.*,
 #     p.prompt_family
-# from result_to_analyze r left join all_prompts p on r.prompt_variation_id = p.variation_id
+# from result_to_analyze_latest_only r left join all_prompts p on r.prompt_variation_id = p.variation_id
 
 # + magic_args="--save res_with_prompt_family_exclude_ind" language="sql"
 # select * from res_with_prompt_family where score != 0
@@ -277,7 +353,8 @@ by_topics_2.DataFrame().set_index('topic')
 #       count(*) as total_amount,
 #       count(*) filter (score = 3) / total_amount * 100 as correct_rate,
 #       -- stddev_pop(score) / mean (score) * 100 as variance
-#       count(DISTINCT score) as variance
+#       -- count(DISTINCT score) as variance
+#       mode(score) as mode_score
 #     from
 #       res_with_prompt_family_exclude_ind
 #     group by
@@ -288,6 +365,43 @@ by_topics_2.DataFrame().set_index('topic')
 #       "correct_rate" desc
 
 # + magic_args="--save model_prompt_stat2" language="sql"
+# select
+#       r.prompt_family,
+#       r.model_configuration_id,
+#       r.question_id,
+#       (1 - count(*) filter (r.score = s1.mode_score) / count(*)) * 100 as variance
+#       -- count(*)
+#     from
+#       res_with_prompt_family_exclude_ind r
+#     left join model_prompt_stat1 s1
+#     on
+#       r.prompt_family = s1.prompt_family AND
+#       r.model_configuration_id = s1.model_configuration_id AND
+#       r.question_id = s1.question_id
+#     group by
+#       r.prompt_family,
+#       r.model_configuration_id,
+#       r.question_id
+
+# +
+# # %%sql
+# select
+#       r.prompt_family,
+#       r.model_configuration_id,
+#       r.prompt_variation_id,
+#       r.question_id,
+#       r.score,
+#       s1.mode_score
+#     from
+#       res_with_prompt_family_exclude_ind r
+#     left join model_prompt_stat1 s1
+#     on
+#       r.prompt_family = s1.prompt_family AND
+#       r.model_configuration_id = s1.model_configuration_id AND
+#       r.question_id = s1.question_id
+#     where r.prompt_family = 'geo' and r.question_id = '41'
+
+# + magic_args="--save model_prompt_stat3" language="sql"
 # select
 #       prompt_family,
 #       model_configuration_id,
@@ -303,34 +417,37 @@ by_topics_2.DataFrame().set_index('topic')
 
 # + magic_args="model_prompt_stats <<" language="sql"
 # select
-#   r2.prompt_family,
-#   r2.model_configuration_id,
+#   r1.prompt_family,
+#   r1.model_configuration_id,
 #   mean (correct_rate) as cr,
 #   mean (indecisive_rate) as ir,
-#   mode (variance) as variance
+#   mean (variance) as variance
 # from
-#   model_prompt_stat1 r2
-#   left join model_prompt_stat2 r3 on r2.prompt_family = r3.prompt_family
-#   and r2.model_configuration_id = r3.model_configuration_id
-#   and r2.question_id = r3.question_id
+#   model_prompt_stat1 r1
+#   left join model_prompt_stat2 r2 on r1.prompt_family = r2.prompt_family
+#       and r1.model_configuration_id = r2.model_configuration_id
+#       and r1.question_id = r2.question_id
+#   left join model_prompt_stat3 r3 on r1.prompt_family = r3.prompt_family
+#       and r1.model_configuration_id = r3.model_configuration_id
+#       and r1.question_id = r3.question_id
 # group by
-#   r2.prompt_family,
-#   r2.model_configuration_id
+#   r1.prompt_family,
+#   r1.model_configuration_id
 # order by
-#   r2.model_configuration_id,
-#   r2.prompt_family
+#   r1.model_configuration_id,
+#   r1.prompt_family
 #
 # -
 
-tmp_df1 = model_prompt_stats.DataFrame().set_index(['prompt_family', 'model_configuration_id'])
+tmp_df1 = model_prompt_stats.DataFrame()
 
-tmp_df1
-
-tmp_df1.describe()
+tmp_df1.set_index(['prompt_family', 'model_configuration_id'])
 
 
 
-# ## Model vs Topic
+
+
+# ### Model vs Topic
 # Same as above, need to calculate variance per question first and get the average.
 
 # + magic_args="--save model_question_stat1" language="sql"
@@ -421,7 +538,7 @@ model_topic_res_df.describe()
 
 
 
-# ## Topic vs Prompt Family
+# ### Topic vs Prompt Family
 
 # +
 # we will reuse the res_with_prompt_family_exclude_ind and res_with_prompt_family queries defined above.

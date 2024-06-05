@@ -145,7 +145,7 @@ raise Exception("Please check if file names are correct in next cell.")
 # to get the most accurate mapping, we will load the prompts from the experiment files
 # be sure to change the name
 cn_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405162248_qwen-max-0403_zh-CN.yaml', 'r'))
-en_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405210902_gpt-4o-2024-05-13_en-US.yaml', 'r'))
+en_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405281300_replicate_meta_meta-llama-3-70b-instruct_en-US.yaml', 'r'))
 
 assert cn_exp_config['variations'][1]['name'] == 'prompt_template'
 assert en_exp_config['variations'][1]['name'] == 'prompt_template'
