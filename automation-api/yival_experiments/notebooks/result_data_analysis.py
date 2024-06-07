@@ -737,6 +737,53 @@ question_prompt_family_stat_df.to_csv('./data/outputs/new_question_prompt_family
 
 
 
+# # for double checking the evaluators
+# check the top 10, bottom 10 questions per model
+
+# + magic_args="--save double_check_results" language="sql"
+# select
+#   question_id,
+#   model_configuration_id,
+#     (100 - correct_rate) as ai_wrong_percentage,
+#     human_wrong_percentage,
+#   ai_wrong_percentage - human_wrong_percentage as diff,
+#     sdg_topic,
+#     other_topics
+# from model_topic_stat
+# -- where diff > 0
+# order by
+#     "sdg_topic",
+#     cast(other_topics as varchar),
+#     "model_configuration_id"
+
+# + language="sql"
+# select * 
+# from double_check_results 
+# where model_configuration_id = 'mc026' AND ai_wrong_percentage = 0
+# order by question_id
+
+# + magic_args="--save double_check_results_1" language="sql"
+# select
+#     model_configuration_id,
+#     question_id,
+#     ai_wrong_percentage,
+#     rank() over (partition by model_configuration_id order by ai_wrong_percentage) as rank
+# from double_check_results
+# order by model_configuration_id, rank, question_id
+
+# + magic_args="to_check <<" language="sql"
+#
+# select * from double_check_results_1 where rank <= 10 OR rank >= 275
+# -
+
+to_check_df = to_check.DataFrame()
+
+to_check_df[to_check_df['model_configuration_id'] == 'mc026']
+
+
+
+
+
 
 
 # # for climate study questions
@@ -811,6 +858,10 @@ outputs2 = pd.read_excel('../output/results.xlsx')
 outputs = pd.concat([outputs1, outputs2], ignore_index=True)
 
 outputs
+
+
+
+outputs.to_parquet("./data/outputs/latest_results.parquet")
 
 
 
