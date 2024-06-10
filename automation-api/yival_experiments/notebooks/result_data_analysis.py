@@ -53,7 +53,7 @@ result
 # select * from result_to_analyze
 # where 
 #     model_configuration_id = 'mc030' 
-#     OR model_configuration_id = 'mc031' 
+#     OR model_configuration_id = 'mc035' 
 #     OR model_configuration_id = 'mc032'
 #     OR model_configuration_id = 'mc033'
 #     OR model_configuration_id = 'mc034'
@@ -67,7 +67,7 @@ result
 # select * from result_chn_prompt_renamed
 # where 
 #     model_configuration_id = 'mc030' 
-#     OR model_configuration_id = 'mc031' 
+#     OR model_configuration_id = 'mc035' 
 #     OR model_configuration_id = 'mc032'
 #     OR model_configuration_id = 'mc033'
 #     OR model_configuration_id = 'mc034'
@@ -205,7 +205,8 @@ question_table_df.to_csv('./data/outputs/question_table.csv', index=False)
 # + magic_args="by_prompt_family <<" language="sql"
 # select
 #     p.prompt_family as prompt_family,
-#     count(DISTINCT p.variation_id) / 2 as number_of_prompts,  -- treat chinese prompt and english prompt the same.
+#     count(DISTINCT p.variation_id) as number_of_prompts,
+#     -- count(DISTINCT p.variation_id) / 2 as number_of_prompts,  -- uncomment this to treat chinese prompt and english prompt the same.
 #     count(*) as total_count,
 #     count(*) filter (result != 'fail') as total_count_exclude_indecisive,
 #     count(*) filter (result = 'correct') / total_count_exclude_indecisive * 100 as correct_rate,

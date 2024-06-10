@@ -31,7 +31,7 @@ def exact_match_correctness(answer, options, correctness):
     option_occurance = [0, 0, 0]
     scores = [option_score_mapping[x] for x in correctness]
     for i, o in zip(range(3), options):
-        if o.lower() in answer.lower():
+        if o.strip().lower() in answer.strip().lower():
             option_occurance[i] = 1
     if sum(option_occurance) == 1:
         score = scores[option_occurance.index(1)]

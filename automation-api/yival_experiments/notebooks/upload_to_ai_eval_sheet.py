@@ -172,6 +172,9 @@ result['prompt_variant_id'] = result['prompt_template'].map(lambda x: prompt_tex
 result['model_conf_id'] = [model_id_params_to_model_config_mapping[
     (row['model_id'], row['model_params'])] for _, row in result.iterrows()]
 
+# update the correctness column with human scores
+result['final_score'] = result['human_rating_score'].fillna(result['correctness'])
+
 # counting
 # let's use polars from now
 result = pl.DataFrame(result)
@@ -192,14 +195,16 @@ result = result.group_by(
 ).agg(pl.all().first())
 
 
+
+
 result_counts = result.group_by(
     ['question_id', 'language', 'prompt_variant_id', 'model_conf_id', 'experiment_date']
 ).agg(
-    pl.col('correctness').filter(pl.col('correctness') == 0).count().alias('fail'),
-    pl.col('correctness').filter(pl.col('correctness') == 1).count().alias('very_wrong'),
-    pl.col('correctness').filter(pl.col('correctness') == 2).count().alias('wrong'),
-    pl.col('correctness').filter(pl.col('correctness') == 3).count().alias('correct'),
-    pl.col('correctness').count().alias('rounds')
+    pl.col('final_score').filter(pl.col('final_score') == 0).count().alias('fail'),
+    pl.col('final_score').filter(pl.col('final_score') == 1).count().alias('very_wrong'),
+    pl.col('final_score').filter(pl.col('final_score') == 2).count().alias('wrong'),
+    pl.col('final_score').filter(pl.col('final_score') == 3).count().alias('correct'),
+    pl.col('final_score').count().alias('rounds')
 )
 
 result_counts
