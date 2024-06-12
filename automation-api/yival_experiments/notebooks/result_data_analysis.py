@@ -48,6 +48,7 @@ result
 #     ELSE 0
 #   END AS score
 # from result
+# where model_configuration_id != 'mc026'  -- exclude qwen 1201
 
 # + magic_args="--save result_to_analyze_latest_only" language="sql"
 # select * from result_to_analyze
@@ -331,6 +332,46 @@ by_prompt_and_model_with_rank_df.to_csv('./data/outputs/new_prompt_model_bottoms
 
 # ## Model, Prompt Family, Topic aggregations
 
+# ### highest variance by model
+
+# + magic_args="--save prompt_variance_stat" language="sql"
+# select
+#       model_configuration_id,
+#       question_id,
+#       stddev_pop(score) / mean (score) * 100 as variance,
+#       -- count(DISTINCT score) as variance
+#     from
+#       res_with_prompt_family_exclude_ind
+#     group by
+#       model_configuration_id,
+#       question_id
+#     order by
+#       "variance" desc
+
+# + magic_args="--save prompt_variance_stat_2" language="sql"
+# select 
+#     model_configuration_id,
+#     question_id,
+#     variance,
+#     rank() over (PARTITION by (model_configuration_id) order by variance desc) as rank
+# from prompt_variance_stat
+
+# + magic_args="high_variance_questions <<" language="sql"
+# select * from prompt_variance_stat_2 where rank <= 10
+# -
+
+high_variance_questions_df = high_variance_questions.DataFrame()
+
+high_variance_questions_df.to_csv('./data/outputs/new_high_variance_questions.csv', index=False)
+
+
+
+
+
+
+
+
+
 # ### Model vs Prompt Family
 
 # +
@@ -353,7 +394,7 @@ by_prompt_and_model_with_rank_df.to_csv('./data/outputs/new_prompt_model_bottoms
 #       question_id,
 #       count(*) as total_amount,
 #       count(*) filter (score = 3) / total_amount * 100 as correct_rate,
-#       -- stddev_pop(score) / mean (score) * 100 as variance
+#       stddev_pop(score) / mean (score) * 100 as variance,
 #       -- count(DISTINCT score) as variance
 #       mode(score) as mode_score
 #     from
@@ -364,13 +405,20 @@ by_prompt_and_model_with_rank_df.to_csv('./data/outputs/new_prompt_model_bottoms
 #       question_id
 #     order by
 #       "correct_rate" desc
+# -
+
+
+
+
+
+
 
 # + magic_args="--save model_prompt_stat2" language="sql"
 # select
 #       r.prompt_family,
 #       r.model_configuration_id,
 #       r.question_id,
-#       (1 - count(*) filter (r.score = s1.mode_score) / count(*)) * 100 as variance
+#       (1 - count(*) filter (r.score = s1.mode_score) / count(*)) * 100 as variance_2
 #       -- count(*)
 #     from
 #       res_with_prompt_family_exclude_ind r
@@ -444,6 +492,8 @@ tmp_df1 = model_prompt_stats.DataFrame()
 
 tmp_df1.set_index(['prompt_family', 'model_configuration_id'])
 
+tmp_df1.to_csv('./data/outputs/new_model_vs_prompt_family.csv', index=False)
+
 
 
 
@@ -458,8 +508,8 @@ tmp_df1.set_index(['prompt_family', 'model_configuration_id'])
 #     count(*) filter (
 #       score = 3
 #     ) / count(*) * 100 as correct_rate,
-#     -- stddev_pop(score) / mean(score) * 100 as variance
-#     count(DISTINCT score) as variance
+#     stddev_pop(score) / mean(score) * 100 as variance
+#     -- count(DISTINCT score) as variance
 #   from
 #     (select * from result_to_analyze where score != 0)
 #   group by
@@ -549,8 +599,8 @@ model_topic_res_df.describe()
 #       question_id,
 #       prompt_family,
 #       count(*) filter (score = 3) / count(*) * 100 as correct_rate,
-#       -- stddev_pop(score) / mean (score) * 100 as variance
-#       count(DISTINCT score) as variance
+#       stddev_pop(score) / mean (score) * 100 as variance
+#       -- count(DISTINCT score) as variance
 #     from
 #       res_with_prompt_family_exclude_ind
 #     group by

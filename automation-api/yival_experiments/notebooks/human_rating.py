@@ -32,7 +32,7 @@
 import os.path as osp
 import pandas as pd
 
-output_dir = '../output/archives/20240401'
+output_dir = '../output/'
 
 # %%
 result_file = osp.join(output_dir, 'results.xlsx')
@@ -42,16 +42,14 @@ result_df = pd.read_excel(result_file)
 # %% magic_args="--save result_to_check_1 " language="sql"
 # select * 
 # from result_df 
-# where auto_mark_correctness != correctness
+# where human_rating_score is null
 
 # %% magic_args="--save result_to_check_2" language="sql"
 # select 
 #     *,
 #     case 
-#         when auto_mark_correctness = 0 and correctness = 3 and not contains(lower(raw_output), lower(correct_answer)) then 1
-#         when (correctness = 1 or correctness = 2) and contains(lower(raw_output), lower(correct_answer)) then 1
+#         when correctness != 0 and auto_mark_correctness != correctness then 1
 #         when auto_mark_correctness = 0 and correctness = 0 then 1
-#         when auto_mark_correctness = 1 OR auto_mark_correctness = 2 OR auto_mark_correctness = 3 then 1
 #     else 0 
 #     end as need_to_check
 # from result_to_check_1
@@ -62,6 +60,12 @@ result_df = pd.read_excel(result_file)
 
 # %%
 result_to_check_df = result_to_check.DataFrame()
+
+# %%
+result_to_check_df.shape
+
+# %%
+result_to_check_df['raw_output'] = result_to_check_df['raw_output'].str.strip()
 
 # %%
 result_to_check_df.to_excel(osp.join(output_dir, 'human_rating.xlsx'), index=False)
@@ -93,10 +97,33 @@ result_df_copy = result_df_copy.reset_index()
 
 # %% magic_args="merged_results << " language="sql"
 # select 
-#     r.* exclude (human_rating_score),
-#     l.human_rating_score
+#     r.* exclude (human_rating_score, index),
+#     coalesce(l.human_rating_score, r.human_rating_score) as human_rating_score
 # from 
-#     result_df_copy r left join human_ratings l
+#     result_df_copy r full join human_ratings l
+#     on (r.experiment_date = l.experiment_date 
+#     and r.question_id = l.question_id 
+#     and r.model_id = l.model_id 
+#     and r.model_params = l.model_params 
+#     and r.prompt_template = l.prompt_template)
+
+# %%
+merged_results_df = merged_results.DataFrame()
+
+# %%
+assert merged_results_df.shape == result_df.shape
+
+# %%
+result_df.shape
+
+# %%
+merged_results_df.drop_duplicates().shape
+
+# %% language="sql"
+# select
+#     *
+# from 
+#     result_df r anti join merged_results_df l
 #     on r.experiment_date = l.experiment_date 
 #     and r.question_id = l.question_id 
 #     and r.model_id = l.model_id 
@@ -104,16 +131,6 @@ result_df_copy = result_df_copy.reset_index()
 #     and r.prompt_template = l.prompt_template
 
 # %%
-merged_results_df = merged_results.DataFrame()
-
-# %%
-merged_results_df
-
-# %%
-result_df_copy
-
-# %%
-assert merged_results_df.shape == result_df.shape
 
 # %%
 merged_results_df[~pd.isnull(merged_results_df.human_rating_score)]
