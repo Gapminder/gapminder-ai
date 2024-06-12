@@ -774,6 +774,24 @@ summary_monkey_ai.DataFrame().to_csv('./data/outputs/new_summary_monkey_ai.csv')
 
 
 
+# ## Questions where AI scores best
+
+# + magic_args="ai_best_questions <<" language="sql"
+# select 
+#     question_id,
+#     mean(correct_rate) as avg_correct_rate,
+#     mean(indecisive_rate) as avg_inde_rate,
+#     mean(variance) as avg_variance,
+# from model_topic_stat
+# group by question_id
+# order by avg_correct_rate desc, avg_inde_rate
+# ;
+# -
+
+ai_best_questions_df = ai_best_questions.DataFrame()
+
+ai_best_questions_df.head(15)
+
 
 
 # ## Question vs Prompt Family
