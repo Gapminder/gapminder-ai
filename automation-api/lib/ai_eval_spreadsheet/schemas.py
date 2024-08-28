@@ -16,13 +16,13 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class Question(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True)
 
-    include_in_next_evaluation: Optional[bool] = Field(
-        None, title="Include in next evaluation", validate_default=True
+    include_in_next_evaluation: bool = Field(
+        False, title="Include in next evaluation", validate_default=True
     )
-    question_id: Optional[str] = Field(None, title="Question ID")
-    language: Optional[str] = Field(None, title="Language")
-    published_version_of_question: Optional[str] = Field(
-        None, title="Published version of question"
+    question_id: str = Field("", title="Question ID")
+    language: str = Field("", title="Language")
+    published_version_of_question: str = Field(
+        "", title="Published version of question"
     )
 
     @field_validator("include_in_next_evaluation", mode="before")
@@ -40,14 +40,12 @@ class QuestionsDf(pa.DataFrameModel):
 class QuestionOption(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True)
 
-    question_option_id: Optional[str] = Field(None, title="Question Option ID")
-    question_id: Optional[str] = Field(None, title="Question ID")
-    language: Optional[str] = Field(None, title="Language")
-    letter: Optional[str] = Field(None, title="Letter")
-    question_option: Optional[str] = Field(None, title="Question option")
-    correctness_of_answer_option: Optional[int] = Field(
-        None, title="Correctness of answer option"
-    )
+    question_option_id: str = Field("", title="Question Option ID")
+    question_id: str = Field("", title="Question ID")
+    language: str = Field("", title="Language")
+    letter: str = Field("", title="Letter")
+    question_option: str = Field("", title="Question option")
+    correctness_of_answer_option: int = Field(-1, title="Correctness of answer option")
 
 
 class QuestionOptionsDf(pa.DataFrameModel):
@@ -59,22 +57,20 @@ class QuestionOptionsDf(pa.DataFrameModel):
 class PromptVariation(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True)
 
-    include_in_next_evaluation: Optional[bool] = Field(
-        None, title="Include in next evaluation"
+    include_in_next_evaluation: bool = Field(False, title="Include in next evaluation")
+    variation_id: str = Field("", title="Variation ID")
+    prompt_family: str = Field("", title="Prompt Family")
+    prompt_variation: str = Field("", title="Prompt Variation")
+    language: str = Field("", title="Language")
+    question_template: str = Field("", title="Question template")
+    question_prefix: str = Field("", title="Question prefix")
+    ai_prefix: str = Field("", title="AI prefix")
+    question_prompt_template: str = Field("", title="Question prompt template")
+    question_prompt_template_example: str = Field(
+        "", title="Question prompt template example"
     )
-    variation_id: Optional[str] = Field(None, title="Variation ID")
-    language: Optional[str] = Field(None, title="Language")
-    question_template: Optional[str] = Field(None, title="Question template")
-    question_prefix: Optional[str] = Field(None, title="Question prefix")
-    ai_prefix: Optional[str] = Field(None, title="AI prefix")
-    question_prompt_template: Optional[str] = Field(
-        None, title="Question prompt template"
-    )
-    question_prompt_template_example: Optional[str] = Field(
-        None, title="Question prompt template example"
-    )
-    follow_up_answer_correctness_evaluation_prompt_template: Optional[str] = Field(
-        None, title="Follow-up answer correctness evaluation prompt template"
+    follow_up_answer_correctness_evaluation_prompt_template: str = Field(
+        "", title="Follow-up answer correctness evaluation prompt template"
     )
 
 
@@ -87,9 +83,9 @@ class PromptVariationsDf(pa.DataFrameModel):
 class GenAiModel(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
 
-    model_id: Optional[str] = Field(None, title="Model ID")
-    vendor: Optional[str] = Field(None, title="Vendor")
-    model_name: Optional[str] = Field(None, title="Model name")
+    model_id: str = Field("", title="Model ID")
+    vendor: str = Field("", title="Vendor")
+    model_name: str = Field("", title="Model name")
 
 
 class GenAiModelsDf(pa.DataFrameModel):
@@ -101,15 +97,13 @@ class GenAiModelsDf(pa.DataFrameModel):
 class GenAiModelConfig(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
 
-    include_in_next_evaluation: Optional[bool] = Field(
-        None, title="Include in next evaluation"
-    )
-    model_config_id: Optional[str] = Field(None, title="Model configuration ID")
-    model_id: Optional[str] = Field(None, title="Model ID")
-    model_parameters: Optional[str] = Field(None, title="Model Parameters")
-    repeat_times: Optional[int] = Field(None, title="Repeat Times")
-    memory: Optional[bool] = Field(None, title="Memory")
-    memory_size: Optional[int] = Field(None, title="Memory Size")
+    include_in_next_evaluation: bool = Field(False, title="Include in next evaluation")
+    model_config_id: str = Field("", title="Model configuration ID")
+    model_id: str = Field("", title="Model ID")
+    model_parameters: str = Field("", title="Model Parameters")
+    repeat_times: int = Field(-1, title="Repeat Times")
+    memory: bool = Field(False, title="Memory")
+    memory_size: int = Field(-1, title="Memory Size")
 
 
 class GenAiModelConfigsDf(pa.DataFrameModel):
@@ -119,11 +113,11 @@ class GenAiModelConfigsDf(pa.DataFrameModel):
 
 
 class Metric(BaseModel):
-    name: Optional[str] = Field(None, title="Name")
-    description: Optional[str] = Field(None, title="Description")
-    prompt: Optional[str] = Field(None, title="Prompt")
-    choices: Optional[str] = Field(None, title="Choices")
-    choice_scores: Optional[str] = Field(None, title="Choice Scores")
+    name: str = Field("", title="Name")
+    description: str = Field("", title="Description")
+    prompt: str = Field("", title="Prompt")
+    choices: str = Field("", title="Choices")
+    choice_scores: str = Field("", title="Choice Scores")
 
 
 class MetricsDf(pa.DataFrameModel):
@@ -135,17 +129,17 @@ class MetricsDf(pa.DataFrameModel):
 class EvalResult(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
 
-    question_id: Optional[str] = Field(None, title="Question ID")
-    language: Optional[str] = Field(None, title="Language")
-    prompt_variation_id: Optional[str] = Field(None, title="Prompt variation ID")
-    model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
-    last_evaluation_datetime: Optional[str] = Field(None, title="Last Evaluation")
-    percent_correct: Optional[float] = Field(None, title="Percent Correct")
-    percent_wrong: Optional[float] = Field(None, title="Percent Wrong")
-    percent_very_wrong: Optional[float] = Field(None, title="Percent Very Wrong")
-    percent_eval_failed: Optional[float] = Field(None, title="Percent Eval Failed")
-    rounds: Optional[int] = Field(None, title="Rounds")
-    result: Optional[str] = Field(None, title="Result")
+    question_id: str = Field("", title="Question ID")
+    language: str = Field("", title="Language")
+    prompt_variation_id: str = Field("", title="Prompt variation ID")
+    model_configuration_id: str = Field("", title="Model Configuration ID")
+    last_evaluation_datetime: str = Field("", title="Last Evaluation")
+    percent_correct: Optional[float] = Field("", title="Percent Correct")
+    percent_wrong: Optional[float] = Field("", title="Percent Wrong")
+    percent_very_wrong: Optional[float] = Field("", title="Percent Very Wrong")
+    percent_eval_failed: Optional[float] = Field("", title="Percent Eval Failed")
+    rounds: int = Field(-1, title="Rounds")
+    result: str = Field("", title="Result")
 
 
 class EvalResultsDf(pa.DataFrameModel):
@@ -157,16 +151,16 @@ class EvalResultsDf(pa.DataFrameModel):
 class SessionResult(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
 
-    session_id: Optional[str] = Field(None, title="Session ID")
-    session_time: Optional[str] = Field(None, title="Session Time")
-    prompt_variation_id: Optional[str] = Field(None, title="Prompt Variation ID")
-    model_configuration_id: Optional[str] = Field(None, title="Model Configuration ID")
-    survey_id: Optional[str] = Field(None, title="Survey ID")
-    question_id: Optional[str] = Field(None, title="Question ID")
-    language: Optional[str] = Field(None, title="Language")
-    question_number: Optional[int] = Field(None, title="Question No.")
-    output: Optional[str] = Field(None, title="Response Text")
-    grade: Optional[str] = Field(None, title="Grade")
+    session_id: str = Field("", title="Session ID")
+    session_time: str = Field("", title="Session Time")
+    prompt_variation_id: str = Field("", title="Prompt Variation ID")
+    model_configuration_id: str = Field("", title="Model Configuration ID")
+    survey_id: str = Field("", title="Survey ID")
+    question_id: str = Field("", title="Question ID")
+    language: str = Field("", title="Language")
+    question_number: int = Field(-1, title="Question No.")
+    output: str = Field("", title="Response Text")
+    grade: str = Field("", title="Grade")
 
 
 class SessionResultsDf(pa.DataFrameModel):

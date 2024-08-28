@@ -10,6 +10,7 @@ from tenacity import (
     retry_if_exception_type,
     retry_if_not_result,
     stop_after_attempt,
+    wait_random_exponential,
 )
 
 from lib.config import read_config
@@ -29,7 +30,8 @@ def return_last_message(retry_state):
 
 @retry(
     retry=(retry_if_exception_type() | retry_if_not_result(response_is_ok)),
-    stop=stop_after_attempt(3),
+    stop=stop_after_attempt(10),
+    wait=wait_random_exponential(multiplier=1, min=5, max=80),
     retry_error_callback=return_last_message,
 )
 def get_reply(**kwargs):

@@ -1,6 +1,8 @@
+import os
+import random
+
 import litellm
 from litellm import completion
-from llms.alibaba_complete import llm_complete as alibaba_llm_complete
 from model_config_wrapper import ModelConfigWrapper
 from yival.logger.token_logger import TokenLogger
 from yival.schemas.experiment_config import MultimodalOutput
@@ -10,14 +12,34 @@ from yival.wrappers.string_wrapper import StringWrapper
 
 # load env vars
 from lib.config import read_config
-from yival_experiments.custom_configuration.llms.palm_completion import (
-    safety_settings_new_categories,
-    safety_settings_old_categories,
+from yival_experiments.custom_configuration.llms.alibaba_complete import (
+    llm_complete as alibaba_llm_complete,
 )
+from yival_experiments.custom_configuration.llms.palm_completion import safety_settings
 
 read_config()
+
 # default model config if not provided
-default_model_config = dict(model_name="gpt-3.5-turbo", params={"temperature": 0.5})
+# default_model_config = dict(
+#     model_id="gpt-4o-2024-05-13",
+#     params={"temperature": 0.5},
+#     vendor="OpenAI"
+# )
+# default_model_config = dict(
+#     model_id="vertex_ai/gemini-1.5-pro-preview-0409",
+#     params={"temperature": 0.5},
+#     vendor="Google",
+# )
+default_model_config = dict(
+    model_id="vertex_ai/claude-3-opus@20240229",
+    params={"temperature": 0.5},
+    vendor="Anthropic",
+)
+default_model_config = dict(
+    model_id="replicate/meta/meta-llama-3-70b-instruct",
+    params={"temperature": 0.5},
+    vendor="Meta",
+)
 # set this to see verbose outputs
 litellm.set_verbose = True
 # enable caching in the evaluator.
@@ -65,58 +87,64 @@ def model_compare(
     )
     # system_prompt = """..."""
 
-    if model["vendor"] == "Alibaba":
-        # FIXME: alibaba's complete function doesn't support system prompt.
-        output = alibaba_llm_complete(
-            model_name=model["model_id"], prompt=prompt, **model["params"]
+    # prepare model call parameters
+    litellm_messages = [
+        # {"content": system_prompt, "role": "system"},
+        {"content": prompt, "role": "user"}
+    ]
+
+    litellm_params = dict(
+        model=model["model_id"],
+        messages=litellm_messages,
+        caching=False,
+        num_retries=10,
+        request_timeout=60,
+        **model["params"]
+    )
+    if model["vendor"] == "Google":
+        # choose a vertex project location
+        litellm.vertex_location = random.choice(
+            os.environ["VERTEXAI_LOCATIONS"].split(",")
         )
-        response = Response(output=output).output
-    elif model["vendor"] == "Google":
-        messages = [
-            # {"content": system_prompt, "role": "system"},
-            {"content": prompt, "role": "user"}
-        ]
-        response = Response(
-            output=completion(
-                model=model["model_id"],
-                messages=messages,
-                # google allows changing content filters. We will disable all
-                safety_settings=safety_settings_old_categories
-                if model["model_id"].startswith("palm")
-                else safety_settings_new_categories,
-                caching=False,
-                num_retries=10,
-                request_timeout=60,
-                **model["params"],
+        # google allows changing content filters. We will disable all
+        litellm_params["safety_settings"] = safety_settings
+    elif model["vendor"] == "Anthropic":
+        if "opus" in model["model_id"]:
+            # there is only one location where claude Opus is available.
+            litellm.vertex_location = "us-east5"
+        else:
+            litellm.vertex_location = "us-central1"
+
+    try:
+        if model["vendor"] == "Alibaba":
+            # FIXME: alibaba's complete function doesn't support system prompt.
+            output = alibaba_llm_complete(
+                model_name=model["model_id"], prompt=prompt, **model["params"]
             )
-        ).output
-        # print(response)
-    else:
-        messages = [
-            # {"content": system_prompt, "role": "system"},
-            {"content": prompt, "role": "user"}
-        ]
-        response = Response(
-            output=completion(
-                model=model["model_id"],
-                messages=messages,
-                caching=False,
-                num_retries=10,
-                request_timeout=60,
-                **model["params"],
-            )
-        ).output
+            response = Response(output=output).output
+            response_text = response["choices"][0]["message"]["content"]
+        else:
+            response = Response(output=completion(**litellm_params)).output
+            response_text = response["choices"][0]["message"]["content"]
+    except KeyboardInterrupt:
+        raise
+    except Exception as e:
+        print(str(e))
+        response = None
+        response_text = "No Answer. Reason:\n" + str(e)
 
     res = MultimodalOutput(
-        text_output=response["choices"][0]["message"]["content"],
+        text_output=response_text,
     )
-    # print(response["choices"][0]["message"]["content"])
-    token_usage = response["usage"]["total_tokens"]
-    logger.log(token_usage)
+    if type(response) is Response:
+        token_usage = response["usage"]["total_tokens"]
+        logger.log(token_usage)
+    else:
+        logger.log(0)
     return res
 
 
-def main():
+def main() -> None:
     q = "How many people worldwide have their basic needs met when it comes to food, "
     "water, toilets, electricity, schooling and healthcare?"
     print(
@@ -125,11 +153,11 @@ def main():
             q,
             "en_US",
             "Around 20%",
-            3,
+            "3",
             "Around 50%",
-            2,
+            "2",
             "Around 80%",
-            1,
+            "1",
             ExperimentState(),
         )
     )

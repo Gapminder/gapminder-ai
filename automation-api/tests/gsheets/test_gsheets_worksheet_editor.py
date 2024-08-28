@@ -1,5 +1,5 @@
 import unittest.mock
-from typing import Optional
+from typing import Optional, Type
 
 import pandas as pd
 import pandera as pa
@@ -47,7 +47,7 @@ def test_gsheets_worksheet_editor(
             coerce = True
             # strict = True
 
-    editor = GsheetsWorksheetEditor[FooDfModel, Foo](
+    editor = GsheetsWorksheetEditor[Type[FooDfModel], Type[Foo]](
         df_schema=FooDfModel,
         row_schema=Foo,
         sh=mock_spreadsheet,

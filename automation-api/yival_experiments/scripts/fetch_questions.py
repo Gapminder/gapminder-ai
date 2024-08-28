@@ -16,6 +16,10 @@ def main():
     print("Getting questions")
     questions = get_questions(sheet)
 
+    if len(questions) == 0:
+        print("Empty Question set. Please double check the Questions sheet.")
+        return
+
     output_list = []
 
     for q, opts in questions:

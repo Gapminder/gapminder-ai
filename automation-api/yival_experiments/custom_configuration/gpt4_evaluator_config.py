@@ -9,7 +9,7 @@ class GPT4EvaluatorConfig(EvaluatorConfig):
     evaluator_type: EvaluatorType = EvaluatorType.INDIVIDUAL
     prompt: Union[str, List[Dict[str, str]]] = ""
     choices: List[str] = field(default_factory=list)
-    model_name: str = "gpt-4"
+    model_name: str = "gpt-4o"
     description: str = "This is the description of the evaluator."
     scale_description: str = "0-4"
     choice_scores: Optional[Dict[str, float]] = None

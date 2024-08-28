@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Type
 
 from gspread import Spreadsheet
 
@@ -18,8 +18,6 @@ from lib.ai_eval_spreadsheet.schemas import (
     QuestionOption,
     QuestionOptionsDf,
     QuestionsDf,
-    SessionResult,
-    SessionResultsDf,
 )
 from lib.gdrive.auth import AuthorizedClients
 from lib.gsheets.gsheets_worksheet_editor import GsheetsWorksheetEditor
@@ -27,24 +25,19 @@ from lib.gsheets.gsheets_worksheet_editor import GsheetsWorksheetEditor
 
 @dataclass
 class AiEvalData:
-    questions: Optional[GsheetsWorksheetEditor[QuestionsDf, Question]] = None
-    question_options: Optional[
-        GsheetsWorksheetEditor[QuestionOptionsDf, QuestionOption]
-    ] = None
-    prompt_variations: Optional[
-        GsheetsWorksheetEditor[PromptVariationsDf, PromptVariation]
-    ] = None
-    gen_ai_models: Optional[GsheetsWorksheetEditor[GenAiModelsDf, GenAiModel]] = None
-    gen_ai_model_configs: Optional[
-        GsheetsWorksheetEditor[GenAiModelConfigsDf, GenAiModelConfig]
-    ] = None
-    metrics: Optional[GsheetsWorksheetEditor[MetricsDf, Metric]] = None
-    evaluation_results: Optional[
-        GsheetsWorksheetEditor[EvalResult, EvalResultsDf]
-    ] = None
-    session_results: Optional[
-        GsheetsWorksheetEditor[SessionResult, SessionResultsDf]
-    ] = None
+    prompt_variations: GsheetsWorksheetEditor[
+        Type[PromptVariationsDf], Type[PromptVariation]
+    ]
+    questions: GsheetsWorksheetEditor[Type[QuestionsDf], Type[Question]]
+    question_options: GsheetsWorksheetEditor[
+        Type[QuestionOptionsDf], Type[QuestionOption]
+    ]
+    gen_ai_models: GsheetsWorksheetEditor[Type[GenAiModelsDf], Type[GenAiModel]]
+    gen_ai_model_configs: GsheetsWorksheetEditor[
+        Type[GenAiModelConfigsDf], Type[GenAiModelConfig]
+    ]
+    metrics: GsheetsWorksheetEditor[Type[MetricsDf], Type[Metric]]
+    evaluation_results: GsheetsWorksheetEditor[Type[EvalResult], Type[EvalResultsDf]]
 
 
 sheet_names = {
@@ -55,7 +48,6 @@ sheet_names = {
     "gen_ai_model_configs": "Model configurations",
     "metrics": "Metrics",
     "evaluation_results": "Latest Results",
-    "session_results": "Sessions",
 }
 
 
@@ -132,15 +124,6 @@ def read_ai_eval_data(
         evaluate_formulas=False,
     )
 
-    session_results = GsheetsWorksheetEditor(
-        sh=ai_eval_spreadsheet,
-        df_schema=SessionResultsDf,
-        row_schema=SessionResult,
-        worksheet_name=sheet_names["session_results"],
-        header_row_number=0,
-        evaluate_formulas=False,
-    )
-
     return AiEvalData(
         questions=questions,
         question_options=question_options,
@@ -149,5 +132,4 @@ def read_ai_eval_data(
         gen_ai_model_configs=gen_ai_model_configs,
         metrics=metrics,
         evaluation_results=evaluation_results,
-        session_results=session_results,
     )

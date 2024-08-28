@@ -1,5 +1,5 @@
 from json import dumps
-from typing import Optional
+from typing import Optional, Type
 
 import pandas as pd
 import pandera as pa
@@ -46,7 +46,7 @@ def test_gsheets_worksheet_data() -> None:
             coerce = True
             # strict = True # Not compatible with only PydanticModel row-wise checks
 
-    data = GsheetsWorksheetData[FooDfModel, Foo](
+    data = GsheetsWorksheetData[Type[FooDfModel], Type[Foo]](
         df_schema=FooDfModel,
         row_schema=Foo,
         df=original_df,

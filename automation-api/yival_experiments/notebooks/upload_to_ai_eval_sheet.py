@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.16.2
 #   kernelspec:
 #     display_name: gapminder-ai-automation-api
 #     language: python
@@ -21,6 +21,7 @@ import json
 import numpy as np
 import pandas as pd
 import polars as pl
+import yaml
 from datetime import datetime
 from langdetect import detect
 from lib.pilot.helpers import read_ai_eval_spreadsheet, get_questions, get_model_configs, get_prompt_variants
@@ -29,8 +30,12 @@ from lib.config import read_config
 # load env
 config = read_config()
 
-
 raw_results = pd.read_excel('../output/results.xlsx')
+# also, save it as parquet, for easier loading into other tools
+# raw_results.to_parquet('../notebooks/data/raw_results_experiment_3.parquet')
+
+# set question_id field to string
+raw_results['question_id'] = raw_results['question_id'].astype(str)
 
 raw_results
 
@@ -92,10 +97,15 @@ cn_ids = [x[0] for x in cn]
 # this should output an empty set
 # if English question set and Chinese question set are the same.
 set(en_ids) - set(cn_ids)
+set(cn_ids) - set(en_ids)
 
-
+# +
 # fix for experiment 20231104: the gpt-4 is gpt-4-0613
 raw_results.loc[raw_results['model_id'] == 'gpt-4', 'model_id'] = 'gpt-4-0613'
+
+# fix for experiment 20240521: gpt-4o is gpt-4o-2024-05-13
+raw_results.loc[raw_results['model_id'] == 'gpt-4o', 'model_id'] = 'gpt-4o-2024-05-13'
+# -
 
 
 # create a mapping from model_id, parameters -> model_config id
@@ -129,21 +139,23 @@ for model_id, params in raw_results[['model_id', 'model_params']].drop_duplicate
 
 model_id_params_to_model_config_mapping
 
+raise Exception("Please check if file names are correct in next cell.")
+
 # create a mapping from prompt_variant_text -> prompt_variant_id
-prompt_variants = get_prompt_variants(ai_eval_sheet, include_all=True)
+# to get the most accurate mapping, we will load the prompts from the experiment files
+# be sure to change the name
+cn_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405162248_qwen-max-0403_zh-CN.yaml', 'r'))
+en_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405281300_replicate_meta_meta-llama-3-70b-instruct_en-US.yaml', 'r'))
 
-prompt_text_to_prompt_id_mapping = {}
+assert cn_exp_config['variations'][1]['name'] == 'prompt_template'
+assert en_exp_config['variations'][1]['name'] == 'prompt_template'
 
-for prompt_text in raw_results['prompt_template'].unique():
-    for prompt in prompt_variants:
-        try:
-            prompt_full = prompt.question_prompt_template.format(question=prompt.question_template)
-        except KeyError:
-            # ignore when the prompt template need more than the question to format.
-            continue
-        if prompt_text == prompt_full:
-            prompt_text_to_prompt_id_mapping[prompt_text] = prompt.variation_id
-            break
+cn_prompts = pd.DataFrame.from_records(cn_exp_config['variations'][1]['variations'])
+en_prompts = pd.DataFrame.from_records(en_exp_config['variations'][1]['variations'])
+
+all_prompts = pd.concat([cn_prompts, en_prompts], ignore_index=True)
+
+prompt_text_to_prompt_id_mapping = all_prompts.set_index('value')['variation_id'].to_dict()
 
 prompt_text_to_prompt_id_mapping
 
@@ -160,6 +172,9 @@ result['prompt_variant_id'] = result['prompt_template'].map(lambda x: prompt_tex
 result['model_conf_id'] = [model_id_params_to_model_config_mapping[
     (row['model_id'], row['model_params'])] for _, row in result.iterrows()]
 
+# update the correctness column with human scores
+result['final_score'] = result['human_rating_score'].fillna(result['correctness'])
+
 # counting
 # let's use polars from now
 result = pl.DataFrame(result)
@@ -173,19 +188,29 @@ result
 # )
 # -
 
+# FIX: In experiment on 2024-04, due to issue in prompt we tested the ideology-capitalist_zh prompt for alibaba twice.
+# we will just keep one.
+result = result.group_by(
+    ['question_id', 'language', 'prompt_variant_id', 'model_conf_id', 'experiment_date']
+).agg(pl.all().first())
+
+
+
+
 result_counts = result.group_by(
     ['question_id', 'language', 'prompt_variant_id', 'model_conf_id', 'experiment_date']
 ).agg(
-    pl.col('correctness').filter(pl.col('correctness') == 0).count().alias('fail'),
-    pl.col('correctness').filter(pl.col('correctness') == 1).count().alias('very_wrong'),
-    pl.col('correctness').filter(pl.col('correctness') == 2).count().alias('wrong'),
-    pl.col('correctness').filter(pl.col('correctness') == 3).count().alias('correct'),
-    pl.col('correctness').count().alias('rounds')
+    pl.col('final_score').filter(pl.col('final_score') == 0).count().alias('fail'),
+    pl.col('final_score').filter(pl.col('final_score') == 1).count().alias('very_wrong'),
+    pl.col('final_score').filter(pl.col('final_score') == 2).count().alias('wrong'),
+    pl.col('final_score').filter(pl.col('final_score') == 3).count().alias('correct'),
+    pl.col('final_score').count().alias('rounds')
 )
 
 result_counts
 
 result_counts['rounds'].max()
+
 
 result_pct = result_counts.with_columns(
     pl.col('fail') / pl.col('rounds') * 100,
@@ -228,3 +253,5 @@ backup.columns
 result_full_df = result_full_df[backup.columns]
 
 ai_eval_sheet.evaluation_results.replace_data(result_full_df)
+
+

@@ -60,6 +60,21 @@ and output a pickle file in `./yival_experiments/output/experiment_name_en-US_0.
 
 When the experiment is completed, Yival will start a web server to show the results.
 
+### Setup environment variables
+Here are a list of environment variables that needed to be set (in automation-api/.env file) before running experiments, depending on the model we are testing:
+
+- OpenAI models: OPENAI_API_KEY and OPENAI_ORG_ID
+- Hugging Face models: HUGGINGFACEHUB_API_TOKEN
+- Replicate models: REPLICATE_API_KEY
+- Alibaba models: DASHSCOPE_API_KEY
+- Google Gemini API: GEMINI_API_KEY
+- VertexAI models: VERTEX_SERVICE_ACCOUNT_CREDENTIALS, VERTEXAI_PROJECT and VERTEXAI_LOCATIONS
+
+Some notes on VertexAI:
+
+- VERTEXAI_LOCATIONS can be a comma separated list of gcp regions, to get over the limit of 5 requests per minute of Gemini
+- follow the instruction in [DEV.md](https://github.com/Gapminder/gapminder-ai/blob/main/automation-api/DEV.md#obtaining-developer-specific-service-account-credentials-base64-encoded) to obtain VERTEX_SERVICE_ACCOUNT_CREDENTIALS
+
 ## 7. Generate a result xlsx from output
 
 To convert the pickle files to Excel file:
@@ -76,8 +91,8 @@ TODO: We can add a custom evaluator in Yival to calculate the final scores.
 
 Two notebooks in `./yival_experiments/notebooks/` directory are provided for calculating scores.
 
-- final_scores.py: calculate a final score for each model and prompt
 - upload_to_ai_eval_sheet.py: generate the result table and upload to the `Latest Results` sheet in AI Eval Spreadsheet
+- result_data_analysis.py: compute statistics from the results
 
 Start Jupyter:
 
