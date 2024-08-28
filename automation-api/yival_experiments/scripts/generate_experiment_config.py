@@ -41,13 +41,13 @@ def get_evaluators(ai_eval_sheet: AiEvalData, evaluator_model="gpt4"):
 
     if evaluator_model == "gpt4":
         evaluator_name = "gpt4_evaluator"
-        model_name = "gpt-4o"
+        model_name = "gpt-4o-2024-08-06"
     elif evaluator_model == "claude":
         evaluator_name = "vertex_ai_evaluator"
-        model_name = "vertex_ai/claude-3-opus@20240229"
+        model_name = "vertex_ai/claude-3-5-sonnet@20240620"
     elif evaluator_model == "llama":
         evaluator_name = "llama3_evaluator"
-        model_name = "replicate/meta/meta-llama-3-70b-instruct"
+        model_name = "replicate/meta/meta-llama-3.1-405b-instruct"
 
     for m in metrics:
         metric: Dict[str, Any] = dict()
