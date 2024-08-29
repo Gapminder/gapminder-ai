@@ -35,7 +35,9 @@ experiment_configurations_path = current_script_path / "../experiment_configurat
 latest_experiment_path = current_script_path / "../experiment_latest.yaml"
 
 
-def get_evaluators(ai_eval_sheet: AiEvalData, evaluator_model="gpt4"):
+def get_evaluators(
+    ai_eval_sheet: AiEvalData, evaluator_model="gpt4"
+) -> List[Dict[str, Any]]:
     metrics = get_metrics(ai_eval_sheet)
     res = list()
 
@@ -113,6 +115,15 @@ def main(evaluator_model):
 
     # metrics
     config["evaluators"] = get_evaluators(sheet, evaluator_model=evaluator_model)
+
+    # also append a simple evaluator
+    simple_evaluator = {
+        "evaluator_type": "individual",
+        "metric_calculators": [{"method": "AVERAGE"}],
+        "name": "simple_evaluator",
+    }
+    config["evaluators"].append(simple_evaluator)
+
     # model configs and prompt variations
     model_configs = get_model_configs(sheet)
     model_ids = {model.model_id for model, model_config in model_configs}
