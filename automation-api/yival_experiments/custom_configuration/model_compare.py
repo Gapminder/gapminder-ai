@@ -109,12 +109,8 @@ def model_compare(
         # google allows changing content filters. We will disable all
         litellm_params["safety_settings"] = safety_settings
     elif model["vendor"] == "Anthropic":
-        if "opus" in model["model_id"]:
-            # there is only one location where claude Opus is available.
-            litellm.vertex_location = "us-east5"
-        else:
-            litellm.vertex_location = "us-central1"
-
+        # all Anthropic models are abailable in us-east5
+        litellm.vertex_location = "us-east5"
     try:
         if model["vendor"] == "Alibaba":
             # FIXME: alibaba's complete function doesn't support system prompt.
