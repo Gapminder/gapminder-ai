@@ -1599,6 +1599,23 @@ six = "*"
 termcolor = "*"
 
 [[package]]
+name = "fireworks-ai"
+version = "0.15.1"
+description = "Python client library for the Fireworks.ai Generative AI Platform"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "fireworks_ai-0.15.1-py3-none-any.whl", hash = "sha256:56aeeb694019db95377ba7cecc45dbc575c4de56cb411a5bda5ca78e6871ab22"},
+    {file = "fireworks_ai-0.15.1.tar.gz", hash = "sha256:fb78df46eef3a23b9cc63cb9bbb5242c3851bce40d9c1ae059161cd6b3e430b8"},
+]
+
+[package.dependencies]
+httpx = "*"
+httpx-sse = "*"
+Pillow = "*"
+pydantic = "*"
+
+[[package]]
 name = "flask"
 version = "3.0.3"
 description = "A simple framework for building complex web applications."
@@ -2576,6 +2593,17 @@ brotli = ["brotli", "brotlicffi"]
 cli = ["click (==8.*)", "pygments (==2.*)", "rich (>=10,<14)"]
 http2 = ["h2 (>=3,<5)"]
 socks = ["socksio (==1.*)"]
+
+[[package]]
+name = "httpx-sse"
+version = "0.4.0"
+description = "Consume Server-Sent Event (SSE) messages with HTTPX."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "httpx-sse-0.4.0.tar.gz", hash = "sha256:1e81a3a3070ce322add1d3529ed42eb5f70817f45ed6ec915ab753f961139721"},
+    {file = "httpx_sse-0.4.0-py3-none-any.whl", hash = "sha256:f329af6eae57eaa2bdfd962b42524764af68075ea87370a2de920af5341e318f"},
+]
 
 [[package]]
 name = "huggingface-hub"
@@ -8326,4 +8354,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "8cbe88a4b02690ac4d5229f2716eb6a4bd0ebe97c8db4672ce37640081cfd572"
+content-hash = "7fb11c89ce0a056ccb623a283dba32de02415703c0af83e122954e33dabc70ea"
