@@ -36,7 +36,7 @@ from yival.schemas.experiment_config import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# because claude opus is only available in one location, we will hard code it here.
+# because all claude models are avaliable in us-east5
 VERTEX_LOCATION = "us-east5"
 
 

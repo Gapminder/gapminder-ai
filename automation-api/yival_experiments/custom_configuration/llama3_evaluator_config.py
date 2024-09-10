@@ -9,7 +9,7 @@ class Llama3EvaluatorConfig(EvaluatorConfig):
     evaluator_type: EvaluatorType = EvaluatorType.INDIVIDUAL
     prompt: Union[str, List[Dict[str, str]]] = ""
     choices: List[str] = field(default_factory=list)
-    model_name: str = "replicate/meta/meta-llama-3-70b-instruct"
+    model_name: str = "fireworks_ai/accounts/fireworks/models/llama-v3p1-405b-instruct"
     description: str = "This is the description of the evaluator."
     scale_description: str = "0-4"
     choice_scores: Optional[Dict[str, float]] = None
