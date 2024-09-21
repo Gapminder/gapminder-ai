@@ -12,9 +12,6 @@ from yival.wrappers.string_wrapper import StringWrapper
 
 # load env vars
 from lib.config import read_config
-from yival_experiments.custom_configuration.llms.alibaba_complete import (
-    llm_complete as alibaba_llm_complete,
-)
 from yival_experiments.custom_configuration.llms.palm_completion import safety_settings
 
 read_config()
@@ -26,19 +23,22 @@ read_config()
 #     vendor="OpenAI"
 # )
 # default_model_config = dict(
-#     model_id="vertex_ai/gemini-1.5-pro-preview-0409",
+#     model_id="vertex_ai/gemini-pro-experimental",
 #     params={"temperature": 0.5},
 #     vendor="Google",
 # )
+# default_model_config = dict(
+#     model_id="vertex_ai/claude-3-opus@20240229",
+#     params={"temperature": 0.5},
+#     vendor="Anthropic",
+# )
+# default_model_config = dict(
+#     model_id="replicate/meta/meta-llama-3-70b-instruct",
+#     params={"temperature": 0.5},
+#     vendor="Meta",
+# )
 default_model_config = dict(
-    model_id="vertex_ai/claude-3-opus@20240229",
-    params={"temperature": 0.5},
-    vendor="Anthropic",
-)
-default_model_config = dict(
-    model_id="replicate/meta/meta-llama-3-70b-instruct",
-    params={"temperature": 0.5},
-    vendor="Meta",
+    model_id="qwen-max", params={"temperature": 0.5}, vendor="Alibaba"
 )
 # set this to see verbose outputs
 litellm.set_verbose = True
@@ -96,10 +96,10 @@ def model_compare(
     litellm_params = dict(
         model=model["model_id"],
         messages=litellm_messages,
-        caching=False,
+        caching=True,
         num_retries=10,
         request_timeout=60,
-        **model["params"]
+        **model["params"],
     )
     if model["vendor"] == "Google":
         # choose a vertex project location
@@ -111,17 +111,14 @@ def model_compare(
     elif model["vendor"] == "Anthropic":
         # all Anthropic models are abailable in us-east5
         litellm.vertex_location = "us-east5"
+    elif model["vendor"] == "Alibaba":
+        # Alibaba has openai compatible endpoints
+        litellm_params["model"] = f"openai/{litellm_params['model']}"
+        litellm_params["api_key"] = os.getenv("DASHSCOPE_API_KEY")
+        litellm_params["api_base"] = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     try:
-        if model["vendor"] == "Alibaba":
-            # FIXME: alibaba's complete function doesn't support system prompt.
-            output = alibaba_llm_complete(
-                model_name=model["model_id"], prompt=prompt, **model["params"]
-            )
-            response = Response(output=output).output
-            response_text = response["choices"][0]["message"]["content"]
-        else:
-            response = Response(output=completion(**litellm_params)).output
-            response_text = response["choices"][0]["message"]["content"]
+        response = Response(output=completion(**litellm_params)).output
+        response_text = response["choices"][0]["message"]["content"]
     except KeyboardInterrupt:
         raise
     except Exception as e:
