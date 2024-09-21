@@ -1121,17 +1121,18 @@ files = [
 
 [[package]]
 name = "dashscope"
-version = "1.19.2"
+version = "1.20.10"
 description = "dashscope client sdk library"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "dashscope-1.19.2-py3-none-any.whl", hash = "sha256:bacfb6b7c2ce273d2f1a75c7a2ecc8142452079dd5efb2bfb77e670742debc62"},
+    {file = "dashscope-1.20.10-py3-none-any.whl", hash = "sha256:174df27ea798a7cd01b7cea710e149f1e6ca43f3e1a86598440fab37bcef31b4"},
 ]
 
 [package.dependencies]
 aiohttp = "*"
 requests = "*"
+websocket-client = "*"
 
 [package.extras]
 tokenizer = ["tiktoken"]
