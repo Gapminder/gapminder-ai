@@ -115,7 +115,7 @@ def main():
                 MethodCalculationMethod(MethodCalculationMethod.AVERAGE)
             )
         ],
-        model_name="gemini-pro-experimental",
+        model_name="vertex_ai/gemini-pro-experimental",
         prompt=prompt,
         choices=choices,
         evaluator_type=EvaluatorType.INDIVIDUAL,

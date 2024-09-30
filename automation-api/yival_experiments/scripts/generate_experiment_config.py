@@ -45,7 +45,7 @@ def get_evaluators(
         evaluator_name = "gpt4_evaluator"
         model_name = "gpt-4o-2024-08-06"
     elif evaluator_model == "claude":
-        evaluator_name = "vertex_ai_evaluator"
+        evaluator_name = "claude_evaluator"
         model_name = "vertex_ai/claude-3-5-sonnet@20240620"
     elif evaluator_model == "llama":
         evaluator_name = "llama3_evaluator"
