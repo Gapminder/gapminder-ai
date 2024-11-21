@@ -24,6 +24,28 @@ current_script_path = Path(__file__).parent
 # In this script, we store all responses into an excel file.
 output_dir = current_script_path / "../output"
 
+option_score_mapping = {"Correct": 3, "Wrong": 2, "Very Wrong": 1}
+
+
+def exact_match_correctness(answer, options, correctness):
+    option_occurance = [0, 0, 0]
+    scores = [option_score_mapping[x] for x in correctness]
+    for i, o in zip(range(3), options):
+        if o.strip().lower() in answer.strip().lower():
+            option_occurance[i] = 1
+    if sum(option_occurance) == 1:
+        score = scores[option_occurance.index(1)]
+    else:
+        score = 0
+
+    return score
+
+
+def extract_correct_answer(options, correctness):
+    for t, c in zip(options, correctness):
+        if c == "Correct":
+            return t
+
 
 if __name__ == "__main__":
     output_list = []
@@ -49,6 +71,10 @@ if __name__ == "__main__":
                     option_b_correctness,
                     option_c_correctness,
                 ]
+                auto_mark_correctness = exact_match_correctness(
+                    answer, options, correctness
+                )
+                correct_answer = extract_correct_answer(options, correctness)
                 result_dict = dict(
                     experiment_date=expr_date,
                     question_id=str(result.input_data.content["question_id"]),
@@ -57,6 +83,8 @@ if __name__ == "__main__":
                     prompt_template=result.combination["prompt_template"],
                     question=result.input_data.content["question_text"],
                     raw_output=result.raw_output.text_output,
+                    correct_answer=correct_answer,
+                    auto_mark_correctness=auto_mark_correctness,
                 )
                 for eval_output in result.evaluator_outputs:
                     col_name = f"{eval_output.name}_{eval_output.display_name}"
