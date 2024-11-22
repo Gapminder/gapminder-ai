@@ -1,4 +1,3 @@
-import argparse
 import os
 from datetime import datetime
 from pathlib import Path
@@ -43,13 +42,18 @@ def get_evaluators(
 
     if evaluator_model == "gpt4":
         evaluator_name = "gpt4_evaluator"
-        model_name = "gpt-4o-2024-08-06"
+        model_name = "gpt-4o-2024-11-20"
     elif evaluator_model == "claude":
-        evaluator_name = "claude_evaluator"
+        evaluator_name = "vertex_ai_evaluator"
         model_name = "vertex_ai/claude-3-5-sonnet@20240620"
     elif evaluator_model == "llama":
         evaluator_name = "llama3_evaluator"
         model_name = "replicate/meta/meta-llama-3.1-405b-instruct"
+    elif evaluator_model == "gemini":
+        evaluator_name = "vertex_ai_evaluator"
+        model_name = "vertex_ai/gemini-1.5-pro-002"
+    else:
+        raise ValueError(f"{evaluator_model} is not a supported evaluator")
 
     for m in metrics:
         metric: Dict[str, Any] = dict()
@@ -66,7 +70,7 @@ def get_evaluators(
         metric["scale_description"] = "{}-{}".format(
             m.choice_scores[0], m.choice_scores[-1]
         )
-        metric["display_name"] = m.name
+        metric["display_name"] = f"{evaluator_model}_{m.name}"
         res.append(metric)
 
     return res
@@ -107,14 +111,17 @@ def get_prompt_variations_yaml_dict(prompt_variations: List[PromptVariation]):
     return res
 
 
-def main(evaluator_model):
+def main():
     print("Reading AI eval spreadsheet")
     sheet = read_ai_eval_spreadsheet()
     # load default config
     config = yaml.load(open(base_configs_path, "r"), Loader=yaml.Loader)
 
     # metrics
-    config["evaluators"] = get_evaluators(sheet, evaluator_model=evaluator_model)
+    evaluators = list()
+    for evaluator_model in ["gpt4", "claude", "gemini"]:
+        evaluators.extend(get_evaluators(sheet, evaluator_model=evaluator_model))
+    config["evaluators"] = evaluators
 
     # also append a simple evaluator
     simple_evaluator = {
@@ -184,21 +191,4 @@ def main(evaluator_model):
 
 
 if __name__ == "__main__":
-    # Create the parser
-    parser = argparse.ArgumentParser(description="generate experiment config")
-
-    # Add the -e/--evaluator argument
-    parser.add_argument(
-        "-e",
-        "--evaluator",
-        type=str,
-        required=False,
-        default="gpt4",
-        help="The evaluator string. (gpt4 or claude)",
-    )
-
-    # Parse the arguments
-    args = parser.parse_args()
-
-    # run main
-    main(args.evaluator)
+    main()
