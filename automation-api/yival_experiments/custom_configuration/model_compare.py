@@ -45,7 +45,9 @@ litellm.set_verbose = True
 # enable caching in the evaluator.
 # litellm.cache = litellm.Cache()
 # to not use Redis for caching: uncomment the line above and comment the line below.
-litellm.cache = litellm.Cache(type="redis", host="127.0.0.1", port=26379)
+litellm.cache = litellm.Cache(
+    type="redis", host="127.0.0.1", port=26379, ttl=60 * 24 * 3600
+)
 
 
 def model_compare(
