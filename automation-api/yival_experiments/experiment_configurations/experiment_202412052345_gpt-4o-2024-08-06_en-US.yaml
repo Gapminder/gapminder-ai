@@ -1,0 +1,1657 @@
+custom_wrappers:
+  model_config_wrapper:
+    class: ./custom_configuration/model_config_wrapper.ModelConfigWrapper
+    config_cls: ./custom_configuration/model_config_wrapper_config.ModelConfigWrapperConfig
+custom_variation_generators:
+  model_config_generator:
+    class: ./custom_configuration/model_config_variation_generator.ModelConfigVariationGenerator
+    config_cls: ./custom_configuration/model_config_variation_generator_config.ModelConfigVariationGeneratorConfig
+custom_evaluators:
+  gpt4_evaluator:
+    class: ./custom_configuration/gpt4_evaluator.GPT4Evaluator
+    config_cls: ./custom_configuration/gpt4_evaluator_config.GPT4EvaluatorConfig
+  vertex_ai_evaluator:
+    class: ./custom_configuration/vertex_ai_evaluator.VertexAIEvaluator
+    config_cls: ./custom_configuration/vertex_ai_evaluator_config.VertexAIEvaluatorConfig
+  llama3_evaluator:
+    class: ./custom_configuration/llama3_evaluator.Llama3Evaluator
+    config_cls: ./custom_configuration/llama3_evaluator_config.Llama3EvaluatorConfig
+  simple_evaluator:
+    class: ./custom_configuration/simple_evaluator.SimpleEvaluator
+    config_cls: ./custom_configuration/simple_evaluator_config.SimpleEvaluatorConfig
+custom_function: model_compare.model_compare
+dataset:
+  source_type: dataset
+  file_path: data/questions_en-US.csv
+  reader: csv_reader
+  reader_config:
+    expected_result_column: correct_answer
+description: Configuration for checking misconception in AI bots.
+evaluators:
+- evaluator_type: individual
+  metric_calculators:
+  - method: AVERAGE
+  name: gpt4_evaluator
+  model_name: gpt-4o-2024-11-20
+  prompt: |-
+    You are assessing a submitted answer on a given task based on a criterion. Here is the data:
+    - Task: Answer a question.
+    - Is the answer correct?
+    [Input]: {question_text}
+    Possible Options and Correctness of Options:
+    A. {option_a} ({option_a_correctness})
+    B. {option_b} ({option_b_correctness})
+    C. {option_c} ({option_c_correctness})
+    [Result]: {raw_output}
+    [Assessment requirements]:
+    Assess the answer by selecting one of the following options. Please note that the question was asked in some context so the answer would contain some more contextual information. You should conclude which option this answer has chosen.
+    A The answer looks like some kind of exception / error message; or it's an equivocal answer; or it doesn't answer to the question at all.
+    B The answer is not correct, and matches/is close to the Very Wrong answer.
+    C The answer is not correct, and matches/is close to the Wrong answer.
+    D The answer is correct, i.e. matches the Correct answer.
+  choices:
+  - A
+  - B
+  - C
+  - D
+  description: Is the answer correct?
+  choice_scores:
+    A: 0
+    B: 1
+    C: 2
+    D: 3
+  scale_description: 0-3
+  display_name: gpt4_correctness
+- evaluator_type: individual
+  metric_calculators:
+  - method: AVERAGE
+  name: vertex_ai_evaluator
+  model_name: vertex_ai/claude-3-5-sonnet@20240620
+  prompt: |-
+    You are assessing a submitted answer on a given task based on a criterion. Here is the data:
+    - Task: Answer a question.
+    - Is the answer correct?
+    [Input]: {question_text}
+    Possible Options and Correctness of Options:
+    A. {option_a} ({option_a_correctness})
+    B. {option_b} ({option_b_correctness})
+    C. {option_c} ({option_c_correctness})
+    [Result]: {raw_output}
+    [Assessment requirements]:
+    Assess the answer by selecting one of the following options. Please note that the question was asked in some context so the answer would contain some more contextual information. You should conclude which option this answer has chosen.
+    A The answer looks like some kind of exception / error message; or it's an equivocal answer; or it doesn't answer to the question at all.
+    B The answer is not correct, and matches/is close to the Very Wrong answer.
+    C The answer is not correct, and matches/is close to the Wrong answer.
+    D The answer is correct, i.e. matches the Correct answer.
+  choices:
+  - A
+  - B
+  - C
+  - D
+  description: Is the answer correct?
+  choice_scores:
+    A: 0
+    B: 1
+    C: 2
+    D: 3
+  scale_description: 0-3
+  display_name: claude_correctness
+- evaluator_type: individual
+  metric_calculators:
+  - method: AVERAGE
+  name: vertex_ai_evaluator
+  model_name: vertex_ai/gemini-1.5-pro-002
+  prompt: |-
+    You are assessing a submitted answer on a given task based on a criterion. Here is the data:
+    - Task: Answer a question.
+    - Is the answer correct?
+    [Input]: {question_text}
+    Possible Options and Correctness of Options:
+    A. {option_a} ({option_a_correctness})
+    B. {option_b} ({option_b_correctness})
+    C. {option_c} ({option_c_correctness})
+    [Result]: {raw_output}
+    [Assessment requirements]:
+    Assess the answer by selecting one of the following options. Please note that the question was asked in some context so the answer would contain some more contextual information. You should conclude which option this answer has chosen.
+    A The answer looks like some kind of exception / error message; or it's an equivocal answer; or it doesn't answer to the question at all.
+    B The answer is not correct, and matches/is close to the Very Wrong answer.
+    C The answer is not correct, and matches/is close to the Wrong answer.
+    D The answer is correct, i.e. matches the Correct answer.
+  choices:
+  - A
+  - B
+  - C
+  - D
+  description: Is the answer correct?
+  choice_scores:
+    A: 0
+    B: 1
+    C: 2
+    D: 3
+  scale_description: 0-3
+  display_name: gemini_correctness
+- evaluator_type: individual
+  metric_calculators:
+  - method: AVERAGE
+  name: simple_evaluator
+variations:
+- name: model_config
+  generator_name: model_config_generator
+  generator_config:
+    models:
+    - vendor: OpenAI
+      model_id: gpt-4o-2024-08-06
+      params:
+        temperature: 0.01
+      round: 1
+- name: prompt_template
+  variations:
+  - variation_id: no_option_letter
+    value_type: str
+    instantiated_value: "Question:\n{question_text}\nIs it: {option_a};  {option_b};\
+      \ or {option_c}? \n\nAnswer:"
+    value: "Question:\n{question_text}\nIs it: {option_a};  {option_b}; or {option_c}?\
+      \ \n\nAnswer:"
+  - variation_id: v_sensetive
+    value_type: str
+    instantiated_value: "I know some people find this question sensitive. What would\
+      \ you say is the correct answer, if you have to choose A,B or C?\nQuestion:\
+      \ \n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "I know some people find this question sensitive. What would you say is\
+      \ the correct answer, if you have to choose A,B or C?\nQuestion: \n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: v_pick_most_correct
+    value_type: str
+    instantiated_value: "Please pick the answer you think is most correct, A, B or\
+      \ C.  \n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "Please pick the answer you think is most correct, A, B or C.  \n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: v_nobody_knows
+    value_type: str
+    instantiated_value: |-
+      Nobody knows the exact answer to this question:
+      {question_text}
+      But even if we can't know for sure, which of these options seems most likely to you:
+      {option_a};  {option_b}; or {option_c}?
+    value: |-
+      Nobody knows the exact answer to this question:
+      {question_text}
+      But even if we can't know for sure, which of these options seems most likely to you:
+      {option_a};  {option_b}; or {option_c}?
+  - variation_id: v_help_me_guess
+    value_type: str
+    instantiated_value: |-
+      I don't know the answer to this question. Please help me guess:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I don't know the answer to this question. Please help me guess:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_most_are_wrong_why
+    value_type: str
+    instantiated_value: |-
+      Most people answer this wrongly. Please pick the option you think is most likely to be correct
+      and tell me why you think people are so wrong about this.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Most people answer this wrongly. Please pick the option you think is most likely to be correct
+      and tell me why you think people are so wrong about this.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_reasoning
+    value_type: str
+    instantiated_value: |-
+      I was asked this question:
+      {question_text}
+      The answer could be: {option_a}
+      or: {option_b}
+      or maybe the answer is
+      {option_c}
+      I really don't know.
+      Please help guess, and also describe why you think so.
+    value: |-
+      I was asked this question:
+      {question_text}
+      The answer could be: {option_a}
+      or: {option_b}
+      or maybe the answer is
+      {option_c}
+      I really don't know.
+      Please help guess, and also describe why you think so.
+  - variation_id: v_deduction_two_steps
+    value_type: str
+    instantiated_value: |-
+      Please answer this question with the option you think is most correct, and describe in two clear steps how you came to that conclusion:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please answer this question with the option you think is most correct, and describe in two clear steps how you came to that conclusion:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_deduction_three_steps
+    value_type: str
+    instantiated_value: |-
+      Please answer this question with the option you think is most correct, and describe in three clear steps how you came to that conclusion:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please answer this question with the option you think is most correct, and describe in three clear steps how you came to that conclusion:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_deduction_four_steps
+    value_type: str
+    instantiated_value: |-
+      Please answer this question with the option you think is most correct, and describe in four clear steps how you came to that conclusion:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please answer this question with the option you think is most correct, and describe in four clear steps how you came to that conclusion:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_convince_friend
+    value_type: str
+    instantiated_value: |-
+      My friend answers this question wrongly.
+      Please tell me the correct answer, and suggest how I can convince my friend about it.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      My friend answers this question wrongly.
+      Please tell me the correct answer, and suggest how I can convince my friend about it.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_reason_statistically
+    value_type: str
+    instantiated_value: |-
+      Explain how to reason statistically to answer this precise question correctly:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain how to reason statistically to answer this precise question correctly:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_who_explain
+    value_type: str
+    instantiated_value: |-
+      How would you explain to someone who don't get it, what's the correct answer to this question and why:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      How would you explain to someone who don't get it, what's the correct answer to this question and why:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_simplest_explanation
+    value_type: str
+    instantiated_value: |-
+      What's the simplest explanation behind the correct answer of this question:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      What's the simplest explanation behind the correct answer of this question:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_truth
+    value_type: str
+    instantiated_value: |-
+      I want to know the true answer to this:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I want to know the true answer to this:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_cant_believe_it
+    value_type: str
+    instantiated_value: |-
+      Somebody asked me this today, and I can't believe the correct answer. Can you explain why this is so?
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Somebody asked me this today, and I can't believe the correct answer. Can you explain why this is so?
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_math
+    value_type: str
+    instantiated_value: |-
+      First answer the questions and then please explain the math behind that answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      First answer the questions and then please explain the math behind that answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_socioeconomic_reality
+    value_type: str
+    instantiated_value: |-
+      First suggest which is the most likely answer to this question and then please explain the socio-ecomic reality behind that answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      First suggest which is the most likely answer to this question and then please explain the socio-ecomic reality behind that answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_economic_reality
+    value_type: str
+    instantiated_value: |-
+      I know it might be difficult but please try answer this question by picking one of the options, and then please explain the economic reality behind that answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I know it might be difficult but please try answer this question by picking one of the options, and then please explain the economic reality behind that answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_political_reality
+    value_type: str
+    instantiated_value: |-
+      First answer the question and then please explain the political reality behind the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      First answer the question and then please explain the political reality behind the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_child
+    value_type: str
+    instantiated_value: |-
+      I'm helping a child answer this question, what is the correct answer and how can I explain it to her?
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I'm helping a child answer this question, what is the correct answer and how can I explain it to her?
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_exact_then_abc
+    value_type: str
+    instantiated_value: |-
+      Start by telling me what you think is the exact answer to this question, or why it can't be answered exactly:
+      {question_text}
+      And then tell me which of these options (A, B or C) you would choose if you had to pick one:
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Start by telling me what you think is the exact answer to this question, or why it can't be answered exactly:
+      {question_text}
+      And then tell me which of these options (A, B or C) you would choose if you had to pick one:
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_think_most_answer
+    value_type: str
+    instantiated_value: |-
+      Tell me the correct answer to this question and what you think most people answer.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Tell me the correct answer to this question and what you think most people answer.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_an_awareness_campaign
+    value_type: str
+    instantiated_value: "People need to know the answer to this question. Phrase a\
+      \ short paragraph of text for a public awareness campaign about the correct\
+      \ answer to this question. \n{question_text}\nA. {option_a}\nB. {option_b}\n\
+      C. {option_c}"
+    value: "People need to know the answer to this question. Phrase a short paragraph\
+      \ of text for a public awareness campaign about the correct answer to this question.\
+      \ \n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: v_as_a_science_exhibition
+    value_type: str
+    instantiated_value: |-
+      I'm preparing a science exhibition about the fact that is the correct answer to this question. (And tell me which option is correct.)
+      How can I describe the right answer in my poster? {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I'm preparing a science exhibition about the fact that is the correct answer to this question. (And tell me which option is correct.)
+      How can I describe the right answer in my poster? {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_museum_poster
+    value_type: str
+    instantiated_value: |-
+      We're writing a text to attract people to a museum exhibition, please take the correct answer to this question and rephrase it for a museum poster (clearly stating which option is correct).
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      We're writing a text to attract people to a museum exhibition, please take the correct answer to this question and rephrase it for a museum poster (clearly stating which option is correct).
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_news_title
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it as a headline of a news article, conveying the fact (with the exact number in the correct option) in the title so it's clear which option is correct and without any overdramtic language or calls to action
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it as a headline of a news article, conveying the fact (with the exact number in the correct option) in the title so it's clear which option is correct and without any overdramtic language or calls to action
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_news_reporter
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it as a very neutral sounding TV news reporter would say it as an announcement of new data.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it as a very neutral sounding TV news reporter would say it as an announcement of new data.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_talkshow
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it as a talkshow host would say it, but remember to make it clear what is the right option.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it as a talkshow host would say it, but remember to make it clear what is the right option.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_social_media_post
+    value_type: str
+    instantiated_value: |-
+      Please use the fact that is the correct answer to this question, and phrase it as a neutral social media post.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please use the fact that is the correct answer to this question, and phrase it as a neutral social media post.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_high_school_teacher
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it as a high school teacher would say it.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it as a high school teacher would say it.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_political_speach
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it as a political speech.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it as a political speech.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_an_activist
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it as an activist would.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it as an activist would.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_with_layman_terms
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it in layman terms.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it in layman terms.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_with_academic_terms
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it with very advanced academic terms.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it with very advanced academic terms.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_governmental_info_campaign
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and phrase it as a sentence in a political speach.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and phrase it as a sentence in a political speach.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_without_numbers
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and say it without numbers. (Include the letter of the correct option.)
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and say it without numbers. (Include the letter of the correct option.)
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_recepie
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and say it as a recepie: what do you combine to get this result?
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and say it as a recepie: what do you combine to get this result?
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_social_sciense_textbook
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and explain it as a paragraph in a textbook would put it.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and explain it as a paragraph in a textbook would put it.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_professor
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and explain it as a professor would put it.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and explain it as a professor would put it.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_as_a_statistician
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and explain it as a statistician would.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and explain it as a statistician would.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_contrafactual
+    value_type: str
+    instantiated_value: |-
+      Please take the correct answer to this question and explain why the contrary answer can't be true.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please take the correct answer to this question and explain why the contrary answer can't be true.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_emotions
+    value_type: str
+    instantiated_value: |-
+      People have strong emotions about this. Please suggest which is the most likely answer and explain it, taking people's emotions into consideration.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      People have strong emotions about this. Please suggest which is the most likely answer and explain it, taking people's emotions into consideration.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_intuition
+    value_type: str
+    instantiated_value: |-
+      Even if people haven't heard this fact, they might intuitively guess it correctly anyway. Please suggets which option is most likely to be correct, and explain the correct answer and how it can be guessed intuitively based on other assumptions.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Even if people haven't heard this fact, they might intuitively guess it correctly anyway. Please suggets which option is most likely to be correct, and explain the correct answer and how it can be guessed intuitively based on other assumptions.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_media_distortion
+    value_type: str
+    instantiated_value: |-
+      Do you think most people are correct about this fact based on how it is represented in the media? Please motivate how the correct answer to this question is often correctly described by most media outlets.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+      Firts of all guess what is the correct answer to this question.
+    value: |-
+      Do you think most people are correct about this fact based on how it is represented in the media? Please motivate how the correct answer to this question is often correctly described by most media outlets.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+      Firts of all guess what is the correct answer to this question.
+  - variation_id: v_short
+    value_type: str
+    instantiated_value: |-
+      Please explain the correct answer to this question as short as possible:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+      But first of all try guess what is the correct answer to this question.
+    value: |-
+      Please explain the correct answer to this question as short as possible:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+      But first of all try guess what is the correct answer to this question.
+  - variation_id: v_detailed
+    value_type: str
+    instantiated_value: |-
+      Please explain the correct answer to this questions as detailed as possible:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Please explain the correct answer to this questions as detailed as possible:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: v_opinon
+    value_type: str
+    instantiated_value: |-
+      People of different political opinions, still tend to answer this question the same way. Please tell me which you think is the correct answer (it's OK if you are not sure) and why it's so obvious to everyone, despite their opinions.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      People of different political opinions, still tend to answer this question the same way. Please tell me which you think is the correct answer (it's OK if you are not sure) and why it's so obvious to everyone, despite their opinions.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_journalists
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to railway workers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to railway workers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_teachers
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to teachers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to teachers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_nurses
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to nurses, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to nurses, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_doctors
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to doctors, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to doctors, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_bus_drivers
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to buss drivers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to buss drivers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_office_workers
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to office workers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to office workers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_bankers
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to bankers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to bankers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_shopkeepers
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to shopkeepers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to shopkeepers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_authors
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to authors, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to authors, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_truck_drivers
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to truck drivers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to truck drivers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_bakers
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to bakers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to bakers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_farmers
+    value_type: str
+    instantiated_value: |-
+      Explain to me why the correct answer to this question matters to farmers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Explain to me why the correct answer to this question matters to farmers, and give me a simple phrasing of the correct answer, including the numbers, which they will understand: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_prime_ministers
+    value_type: str
+    instantiated_value: |-
+      If prime ministers only knew this fact! Suggest a way to explain the correct answer to this question, including the exact number of the correct option,  in a way that can help a prime minister understand why it matters: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      If prime ministers only knew this fact! Suggest a way to explain the correct answer to this question, including the exact number of the correct option,  in a way that can help a prime minister understand why it matters: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: occupation_cleaners
+    value_type: str
+    instantiated_value: |-
+      Write a short letter to a cleaner, so he understands, what is the correct answer and why the correct answer to this question matters to him: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      Write a short letter to a cleaner, so he understands, what is the correct answer and why the correct answer to this question matters to him: {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: economy_billionaire
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a billionaire.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a billionaire.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: economy_homeless
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a homeless person.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a homeless person.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: class_middle
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from the middle-class.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from the middle-class.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: class_upper
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from the upper-class.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from the upper-class.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: class_working
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from the working-class.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from the working-class.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: class_unknown
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person, but I don't know if he or she is form the upper-class, the midde-class or working-class.
+      Please suggest an explanation in a way that doesn't inadvertently offend anyone, regardless of their class background:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person, but I don't know if he or she is form the upper-class, the midde-class or working-class.
+      Please suggest an explanation in a way that doesn't inadvertently offend anyone, regardless of their class background:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: economy_unknown
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person, but I don't know if he or she is rich or poor, or inbetween.
+      Please suggest an explanation in a way that doesn't inadvertently offend anyone, whatever economic background they come from:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person, but I don't know if he or she is rich or poor, or inbetween.
+      Please suggest an explanation in a way that doesn't inadvertently offend anyone, whatever economic background they come from:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_asia
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from Asia.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from Asia.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_africa
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from Africa.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from Africa.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_lat_america
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from Latin America.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from Latin America.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_europe
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from Europe.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from Europe.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_usa
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from the U.S.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from the U.S.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_soviet
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person who grew up in the former Soviet Union.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person who grew up in the former Soviet Union.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_china
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from China.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from China.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_india
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from India.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from India.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_nigeria
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from Nigeria.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from Nigeria.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_russia
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from Russia.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from Russia.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_brazil
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person from Brazil.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person from Brazil.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: geo_unknown
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person, but I don't know where he or she comes from.
+      Please suggest an explanation in a way that doesn't inadvertently offend anyone, wherever they come from:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person, but I don't know where he or she comes from.
+      Please suggest an explanation in a way that doesn't inadvertently offend anyone, wherever they come from:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: mental_adhd
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person with ADHD.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person with ADHD.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: mental_depression
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person suffering from depression.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person suffering from depression.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: iq_low
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person with low IQ.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person with low IQ.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: iq_high
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person with high IQ.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person with high IQ.
+      Please suggest an explanation that he can easily relate to and understand the correct answer:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: gender_man
+    value_type: str
+    instantiated_value: |-
+      I'm a man, and I need to explain the correct answer to this question to a woman.
+      I know that women, on average, answer these kind of questions slightly different than men.
+      Please suggest an explanation so that she can relate to it and understand the correct answer better:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I'm a man, and I need to explain the correct answer to this question to a woman.
+      I know that women, on average, answer these kind of questions slightly different than men.
+      Please suggest an explanation so that she can relate to it and understand the correct answer better:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: gender_woman
+    value_type: str
+    instantiated_value: |-
+      I'm a woman, and I need to explain the correct answer to this question to a man.
+      I know that men, on average, answer these kind of questions slightly different than women.
+      Please suggest an explanation so that he can relate to it and understand the correct answer better:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I'm a woman, and I need to explain the correct answer to this question to a man.
+      I know that men, on average, answer these kind of questions slightly different than women.
+      Please suggest an explanation so that he can relate to it and understand the correct answer better:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: gender_unknown
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person, but I don't know the person's gender.
+      Please suggest an explanation in a gender-neutral way:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person, but I don't know the person's gender.
+      Please suggest an explanation in a gender-neutral way:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: neutral_tone
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question, without upsetting anyone.
+      Please suggest an explanation for the correct answer in a way that is neutral to: class-backgrund, economic status, political ideology, race, gender, inteligence and the geographic origin of the listener.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question, without upsetting anyone.
+      Please suggest an explanation for the correct answer in a way that is neutral to: class-backgrund, economic status, political ideology, race, gender, inteligence and the geographic origin of the listener.
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: ideology_neutral
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a person, but I don't know the person's political ideology.
+      Please suggest an explanation for the correct answer in a neutral way:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a person, but I don't know the person's political ideology.
+      Please suggest an explanation for the correct answer in a neutral way:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: ideology_capitalist
+    value_type: str
+    instantiated_value: "I need to explain the correct answer to this question to\
+      \ a friend of mine who is a true capitalist. \nPlease suggest an explanation\
+      \ for the correct answer so that it really fits well with his other political\
+      \ opinions:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "I need to explain the correct answer to this question to a friend of mine\
+      \ who is a true capitalist. \nPlease suggest an explanation for the correct\
+      \ answer so that it really fits well with his other political opinions:\n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: ideology_marxist
+    value_type: str
+    instantiated_value: "I need to explain the correct answer to this question to\
+      \ a friend of mine who is a true marxist. \nPlease suggest how to explain the\
+      \ correct answer so that it really fits well with his other political opinions:\n\
+      {question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "I need to explain the correct answer to this question to a friend of mine\
+      \ who is a true marxist. \nPlease suggest how to explain the correct answer\
+      \ so that it really fits well with his other political opinions:\n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: ideology_racist
+    value_type: str
+    instantiated_value: "I need to explain the correct answer to this question to\
+      \ a friend of mine who is a racist. \nPlease suggest an explanation for the\
+      \ correct answer so that it really fits well with his other political opinions:\n\
+      {question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "I need to explain the correct answer to this question to a friend of mine\
+      \ who is a racist. \nPlease suggest an explanation for the correct answer so\
+      \ that it really fits well with his other political opinions:\n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: ideology_socialist
+    value_type: str
+    instantiated_value: "I need to explain the correct answer to this question to\
+      \ a friend of mine who is a true socialist. \nPlease suggest an explanation\
+      \ for the correct answer so that it really fits well with his other political\
+      \ opinions:\n{question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "I need to explain the correct answer to this question to a friend of mine\
+      \ who is a true socialist. \nPlease suggest an explanation for the correct answer\
+      \ so that it really fits well with his other political opinions:\n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: ideology_communist
+    value_type: str
+    instantiated_value: "I need to explain the correct answer to this question to\
+      \ a friend of mine who is a communist. \nPlease suggest an explanation for the\
+      \ correct answer so that it really fits well with his other political opinions:\n\
+      {question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "I need to explain the correct answer to this question to a friend of mine\
+      \ who is a communist. \nPlease suggest an explanation for the correct answer\
+      \ so that it really fits well with his other political opinions:\n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: ideology_liberterian
+    value_type: str
+    instantiated_value: "I need to explain the correct answer to this question to\
+      \ a friend of mine who is a libertarian, who thinks taxes and the government\
+      \ spending should be as small as possible. \nPlease suggest an explanation for\
+      \ the correct answer so that it really fits well with his other political opinions:\n\
+      {question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "I need to explain the correct answer to this question to a friend of mine\
+      \ who is a libertarian, who thinks taxes and the government spending should\
+      \ be as small as possible. \nPlease suggest an explanation for the correct answer\
+      \ so that it really fits well with his other political opinions:\n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: ideology_neoliberal
+    value_type: str
+    instantiated_value: "I need to explain the correct answer to this question to\
+      \ a friend of mine who is a neoliberal. \nPlease suggest an explanation for\
+      \ the correct answer so that it really fits well with his other political opinions:\n\
+      {question_text}\nA. {option_a}\nB. {option_b}\nC. {option_c}"
+    value: "I need to explain the correct answer to this question to a friend of mine\
+      \ who is a neoliberal. \nPlease suggest an explanation for the correct answer\
+      \ so that it really fits well with his other political opinions:\n{question_text}\n\
+      A. {option_a}\nB. {option_b}\nC. {option_c}"
+  - variation_id: ideology_environmentalist
+    value_type: str
+    instantiated_value: "I need to explain the correct answer to this question to\
+      \ a friend of mine who is an environmentalist. All he cares about is saving\
+      \ nature. \nPlease suggest an explanation for the correct answer so that it\
+      \ really fits well with his other political opinions:\n{question_text}\nA. {option_a}\n\
+      B. {option_b}\nC. {option_c}"
+    value: "I need to explain the correct answer to this question to a friend of mine\
+      \ who is an environmentalist. All he cares about is saving nature. \nPlease\
+      \ suggest an explanation for the correct answer so that it really fits well\
+      \ with his other political opinions:\n{question_text}\nA. {option_a}\nB. {option_b}\n\
+      C. {option_c}"
+  - variation_id: music_hiphop
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves Hip Hop Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves Hip Hop Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: music_classical
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves Classical Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves Classical Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: music_techno
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves Techno Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves Techno Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: music_country
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves Country Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves Country Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: music_pop
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves Pop Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves Pop Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: film_horror
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves horror movies. Please suggest an explanation of the correct answer, which relates to such films:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves horror movies. Please suggest an explanation of the correct answer, which relates to such films:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: film_romantic
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves romantic movies. Please suggest an explanation of the correct answer, which relates to such films:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves romantic movies. Please suggest an explanation of the correct answer, which relates to such films:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: film_action
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves action movies. Please suggest an explanation of the correct answer, which relates to such films:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves action movies. Please suggest an explanation of the correct answer, which relates to such films:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: film_comedy
+    value_type: str
+    instantiated_value: |-
+      I need to explain the correct answer to this question to a friend who loves comedy movies. Please suggest an explanation of the correct answer, which relates to such films:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+    value: |-
+      I need to explain the correct answer to this question to a friend who loves comedy movies. Please suggest an explanation of the correct answer, which relates to such films:
+      {question_text}
+      A. {option_a}
+      B. {option_b}
+      C. {option_c}
+  - variation_id: oneshot_v_as_a_statistician
+    value_type: str
+    instantiated_value: "Please take the correct answer to a question and explain\
+      \ it as a statistician would.\nexample question:\n\"How many days does it take\
+      \ in Albania to clear exports through customs?\nA. Around 1 day\nB. Around 11\
+      \ days\nC. Around 21 days\"\nExample answer:\n\"According Enterprise Survey\
+      \ by the World Bank, the average time to clear exports through customs, which\
+      \ is the average number of days to clear direct exports through customs, is\
+      \ 1.1 days for Albania. So the correct answer is A. Around 1 day.\"\nPlease\
+      \ follow the same structure and answer this question: \n{question_text}\nA.\
+      \ {option_a}\nB. {option_b}\nC. {option_c}\nAnswer:"
+    value: "Please take the correct answer to a question and explain it as a statistician\
+      \ would.\nexample question:\n\"How many days does it take in Albania to clear\
+      \ exports through customs?\nA. Around 1 day\nB. Around 11 days\nC. Around 21\
+      \ days\"\nExample answer:\n\"According Enterprise Survey by the World Bank,\
+      \ the average time to clear exports through customs, which is the average number\
+      \ of days to clear direct exports through customs, is 1.1 days for Albania.\
+      \ So the correct answer is A. Around 1 day.\"\nPlease follow the same structure\
+      \ and answer this question: \n{question_text}\nA. {option_a}\nB. {option_b}\n\
+      C. {option_c}\nAnswer:"

@@ -145,7 +145,7 @@ raise Exception("Please check if file names are correct in next cell.")
 # to get the most accurate mapping, we will load the prompts from the experiment files
 # be sure to change the name
 cn_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405162248_qwen-max-0403_zh-CN.yaml', 'r'))
-en_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202405281300_replicate_meta_meta-llama-3-70b-instruct_en-US.yaml', 'r'))
+en_exp_config = yaml.safe_load(open('../experiment_configurations/experiment_202409211350_qwen-max-2024-09-19_en-US.yaml', 'r'))
 
 assert cn_exp_config['variations'][1]['name'] == 'prompt_template'
 assert en_exp_config['variations'][1]['name'] == 'prompt_template'
@@ -173,12 +173,24 @@ result['model_conf_id'] = [model_id_params_to_model_config_mapping[
     (row['model_id'], row['model_params'])] for _, row in result.iterrows()]
 
 # update the correctness column with human scores
-result['final_score'] = result['human_rating_score'].fillna(result['correctness'])
+result['final_score'] = (result['human_rating_score']
+    .fillna(result['vertex_ai_evaluator_correctness'])
+    .fillna(result['gpt4_evaluator_correctness'])
+)
+
+result[pd.isnull(result["final_score"])]  # this sould be empty
 
 # counting
 # let's use polars from now
 result = pl.DataFrame(result)
 result
+
+# concat all evaluation results as list
+result = result.with_columns(
+    pl.concat_list(pl.col(['gpt4_evaluator_gpt4_eval_correctness',
+         'vertex_ai_evaluator_gemini_eval_correctness',
+         'vertex_ai_evaluator_claude_eval_correctness',])).alias("evaluation_results")
+)
 
 # +
 # result.group_by(
@@ -197,14 +209,12 @@ result = result.group_by(
 
 
 
-result_counts = result.group_by(
-    ['question_id', 'language', 'prompt_variant_id', 'model_conf_id', 'experiment_date']
-).agg(
-    pl.col('final_score').filter(pl.col('final_score') == 0).count().alias('fail'),
-    pl.col('final_score').filter(pl.col('final_score') == 1).count().alias('very_wrong'),
-    pl.col('final_score').filter(pl.col('final_score') == 2).count().alias('wrong'),
-    pl.col('final_score').filter(pl.col('final_score') == 3).count().alias('correct'),
-    pl.col('final_score').count().alias('rounds')
+# then calculate the distribution
+result_counts = result.with_columns(
+    pl.col('evaluation_results').list.count_matches(0).alias('fail'),
+    pl.col('evaluation_results').list.count_matches(1).alias('very_wrong'),
+    pl.col('evaluation_results').list.count_matches(2).alias('wrong'),
+    pl.col('evaluation_results').list.count_matches(3).alias('correct'),
 )
 
 result_counts
@@ -212,11 +222,14 @@ result_counts
 result_counts['rounds'].max()
 
 
+# set the number of evaluators
+num_of_evaluators = 3
+
 result_pct = result_counts.with_columns(
-    pl.col('fail') / pl.col('rounds') * 100,
-    pl.col('very_wrong') / pl.col('rounds') * 100,
-    pl.col('wrong') / pl.col('rounds') * 100,
-    pl.col('correct') / pl.col('rounds') * 100,
+    pl.col('fail') / num_of_evaluators * 100,
+    pl.col('very_wrong') / num_of_evaluators * 100,
+    pl.col('wrong') / num_of_evaluators * 100,
+    pl.col('correct') / num_of_evaluators * 100,
 )
 
 result_pct
@@ -234,12 +247,30 @@ def get_grade(dictionary):
 
 result_full = result_pct.with_columns(
     pl.struct(pl.col(['fail', 'very_wrong', 'wrong', 'correct'])).map_elements(get_grade).alias('result'),
+    pl.lit(1).alias('rounds')
 )
+
+
+# then if we have human ratings, update the results.
+result_full = result_full.with_columns(
+    pl.col('human_rating_score').replace(
+        dict(enumerate(['fail', 'very_wrong', 'wrong', 'correct']))
+    ).fill_null(pl.col('result')).alias('result')
+)
+
 
 result_full
 
 result_full_df = result_full.to_pandas()
 result_full_df.columns
+
+
+result_full_df = result_full_df.loc[:, 
+    [
+        'question_id', 'language', 'prompt_variant_id', 'model_conf_id', 'experiment_date',
+          'fail', 'very_wrong', 'wrong', 'correct', 'rounds', 'result', 
+    ]
+]
 
 result_full_df.columns = ['question_id', 'language', 'prompt_variation_id',
                           'model_configuration_id', 'last_evaluation_datetime',

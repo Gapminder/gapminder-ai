@@ -47,7 +47,6 @@ class GPT4Evaluator(BaseEvaluator):
 
     def evaluate(self, experiment_result: ExperimentResult) -> EvaluatorOutput:
         """Evaluate the experiment result using OpenAI's prompt-based evaluation."""
-        assert isinstance(self.config, GPT4EvaluatorConfig)
         format_dict = copy.deepcopy(experiment_result.input_data.content)
         format_dict["raw_output"] = experiment_result.raw_output.text_output
 

@@ -1,0 +1,7 @@
+# About
+
+This experiment filled the missing datapoints for a few questions, which we want to see all chatbots' results.
+
+There are 12 questions and 6 models in total, some of them are already tested in previous experiments.
+
+Because gemini 0409 is old, we did not use previous experiment result but used latest gemini-pro-002 for testing all 12 questions.

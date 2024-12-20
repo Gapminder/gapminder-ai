@@ -21,6 +21,9 @@ custom_evaluators:
     class: ./custom_configuration/llama3_evaluator.Llama3Evaluator
     config_cls: ./custom_configuration/llama3_evaluator_config.Llama3EvaluatorConfig
 
+  simple_evaluator:
+    class: ./custom_configuration/simple_evaluator.SimpleEvaluator
+    config_cls: ./custom_configuration/simple_evaluator_config.SimpleEvaluatorConfig
 
 custom_function: model_compare.model_compare
 
