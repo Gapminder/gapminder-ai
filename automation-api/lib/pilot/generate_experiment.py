@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from typing import Dict
 
+import pandas as pd
 from pandera.errors import SchemaError
 
 from lib.ai_eval_spreadsheet.wrapper import (
@@ -16,6 +17,12 @@ from lib.config import read_config
 
 logger = AppSingleton().get_logger()
 
+
+def filter_included_rows(df: pd.DataFrame) -> pd.DataFrame:
+    """Filter dataframe to keep only rows where include_in_next_evaluation is True"""
+    if 'include_in_next_evaluation' in df.columns:
+        return df[df['include_in_next_evaluation'] == True]
+    return df
 
 def read_ai_eval_spreadsheet() -> AiEvalData:
     config = read_config()
@@ -52,14 +59,14 @@ def save_sheets_as_csv() -> Dict[str, str]:
     # Read all data using existing wrapper
     ai_eval_data = read_ai_eval_spreadsheet()
 
-    # Map of editors to their corresponding sheet names
+    # Map of editors to their corresponding sheet names and apply filtering
     editor_map = {
-        "questions": ai_eval_data.questions.data.df,
-        "question_options": ai_eval_data.question_options.data.df,
-        "prompt_variations": ai_eval_data.prompt_variations.data.df,
-        "gen_ai_models": ai_eval_data.gen_ai_models.data.df,
-        "gen_ai_model_configs": ai_eval_data.gen_ai_model_configs.data.df,
-        "metrics": ai_eval_data.metrics.data.df,
+        "questions": filter_included_rows(ai_eval_data.questions.data.df),
+        "question_options": filter_included_rows(ai_eval_data.question_options.data.df),
+        "prompt_variations": filter_included_rows(ai_eval_data.prompt_variations.data.df),
+        "gen_ai_models": filter_included_rows(ai_eval_data.gen_ai_models.data.df),
+        "gen_ai_model_configs": filter_included_rows(ai_eval_data.gen_ai_model_configs.data.df),
+        "metrics": filter_included_rows(ai_eval_data.metrics.data.df),
         # no need to export the results
         # "evaluation_results": ai_eval_data.evaluation_results,
     }
