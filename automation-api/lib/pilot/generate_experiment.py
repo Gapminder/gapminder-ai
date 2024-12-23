@@ -93,7 +93,10 @@ def save_sheets_as_csv() -> Dict[str, str]:
     for sheet_key, df in editor_map.items():
         output_path = os.path.join(base_dir, f"{sheet_key}.csv")
         df.to_csv(output_path, index=False)
-        saved_files[sheet_names[sheet_key]] = output_path
+        if sheet_key in sheet_names:  # Only use sheet_names mapping for sheets in the schema
+            saved_files[sheet_names[sheet_key]] = output_path
+        else:
+            saved_files[sheet_key] = output_path
 
     return saved_files
 
