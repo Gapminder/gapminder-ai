@@ -64,8 +64,19 @@ def save_sheets_as_csv() -> Dict[str, str]:
     # Read all data using existing wrapper
     ai_eval_data = read_ai_eval_spreadsheet()
 
+    # Create evaluators DataFrame
+    evaluators_data = {
+        'evaluator': [
+            'vertex_ai/gemini-1.5-pro-002',
+            'gpt-4o-2024-11-20',
+            'anthropic/claude-3-5-sonnet-202401022'
+        ]
+    }
+    evaluators_df = pd.DataFrame(evaluators_data)
+
     # Map of editors to their corresponding sheet names and apply filtering
     editor_map = {
+        "evaluators": evaluators_df,
         "questions": filter_included_rows(ai_eval_data.questions.data.df),
         "question_options": filter_included_rows(ai_eval_data.question_options.data.df),
         "prompt_variations": filter_included_rows(ai_eval_data.prompt_variations.data.df),
