@@ -2,13 +2,39 @@ import os
 from datetime import datetime
 from typing import Dict
 
+from pandera.errors import SchemaError
+
 from lib.ai_eval_spreadsheet.wrapper import (
+    AiEvalData,
     get_ai_eval_spreadsheet,
     read_ai_eval_data,
     sheet_names,
 )
+from lib.app_singleton import AppSingleton
+from lib.authorized_clients import get_service_account_authorized_clients
 from lib.config import read_config
-from lib.gdrive.auth import AuthorizedClients
+
+logger = AppSingleton().get_logger()
+
+
+def read_ai_eval_spreadsheet() -> AiEvalData:
+    config = read_config()
+    authorized_clients = get_service_account_authorized_clients()
+    ai_eval_spreadsheet_id = config["AI_EVAL_DEV_SPREADSHEET_ID"]
+    ai_eval_spreadsheet = get_ai_eval_spreadsheet(
+        authorized_clients, ai_eval_spreadsheet_id
+    )
+    try:
+        return read_ai_eval_data(ai_eval_spreadsheet)
+    except SchemaError as err:
+        logger.error("DataFrame validation failed. Errors:", err.check)
+        logger.error("Schema:")
+        logger.error(err.schema)
+        logger.error("Failure cases:")
+        logger.error(err.failure_cases)  # dataframe of schema errors
+        logger.error("Original data:")
+        logger.error(err.data)  # invalid dataframe
+        raise Exception("Data validation. Please fix and retry")
 
 
 def save_sheets_as_csv() -> Dict[str, str]:
@@ -23,33 +49,25 @@ def save_sheets_as_csv() -> Dict[str, str]:
     base_dir = os.path.join("experiments", date_str)
     os.makedirs(base_dir, exist_ok=True)
 
-    # Load configuration
-    config = read_config()
-    spreadsheet_id = config["AI_EVAL_SPREADSHEET_ID"]
-
-    # Initialize Google Sheets client
-    authorized_clients = AuthorizedClients(gc=None, drive_service=None, sheets_service=None)
-    spreadsheet = get_ai_eval_spreadsheet(authorized_clients, spreadsheet_id)
-
     # Read all data using existing wrapper
-    ai_eval_data = read_ai_eval_data(spreadsheet)
+    ai_eval_data = read_ai_eval_spreadsheet()
 
     # Map of editors to their corresponding sheet names
     editor_map = {
-        "questions": ai_eval_data.questions,
-        "question_options": ai_eval_data.question_options,
-        "prompt_variations": ai_eval_data.prompt_variations,
-        "gen_ai_models": ai_eval_data.gen_ai_models,
-        "gen_ai_model_configs": ai_eval_data.gen_ai_model_configs,
-        "metrics": ai_eval_data.metrics,
-        "evaluation_results": ai_eval_data.evaluation_results,
+        "questions": ai_eval_data.questions.data.df,
+        "question_options": ai_eval_data.question_options.data.df,
+        "prompt_variations": ai_eval_data.prompt_variations.data.df,
+        "gen_ai_models": ai_eval_data.gen_ai_models.data.df,
+        "gen_ai_model_configs": ai_eval_data.gen_ai_model_configs.data.df,
+        "metrics": ai_eval_data.metrics.data.df,
+        # no need to export the results
+        # "evaluation_results": ai_eval_data.evaluation_results,
     }
 
     saved_files = {}
 
     # Export each sheet to CSV
-    for sheet_key, editor in editor_map.items():
-        df = editor.export()
+    for sheet_key, df in editor_map.items():
         output_path = os.path.join(base_dir, f"{sheet_key}.csv")
         df.to_csv(output_path, index=False)
         saved_files[sheet_names[sheet_key]] = output_path
