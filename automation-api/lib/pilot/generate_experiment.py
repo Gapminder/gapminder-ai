@@ -19,9 +19,14 @@ logger = AppSingleton().get_logger()
 
 
 def filter_included_rows(df: pd.DataFrame) -> pd.DataFrame:
-    """Filter dataframe to keep only rows where include_in_next_evaluation is True"""
+    """
+    Filter dataframe to keep only rows where include_in_next_evaluation is True
+    and remove the include_in_next_evaluation column
+    """
     if 'include_in_next_evaluation' in df.columns:
-        return df[df['include_in_next_evaluation'] == True]
+        filtered_df = df[df['include_in_next_evaluation'] == True].copy()
+        filtered_df.drop(columns=['include_in_next_evaluation'], inplace=True)
+        return filtered_df
     return df
 
 def read_ai_eval_spreadsheet() -> AiEvalData:
