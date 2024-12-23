@@ -28,7 +28,7 @@ def save_sheets_as_csv() -> Dict[str, str]:
     spreadsheet_id = config["AI_EVAL_SPREADSHEET_ID"]
 
     # Initialize Google Sheets client
-    authorized_clients = AuthorizedClients()
+    authorized_clients = AuthorizedClients(gc=None, drive_service=None, sheets_service=None)
     spreadsheet = get_ai_eval_spreadsheet(authorized_clients, spreadsheet_id)
 
     # Read all data using existing wrapper
@@ -49,7 +49,7 @@ def save_sheets_as_csv() -> Dict[str, str]:
 
     # Export each sheet to CSV
     for sheet_key, editor in editor_map.items():
-        df = editor.data.df
+        df = editor.export()
         output_path = os.path.join(base_dir, f"{sheet_key}.csv")
         df.to_csv(output_path, index=False)
         saved_files[sheet_names[sheet_key]] = output_path
