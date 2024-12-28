@@ -8,7 +8,8 @@ import pandas as pd
 EVALUATORS: List[str] = [
     'vertex_ai/gemini-1.5-pro-002',
     'gpt-4o-2024-11-20', 
-    'anthropic/claude-3-5-sonnet-202401022'
+    'anthropic/claude-3-5-sonnet-202401022',
+    'deepseek/deepseek-chat'
 ]
 from pandera.errors import SchemaError
 
