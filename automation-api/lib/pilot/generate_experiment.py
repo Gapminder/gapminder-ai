@@ -1,8 +1,15 @@
 import os
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List
 
 import pandas as pd
+
+# List of evaluators to include in experiments
+EVALUATORS: List[str] = [
+    'vertex_ai/gemini-1.5-pro-002',
+    'gpt-4o-2024-11-20', 
+    'anthropic/claude-3-5-sonnet-202401022'
+]
 from pandera.errors import SchemaError
 
 from lib.ai_eval_spreadsheet.wrapper import (
@@ -66,11 +73,7 @@ def save_sheets_as_csv() -> Dict[str, str]:
 
     # Create evaluators DataFrame
     evaluators_data = {
-        'evaluator': [
-            'vertex_ai/gemini-1.5-pro-002',
-            'gpt-4o-2024-11-20',
-            'anthropic/claude-3-5-sonnet-202401022'
-        ]
+        'evaluator': EVALUATORS
     }
     evaluators_df = pd.DataFrame(evaluators_data)
 
