@@ -1,3 +1,4 @@
 .idea
 .aider*
 .env
+litellm/*.log
