@@ -1,0 +1,5 @@
+{"model": "claude-3-sonnet-20240229", "messages": [{"role": "user", "content": "What is the capital of France?"}]}
+{"model": "claude-3-sonnet-20240229", "messages": [{"role": "user", "content": "Write a hello world program in Python"}]}
+{"model": "claude-3-sonnet-20240229", "messages": [{"role": "user", "content": "Explain what is machine learning in simple terms"}]}
+{"model": "claude-3-sonnet-20240229", "messages": [{"role": "user", "content": "What is the difference between SQL and NoSQL databases?"}]}
+{"model": "claude-3-sonnet-20240229", "messages": [{"role": "user", "content": "How do I make a chocolate cake?"}]}
