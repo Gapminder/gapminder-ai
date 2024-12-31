@@ -1,18 +1,31 @@
 import json
 
-prompts = [
-    {"role": "user", "content": "What is the capital of France?"},
-    {"role": "user", "content": "Write a hello world program in Python"},
-    {"role": "user", "content": "Explain what is machine learning in simple terms"},
-    {
-        "role": "user",
-        "content": "What is the difference between SQL and NoSQL databases?",
-    },
-    {"role": "user", "content": "How do I make a chocolate cake?"},
+# Static configuration values
+MODEL = "openai/gpt-4o-mini"
+TEMPERATURE = 0.7
+SYSTEM_FINGERPRINT = "fp_12345"
+
+# List of prompt contents
+PROMPT_CONTENTS = [
+    "What is the capital of France?",
+    "Write a hello world program in Python",
+    "Explain what is machine learning in simple terms",
+    "What is the difference between SQL and NoSQL databases?",
+    "How do I make a chocolate cake?",
 ]
 
-# Create a single batch request
-batch_request = {"model": "claude-3-sonnet-20240229", "messages": prompts}
+# Generate complete prompt objects
+prompts = [
+    {
+        "model": MODEL,
+        "messages": [{"role": "user", "content": content}],
+        "temperature": TEMPERATURE,
+        "system_fingerprint": SYSTEM_FINGERPRINT,
+    }
+    for content in PROMPT_CONTENTS
+]
 
-with open("batch_prompts.json", "w") as f:
-    json.dump(batch_request, f, indent=2)
+# Create a JSONL file with one prompt per line
+with open("batch_prompts.jsonl", "w") as f:
+    for prompt in prompts:
+        f.write(json.dumps(prompt) + "\n")
