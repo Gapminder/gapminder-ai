@@ -1,25 +1,17 @@
 model_list:
-  # For response gathering
-  - model_name: "claude-3-sonnet-20240229"
+  # Works for ALL Providers and needs the default provider credentials in .env
+  - model_name: "openai/*"
     litellm_params:
-      model: "anthropic/claude-3-sonnet-20240229"
-      api_key: "os.environ/ANTHROPIC_API_KEY"
-      batch_size: 20  # Enable batch API with max 20 messages per batch
-
-  # For evaluation models
-  - model_name: "gpt-4"
-    litellm_params:
-      model: "openai/gpt-4"
-      api_key: "os.environ/OPENAI_API_KEY"
-      
-  - model_name: "gemini-pro"
-    litellm_params:
-      model: "vertex_ai/gemini-pro"
-      project_id: "os.environ/VERTEX_PROJECT"
-      location: "os.environ/VERTEX_LOCATION"
+      model: "openai/*"
+      api_key: os.environ/OPENAI_API_KEY
+      organization: os.environ/OPENAI_ORG_ID
 
 general_settings:
   # Enable detailed logging for debugging
   debug: true
   # Set a master key for proxy authentication
   master_key: "os.environ/LITELLM_MASTER_KEY"
+
+files_settings:
+  - custom_llm_provider: openai
+    api_key: os.environ/OPENAI_API_KEY

@@ -1,9 +1,9 @@
 import json
 
 # Static configuration values
-MODEL = "openai/gpt-4o-mini"
+MODEL = "gpt-4o-mini"
 TEMPERATURE = 0.7
-SYSTEM_FINGERPRINT = "fp_12345"
+# SYSTEM_FINGERPRINT = "fp_12345"
 
 # List of prompt contents
 PROMPT_CONTENTS = [
@@ -17,12 +17,19 @@ PROMPT_CONTENTS = [
 # Generate complete prompt objects
 prompts = [
     {
-        "model": MODEL,
-        "messages": [{"role": "user", "content": content}],
-        "temperature": TEMPERATURE,
-        "system_fingerprint": SYSTEM_FINGERPRINT,
+        "custom_id": f"request-{i}",
+        "method": "POST",
+        "url": "/v1/chat/completions",
+        "body": {
+            "model": MODEL,
+            "messages": [
+                # {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": content}
+            ],
+            "temperature": TEMPERATURE,
+        },
     }
-    for content in PROMPT_CONTENTS
+    for i, content in enumerate(PROMPT_CONTENTS)
 ]
 
 # Create a JSONL file with one prompt per line
