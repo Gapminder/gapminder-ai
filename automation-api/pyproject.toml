@@ -20,7 +20,8 @@ polars = "^0.19.12"
 
 # for data frames schemas / types validation
 pydantic = "^2.1.1"
-pandera = {extras = ["mypy"], version = "^0.17.0"}
+pandera = {extras = ["mypy"], version = "^0.22.0"}
+# numpy = "<2.0"
 
 # to simplify development and deployment of cloud functions
 functions-framework = "^3.0.0"
