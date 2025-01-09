@@ -1,6 +1,7 @@
+import argparse
 import os
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pandas as pd
 from pandera.errors import SchemaError
@@ -31,7 +32,8 @@ def filter_included_rows(df: pd.DataFrame) -> pd.DataFrame:
     and remove the include_in_next_evaluation column
     """
     if "include_in_next_evaluation" in df.columns:
-        filtered_df = df[df["include_in_next_evaluation"] is True].copy()
+        # Convert to boolean if needed and filter
+        filtered_df = df[df["include_in_next_evaluation"].astype(bool)].copy()
         filtered_df.drop(columns=["include_in_next_evaluation"], inplace=True)
         return filtered_df
     return df
@@ -57,16 +59,22 @@ def read_ai_eval_spreadsheet() -> AiEvalData:
         raise Exception("Data validation. Please fix and retry")
 
 
-def save_sheets_as_csv() -> Dict[str, str]:
+def save_sheets_as_csv(base_dir: Optional[str] = None) -> Dict[str, str]:
     """
     Fetches all sheets from the AI Eval Spreadsheet and saves them as CSV files.
+
+    Args:
+        base_dir: Directory to save CSV files to. If None, uses default experiments/YYYYMMDD
 
     Returns:
         Dict mapping sheet names to their saved file paths
     """
-    # Create experiments directory with today's date
+    # Create output directory structure
     date_str = datetime.now().strftime("%Y%m%d")
-    base_dir = os.path.join("experiments", date_str)
+    if base_dir is None:
+        base_dir = os.path.join("experiments", date_str, "ai_eval_sheets")
+    else:
+        base_dir = os.path.join(base_dir, date_str, "ai_eval_sheets")
     os.makedirs(base_dir, exist_ok=True)
 
     # Read all data using existing wrapper
@@ -110,7 +118,18 @@ def save_sheets_as_csv() -> Dict[str, str]:
 
 
 if __name__ == "__main__":
-    saved_files = save_sheets_as_csv()
+    parser = argparse.ArgumentParser(
+        description="Generate experiment configuration files"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        help="Directory to save experiment configuration files",
+        default=None,
+    )
+    args = parser.parse_args()
+
+    saved_files = save_sheets_as_csv(args.output_dir)
 
     print("\nSaved the following files:")
     for sheet_name, file_path in saved_files.items():
