@@ -1,7 +1,7 @@
 import json
 
 # Static configuration values
-MODEL = "gpt-4o-mini"
+MODEL = "gemini-1.5-flash-001"
 TEMPERATURE = 0.7
 # SYSTEM_FINGERPRINT = "fp_12345"
 
