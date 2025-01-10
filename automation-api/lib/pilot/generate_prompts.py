@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 
 import polars as pl
@@ -218,6 +219,12 @@ if __name__ == "__main__":
         default=".",
         help="Base directory containing ai_eval_sheets folder",
     )
+    parser.add_argument(
+        "--model-config-id",
+        type=str,
+        required=True,
+        help="ID of the model configuration to use",
+    )
     args = parser.parse_args()
 
     # Construct input paths
@@ -225,11 +232,13 @@ if __name__ == "__main__":
     questions_path = os.path.join(sheets_dir, "questions.csv")
     question_options_path = os.path.join(sheets_dir, "question_options.csv")
     prompt_variations_path = os.path.join(sheets_dir, "prompt_variations.csv")
+    model_configurations_path = os.path.join(sheets_dir, "gen_ai_model_configs.csv")
 
     # Read input files
     questions = pl.read_csv(questions_path)
     question_options = pl.read_csv(question_options_path)
     prompt_template_variations = pl.read_csv(prompt_variations_path)
+    model_configurations = pl.read_csv(model_configurations_path)
 
     # Combine questions with options
     combined_questions = combine_questions_with_options(questions, question_options)
@@ -239,15 +248,36 @@ if __name__ == "__main__":
         combined_questions, prompt_template_variations
     )
 
+    # Find and validate model configuration
+    model_config = model_configurations.filter(
+        pl.col("model_config_id") == args.model_config_id
+    )
+
+    if model_config.height == 0:
+        raise ValueError(f"Model config ID {args.model_config_id} not found")
+
+    # Get model parameters
+    model_id = model_config["model_id"][0]
+    model_parameters = model_config["model_parameters"][0]
+
+    # Parse model parameters if they exist
+    temperature = 0.01  # default
+    if model_parameters is not None:
+        try:
+            params = json.loads(model_parameters)
+            temperature = params.get("temperature", temperature)
+        except json.JSONDecodeError:
+            logger.warning(f"Could not parse model_parameters: {model_parameters}")
+
     # Save as JSONL file in OpenAI format
     output_path = os.path.join(args.base_path, "question_prompts.jsonl")
     convert_to_jsonl_openai(
         question_prompts,
         output_path,
-        model="gpt-4-0125-preview",  # Example model
+        model=model_id,
         max_tokens=2000,  # Example max tokens
-        temperature=0.7,  # Example temperature
-        id_prefix="exp1_",  # Example prefix
+        temperature=temperature,
+        id_prefix=f"{args.model_config_id}-",  # Use model_config_id as prefix
     )
 
     print(f"Saved {len(question_prompts)} prompts to {output_path}")
