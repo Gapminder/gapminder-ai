@@ -1,3 +1,6 @@
+import argparse
+import os
+
 import polars as pl
 
 from lib.app_singleton import AppSingleton
@@ -141,7 +144,7 @@ def generate_question_prompt_combinations(
             question=formatted_question
         )
 
-        # Create ID and add to results
+        # Create the prompt ID and text
         question_prompt_id = f"question-{combo['question_id']}-{combo['variation_id']}"
         processed.append(
             {
@@ -154,11 +157,79 @@ def generate_question_prompt_combinations(
     return pl.DataFrame(processed)
 
 
+def convert_to_jsonl(df: pl.DataFrame, output_path: str) -> None:
+    """
+    Convert a DataFrame to JSONL format and save to file.
+
+    Args:
+        df: DataFrame to convert
+        output_path: Path to save JSONL file
+    """
+    with open(output_path, "w") as f:
+        for row in df.iter_rows(named=True):
+            f.write(f"{row}\n")
+
+
+def convert_to_jsonl_openai(
+    df: pl.DataFrame,
+    output_path: str,
+    model: str = "gpt-3.5-turbo-0125",
+    max_tokens: int = 1000,
+    temperature: float = 0.7,
+    id_prefix: str = "",
+) -> None:
+    """
+    Convert a DataFrame of prompts to OpenAI JSONL format for batch processing.
+
+    Args:
+        df: DataFrame with columns [question_prompt_id, question_prompt_text]
+        output_path: Path to save JSONL file
+        model: OpenAI model to use
+        max_tokens: Maximum tokens to generate
+        temperature: Sampling temperature
+    """
+    with open(output_path, "w") as f:
+        for row in df.iter_rows(named=True):
+            request_body = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": row["question_prompt_text"]},
+                ],
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            }
+
+            request_obj = {
+                "custom_id": f"{id_prefix}{row['question_prompt_id']}",
+                "method": "POST",
+                "url": "/v1/chat/completions",
+                "body": request_body,
+            }
+
+            f.write(f"{request_obj}\n")
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate question prompts")
+    parser.add_argument(
+        "--base-path",
+        type=str,
+        default=".",
+        help="Base directory containing ai_eval_sheets folder",
+    )
+    args = parser.parse_args()
+
+    # Construct input paths
+    sheets_dir = os.path.join(args.base_path, "ai_eval_sheets")
+    questions_path = os.path.join(sheets_dir, "questions.csv")
+    question_options_path = os.path.join(sheets_dir, "question_options.csv")
+    prompt_variations_path = os.path.join(sheets_dir, "prompt_variations.csv")
+
     # Read input files
-    questions = pl.read_csv("questions.csv")
-    question_options = pl.read_csv("question_options.csv")
-    prompt_template_variations = pl.read_csv("prompt_variations.csv")
+    questions = pl.read_csv(questions_path)
+    question_options = pl.read_csv(question_options_path)
+    prompt_template_variations = pl.read_csv(prompt_variations_path)
 
     # Combine questions with options
     combined_questions = combine_questions_with_options(questions, question_options)
@@ -168,4 +239,15 @@ if __name__ == "__main__":
         combined_questions, prompt_template_variations
     )
 
-    print(question_prompts)
+    # Save as JSONL file in OpenAI format
+    output_path = os.path.join(args.base_path, "question_prompts.jsonl")
+    convert_to_jsonl_openai(
+        question_prompts,
+        output_path,
+        model="gpt-4-0125-preview",  # Example model
+        max_tokens=2000,  # Example max tokens
+        temperature=0.7,  # Example temperature
+        id_prefix="exp1_",  # Example prefix
+    )
+
+    print(f"Saved {len(question_prompts)} prompts to {output_path}")
