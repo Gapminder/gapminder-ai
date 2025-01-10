@@ -269,13 +269,15 @@ if __name__ == "__main__":
         except json.JSONDecodeError:
             logger.warning(f"Could not parse model_parameters: {model_parameters}")
 
-    # Save as JSONL file in OpenAI format
-    output_path = os.path.join(args.base_path, "question_prompts.jsonl")
+    # Save as JSONL file in OpenAI format with model config prefix
+    output_path = os.path.join(
+        args.base_path, f"{args.model_config_id}-question_prompts.jsonl"
+    )
     convert_to_jsonl_openai(
         question_prompts,
         output_path,
         model=model_id,
-        max_tokens=2000,  # Example max tokens
+        max_tokens=2000,  # Default max tokens
         temperature=temperature,
         id_prefix=f"{args.model_config_id}-",  # Use model_config_id as prefix
     )
