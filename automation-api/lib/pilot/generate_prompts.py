@@ -1,10 +1,17 @@
 import argparse
 import json
 import os
+from enum import Enum
 
 import polars as pl
 
 from lib.app_singleton import AppSingleton
+
+
+class JsonlFormat(Enum):
+    OPENAI = "openai"
+    VERTEX = "vertex"
+
 
 logger = AppSingleton().get_logger()
 
@@ -158,19 +165,6 @@ def generate_question_prompt_combinations(
     return pl.DataFrame(processed)
 
 
-def convert_to_jsonl(df: pl.DataFrame, output_path: str) -> None:
-    """
-    Convert a DataFrame to JSONL format and save to file.
-
-    Args:
-        df: DataFrame to convert
-        output_path: Path to save JSONL file
-    """
-    with open(output_path, "w") as f:
-        for row in df.iter_rows(named=True):
-            f.write(f"{row}\n")
-
-
 def convert_to_jsonl_openai(
     df: pl.DataFrame,
     output_path: str,
@@ -212,6 +206,38 @@ def convert_to_jsonl_openai(
             f.write(f"{json_line}\n")
 
 
+def convert_to_jsonl_vertex(
+    df: pl.DataFrame,
+    output_path: str,
+    id_prefix: str = "",
+) -> None:
+    """
+    Convert a DataFrame of prompts to Vertex AI JSONL format for batch processing.
+
+    Args:
+        df: DataFrame with columns [question_prompt_id, question_prompt_text]
+        output_path: Path to save JSONL file
+        id_prefix: Prefix to add to custom IDs
+    """
+    with open(output_path, "w", encoding="utf-8") as f:
+        for row in df.iter_rows(named=True):
+            request_obj = {
+                "request": {
+                    "contents": [
+                        {
+                            "role": "user",
+                            "parts": [{"text": row["question_prompt_text"]}],
+                        }
+                    ]
+                },
+                "custom_id": f"{id_prefix}{row['question_prompt_id']}",
+            }
+
+            # Use json.dumps to ensure proper JSON formatting and UTF-8 encoding
+            json_line = json.dumps(request_obj, ensure_ascii=False)
+            f.write(f"{json_line}\n")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate question prompts")
     parser.add_argument(
@@ -225,6 +251,13 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="ID of the model configuration to use",
+    )
+    parser.add_argument(
+        "--jsonl-format",
+        type=str,
+        choices=[f.value for f in JsonlFormat],
+        default=JsonlFormat.OPENAI.value,
+        help="Format of JSONL output (openai or vertex)",
     )
     args = parser.parse_args()
 
@@ -270,17 +303,25 @@ if __name__ == "__main__":
         except json.JSONDecodeError:
             logger.warning(f"Could not parse model_parameters: {model_parameters}")
 
-    # Save as JSONL file in OpenAI format with model config prefix
+    # Save as JSONL file in selected format with model config prefix
     output_path = os.path.join(
         args.base_path, f"{args.model_config_id}-question_prompts.jsonl"
     )
-    convert_to_jsonl_openai(
-        question_prompts,
-        output_path,
-        model=model_id,
-        max_tokens=2000,  # Default max tokens
-        temperature=temperature,
-        id_prefix=f"{args.model_config_id}-",  # Use model_config_id as prefix
-    )
+
+    if JsonlFormat(args.jsonl_format) == JsonlFormat.OPENAI:
+        convert_to_jsonl_openai(
+            question_prompts,
+            output_path,
+            model=model_id,
+            max_tokens=2000,  # Default max tokens
+            temperature=temperature,
+            id_prefix=f"{args.model_config_id}-",  # Use model_config_id as prefix
+        )
+    else:
+        convert_to_jsonl_vertex(
+            question_prompts,
+            output_path,
+            id_prefix=f"{args.model_config_id}-",  # Use model_config_id as prefix
+        )
 
     print(f"Saved {len(question_prompts)} prompts to {output_path}")
