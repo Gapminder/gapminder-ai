@@ -189,12 +189,11 @@ def convert_to_jsonl_openai(
         max_tokens: Maximum tokens to generate
         temperature: Sampling temperature
     """
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         for row in df.iter_rows(named=True):
             request_body = {
                 "model": model,
                 "messages": [
-                    {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": row["question_prompt_text"]},
                 ],
                 "max_tokens": max_tokens,
@@ -208,7 +207,9 @@ def convert_to_jsonl_openai(
                 "body": request_body,
             }
 
-            f.write(f"{request_obj}\n")
+            # Use json.dumps to ensure proper JSON formatting and UTF-8 encoding
+            json_line = json.dumps(request_obj, ensure_ascii=False)
+            f.write(f"{json_line}\n")
 
 
 if __name__ == "__main__":
