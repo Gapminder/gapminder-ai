@@ -209,7 +209,7 @@ def convert_to_jsonl_openai(
 def convert_to_jsonl_vertex(
     df: pl.DataFrame,
     output_path: str,
-    id_prefix: str = "",
+    temperature: float = 0.01,
 ) -> None:
     """
     Convert a DataFrame of prompts to Vertex AI JSONL format for batch processing.
@@ -217,7 +217,8 @@ def convert_to_jsonl_vertex(
     Args:
         df: DataFrame with columns [question_prompt_id, question_prompt_text]
         output_path: Path to save JSONL file
-        id_prefix: Prefix to add to custom IDs
+        temperature: Temperature setting for generation
+        id_prefix: Prefix to add to custom_id
     """
     with open(output_path, "w", encoding="utf-8") as f:
         for row in df.iter_rows(named=True):
@@ -228,9 +229,29 @@ def convert_to_jsonl_vertex(
                             "role": "user",
                             "parts": [{"text": row["question_prompt_text"]}],
                         }
-                    ]
-                },
-                "custom_id": f"{id_prefix}{row['question_prompt_id']}",
+                    ],
+                    "generationConfig": {
+                        "temperature": temperature,
+                        "safety_settings": [
+                            {
+                                "category": "HARM_CATEGORY_HARASSMENT",
+                                "threshold": "BLOCK_ONLY_HIGH",
+                            },
+                            {
+                                "category": "HARM_CATEGORY_HATE_SPEECH",
+                                "threshold": "BLOCK_ONLY_HIGH",
+                            },
+                            {
+                                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                                "threshold": "BLOCK_ONLY_HIGH",
+                            },
+                            {
+                                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                                "threshold": "BLOCK_ONLY_HIGH",
+                            },
+                        ],
+                    },
+                }
             }
 
             # Use json.dumps to ensure proper JSON formatting and UTF-8 encoding
@@ -321,7 +342,7 @@ if __name__ == "__main__":
         convert_to_jsonl_vertex(
             question_prompts,
             output_path,
-            id_prefix=f"{args.model_config_id}-",  # Use model_config_id as prefix
+            temperature=temperature,
         )
 
     print(f"Saved {len(question_prompts)} prompts to {output_path}")
