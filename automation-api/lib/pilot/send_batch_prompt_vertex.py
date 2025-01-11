@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import time
@@ -8,23 +9,41 @@ from typing import Optional, Tuple
 import polars as pl
 import vertexai
 from google.cloud import storage
+from vertexai.batch_prediction import BatchPredictionJob
 
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
 logger = AppSingleton().get_logger()
+logger.setLevel(logging.DEBUG)
 
 
-def upload_to_gcs(local_path: str, gcs_uri: str) -> None:
-    """Upload a file to Google Cloud Storage."""
+def upload_to_gcs(local_path: str, gcs_uri: str) -> str:
+    """Upload a file to Google Cloud Storage with timestamp folder.
+
+    Args:
+        local_path: Path to local file to upload
+        gcs_uri: Base GCS URI (without timestamp folder)
+
+    Returns:
+        Full GCS URI including timestamp folder
+    """
     client = storage.Client()
-    bucket_name, blob_path = gcs_uri.replace("gs://", "").split("/", 1)
+    bucket_name, base_blob_path = gcs_uri.replace("gs://", "").split("/", 1)
+
+    # Add timestamp folder
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = os.path.basename(base_blob_path)
+    blob_path = f"batch_prompts/{timestamp}/{filename}"
+
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(blob_path)
 
-    logger.info(f"Uploading {local_path} to {gcs_uri}")
+    full_uri = f"gs://{bucket_name}/{blob_path}"
+    logger.info(f"Uploading {local_path} to {full_uri}")
     blob.upload_from_filename(local_path)
     logger.info("Upload complete")
+    return full_uri
 
 
 def get_model_parameters(model_config_id: str, base_path: str = ".") -> dict:
@@ -80,12 +99,6 @@ def get_batch_id_and_output_path(jsonl_path: str) -> Tuple[str, str]:
     return batch_id, output_path
 
 
-def get_batch_status(batch_job) -> str:
-    """Get the current status of a batch"""
-    batch_job.refresh()
-    return batch_job.state.name
-
-
 def download_batch_results(batch_job, output_path: str) -> str:
     """
     Download results for a completed batch
@@ -105,15 +118,22 @@ def download_batch_results(batch_job, output_path: str) -> str:
     uri = batch_job.output_location.replace("gs://", "")
     bucket_name, prefix = uri.split("/", 1)
 
+    # Look for predictions.jsonl in the output folder
     bucket = client.bucket(bucket_name)
     blobs = list(bucket.list_blobs(prefix=prefix))
 
-    if not blobs:
-        raise ValueError(f"No results found at {batch_job.output_location}")
+    # Find the predictions file
+    predictions_blob = None
+    for blob in blobs:
+        if blob.name.endswith("predictions.jsonl"):
+            predictions_blob = blob
+            break
 
-    # Download first result file
-    blob = blobs[0]
-    blob.download_to_filename(output_path)
+    if not predictions_blob:
+        raise ValueError(f"No predictions.jsonl found at {batch_job.output_location}")
+
+    # Download the predictions file
+    predictions_blob.download_to_filename(output_path)
 
     logger.info(f"Saved batch results to {output_path}")
     return output_path
@@ -132,12 +152,14 @@ def process_batch_prompts(
     """
     # Read configuration
     config = read_config()
-    project_id = config.get("VERTEX_PROJECT")
+    project_id = config.get("VERTEXAI_PROJECT")
     if not project_id:
-        raise ValueError("VERTEX_PROJECT not found in configuration")
+        raise ValueError("VERTEXAI_PROJECT not found in configuration")
 
-    # Get GCS bucket from argument or environment
-    gcs_bucket = gcs_bucket or os.getenv("GCS_BUCKET")
+    # Get GCS bucket from environment
+    gcs_bucket = os.getenv("GCS_BUCKET")
+    if not gcs_bucket:
+        raise ValueError("GCS_BUCKET environment variable is required")
 
     # Initialize Vertex AI
     vertexai.init(project=project_id, location="us-central1")
@@ -145,30 +167,21 @@ def process_batch_prompts(
     # Get model parameters
     model_params = get_model_parameters(model_config_id, base_path)
 
-    # Handle GCS upload if needed
-    input_uri = input_jsonl_path
-    if gcs_bucket:
-        gcs_path = (
-            f"gs://{gcs_bucket}/batch_prompts/{os.path.basename(input_jsonl_path)}"
-        )
-        upload_to_gcs(input_jsonl_path, gcs_path)
-        input_uri = gcs_path
+    # Upload to GCS and get the full URI with timestamp folder
+    gcs_path = f"gs://{gcs_bucket}/{os.path.basename(input_jsonl_path)}"
+    input_uri = upload_to_gcs(input_jsonl_path, gcs_path)
 
     # Generate output URI
     output_uri = f"gs://{gcs_bucket}/batch_results" if gcs_bucket else None
 
     # Submit batch prediction job
-    logger.info(f"Submitting batch prediction job for model {model_params['model_id']}")
-    batch_job = vertexai.batch_prediction.BatchPredictionJob.submit(
-        source_model=model_params["model_id"],
+    # Strip vertex_ai/ prefix if present
+    model_id = model_params["model_id"].replace("vertex_ai/", "")
+    logger.info(f"Submitting batch prediction job for model {model_id}")
+    batch_job = BatchPredictionJob.submit(
+        source_model=model_id,
         input_dataset=input_uri,
         output_uri_prefix=output_uri,
-        parameters={
-            "temperature": model_params["temperature"],
-            "max_output_tokens": model_params["max_output_tokens"],
-            "top_p": model_params["top_p"],
-            "top_k": model_params["top_k"],
-        },
     )
 
     logger.info(f"Job resource name: {batch_job.resource_name}")
@@ -189,20 +202,20 @@ def wait_for_batch_completion(batch_job, output_path: str) -> Optional[str]:
         Path to results file if successful, None if batch failed/cancelled
     """
     logger.info(f"Waiting for batch {batch_job.resource_name} to complete...")
-    while True:
-        status = get_batch_status(batch_job)
-        logger.info(f"Batch status: {status}")
 
-        if status == "SUCCEEDED":
-            # Download results
-            return download_batch_results(batch_job, output_path)
-        elif status in ["PENDING", "RUNNING"]:
-            # Still processing, wait before checking again
-            time.sleep(60)
-        else:
-            # Failed or cancelled
-            logger.error(f"Batch {batch_job.resource_name} ended with status: {status}")
-            return None
+    # Refresh the job until complete
+    while not batch_job.has_ended:
+        time.sleep(60)
+        batch_job.refresh()
+        logger.info(f"Batch status: {batch_job.state.name}")
+
+    # Check if the job succeeded
+    if batch_job.has_succeeded:
+        logger.info("Batch succeeded!")
+        return download_batch_results(batch_job, output_path)
+    else:
+        logger.error(f"Batch failed: {batch_job.error}")
+        return None
 
 
 if __name__ == "__main__":
@@ -212,12 +225,6 @@ if __name__ == "__main__":
         description="Process batch prompts using Vertex AI"
     )
     parser.add_argument(
-        "--model-config-id",
-        type=str,
-        required=True,
-        help="ID of the model configuration to use",
-    )
-    parser.add_argument(
         "--input-jsonl", type=str, required=True, help="Path to input JSONL file"
     )
     parser.add_argument(
@@ -225,9 +232,6 @@ if __name__ == "__main__":
         type=str,
         default=".",
         help="Base directory containing ai_eval_sheets folder",
-    )
-    parser.add_argument(
-        "--gcs-bucket", type=str, help="GCS bucket name for input/output (optional)"
     )
     parser.add_argument(
         "--wait",
@@ -248,14 +252,29 @@ if __name__ == "__main__":
             # Read and return the batch ID from the file
             with open(processing_file, "r") as f:
                 batch_id = f.read().strip()
-            batch_job = vertexai.batch_prediction.BatchPredictionJob(batch_id)
+            # Initialize Vertex AI
+            config = read_config()
+            project_id = config.get("VERTEXAI_PROJECT")
+            if not project_id:
+                raise ValueError("VERTEXAI_PROJECT not found in configuration")
+            vertexai.init(project=project_id, location="us-central1")
+
+            batch_job = BatchPredictionJob(batch_id)
         else:
             # Submit new batch job
+            # Extract model_config_id from input filename
+            base_name = os.path.basename(args.input_jsonl)
+            match = re.match(r"^(.*?)-question_prompts\.jsonl$", base_name)
+            if not match:
+                raise ValueError(
+                    f"Input filename {base_name} doesn't match expected pattern"
+                )
+            model_config_id = match.group(1)
+
             batch_job = process_batch_prompts(
-                model_config_id=args.model_config_id,
+                model_config_id=model_config_id,
                 input_jsonl_path=args.input_jsonl,
                 base_path=args.base_path,
-                gcs_bucket=args.gcs_bucket,
             )
             # Save batch ID to processing file
             with open(processing_file, "w") as f:

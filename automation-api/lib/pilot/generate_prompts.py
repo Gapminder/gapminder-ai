@@ -210,6 +210,7 @@ def convert_to_jsonl_vertex(
     df: pl.DataFrame,
     output_path: str,
     temperature: float = 0.01,
+    max_output_tokens: int = 2000,
 ) -> None:
     """
     Convert a DataFrame of prompts to Vertex AI JSONL format for batch processing.
@@ -232,25 +233,26 @@ def convert_to_jsonl_vertex(
                     ],
                     "generationConfig": {
                         "temperature": temperature,
-                        "safety_settings": [
-                            {
-                                "category": "HARM_CATEGORY_HARASSMENT",
-                                "threshold": "BLOCK_ONLY_HIGH",
-                            },
-                            {
-                                "category": "HARM_CATEGORY_HATE_SPEECH",
-                                "threshold": "BLOCK_ONLY_HIGH",
-                            },
-                            {
-                                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                                "threshold": "BLOCK_ONLY_HIGH",
-                            },
-                            {
-                                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                                "threshold": "BLOCK_ONLY_HIGH",
-                            },
-                        ],
+                        "max_output_tokens": max_output_tokens,
                     },
+                    "safety_settings": [
+                        {
+                            "category": "HARM_CATEGORY_HARASSMENT",
+                            "threshold": "BLOCK_ONLY_HIGH",
+                        },
+                        {
+                            "category": "HARM_CATEGORY_HATE_SPEECH",
+                            "threshold": "BLOCK_ONLY_HIGH",
+                        },
+                        {
+                            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                            "threshold": "BLOCK_ONLY_HIGH",
+                        },
+                        {
+                            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                            "threshold": "BLOCK_ONLY_HIGH",
+                        },
+                    ],
                 }
             }
 
@@ -343,6 +345,7 @@ if __name__ == "__main__":
             question_prompts,
             output_path,
             temperature=temperature,
+            max_output_tokens=2000,
         )
 
     print(f"Saved {len(question_prompts)} prompts to {output_path}")
