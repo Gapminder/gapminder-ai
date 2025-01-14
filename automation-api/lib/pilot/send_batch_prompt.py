@@ -3,22 +3,21 @@ import logging
 import os
 import re
 import time
-from datetime import datetime
 from typing import Optional, Tuple
-
-from openai import OpenAI
 
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
+from lib.llm.openai_batch_api import (
+    PROCESSING_STATUSES,
+    check_batch_job_status,
+    download_batch_job_output,
+    send_batch_file,
+)
 
 logger = AppSingleton().get_logger()
 logger.setLevel(logging.DEBUG)
 
 read_config()
-client = OpenAI()
-
-# Statuses that indicate the batch is still processing
-PROCESSING_STATUSES = {"validating", "in_progress", "finalizing"}
 
 
 def get_batch_id_and_output_path(jsonl_path: str) -> Tuple[str, str]:
@@ -40,39 +39,8 @@ def get_batch_id_and_output_path(jsonl_path: str) -> Tuple[str, str]:
     model_conf_id = match.group(1)
     output_dir = os.path.dirname(jsonl_path)
     output_path = os.path.join(output_dir, f"{model_conf_id}-question_response.jsonl")
-    # Add timestamp to batch_id (YYYYMMDDHHMMSS format)
-    # FIXME: this is different every time I call it. Find a better way?
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    batch_id = f"{model_conf_id}-{timestamp}"
 
-    return batch_id, output_path
-
-
-def get_batch_status(batch_id: str) -> str:
-    """Get the current status of a batch"""
-    batch = client.batches.retrieve(batch_id)
-    return batch.status
-
-
-def download_batch_results(batch_id: str, output_path: str) -> str:
-    """
-    Download results for a completed batch
-
-    Args:
-        batch_id: The batch ID to download results for
-        output_path: Path to save results file
-
-    Returns:
-        Path to the downloaded results file
-    """
-    # Get batch info
-    batch = client.batches.retrieve(batch_id)
-
-    # Download results file
-    client.files.content(batch.output_file_id).write_to_file(output_path)
-
-    logger.info(f"Saved batch results to {output_path}")
-    return output_path
+    return model_conf_id, output_path
 
 
 def send_batch_to_openai(jsonl_path: str) -> str:
@@ -86,8 +54,7 @@ def send_batch_to_openai(jsonl_path: str) -> str:
     Returns:
         The batch ID for tracking the request
     """
-    # Get batch ID and output path from input filename
-    batch_id, output_path = get_batch_id_and_output_path(jsonl_path)
+    _, output_path = get_batch_id_and_output_path(jsonl_path)
 
     # Check for existing processing file
     processing_file = f"{output_path}.processing"
@@ -97,27 +64,15 @@ def send_batch_to_openai(jsonl_path: str) -> str:
         with open(processing_file, "r") as f:
             return f.read().strip()
 
-    # Upload the JSONL file
-    batch_input_file = client.files.create(file=open(jsonl_path, "rb"), purpose="batch")
-    batch_input_file_id = batch_input_file.id
-
-    # Create the batch
-    batch = client.batches.create(
-        input_file_id=batch_input_file_id,
-        endpoint="/v1/chat/completions",
-        completion_window="24h",
-        metadata={
-            "batch_id": batch_id,
-            "source_file": os.path.basename(jsonl_path),
-        },
-    )
+    # Send batch to OpenAI
+    batch_id = send_batch_file(jsonl_path)
 
     # Create processing file with batch info
     with open(processing_file, "w") as f:
-        f.write(batch.id)
+        f.write(batch_id)
         logger.info("Batch created successfully.")
 
-    return batch.id
+    return batch_id
 
 
 def wait_for_batch_completion(batch_id: str, output_path: str) -> Optional[str]:
@@ -133,12 +88,12 @@ def wait_for_batch_completion(batch_id: str, output_path: str) -> Optional[str]:
     """
     logger.info(f"Waiting for batch {batch_id} to complete...")
     while True:
-        status = get_batch_status(batch_id)
+        status = check_batch_job_status(batch_id)
         logger.info(f"Batch status: {status}")
 
         if status == "completed":
             # Download results
-            return download_batch_results(batch_id, output_path)
+            return download_batch_job_output(batch_id, output_path)
         elif status in PROCESSING_STATUSES:
             # Still processing, wait before checking again
             time.sleep(60)
@@ -164,15 +119,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        # Extract model_config_id from input filename
-        base_name = os.path.basename(args.jsonl_file)
-        match = re.match(r"^(.*?)-question_prompts\.jsonl$", base_name)
-        if not match:
-            raise ValueError(
-                f"Input filename {base_name} doesn't match expected pattern"
-            )
-        model_config_id = match.group(1)
-
         batch_id = send_batch_to_openai(args.jsonl_file)
         if args.wait:
             output_path = get_batch_id_and_output_path(args.jsonl_file)[1]
