@@ -120,12 +120,14 @@ def download_batch_job_output(batch_id: str, output_path: str) -> Optional[str]:
     client.files.content(batch.output_file_id).write_to_file(temp_output)
 
     # Process and simplify the results
-    with open(temp_output, "r") as raw_file, open(output_path, "w") as out_file:
+    with open(temp_output, "r", encoding="utf-8") as raw_file, open(
+        output_path, "w", encoding="utf-8"
+    ) as out_file:
         for line in raw_file:
             try:
                 response_data = json.loads(line)
                 simplified = simplify_openai_response(response_data)
-                out_file.write(json.dumps(simplified) + "\n")
+                out_file.write(json.dumps(simplified, ensure_ascii=False) + "\n")
             except json.JSONDecodeError as e:
                 logger.error(f"Error processing line: {e}")
                 continue

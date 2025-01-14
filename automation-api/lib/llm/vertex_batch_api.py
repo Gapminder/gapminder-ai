@@ -105,7 +105,7 @@ def simplify_vertex_response(
     """
     simplified = {
         "custom_id": custom_id,
-        "status_code": 200 if response_data.get("status") != "error" else 500,
+        "status_code": response_data.get("status"),
         "content": None,
         "error": None,
     }
@@ -117,7 +117,7 @@ def simplify_vertex_response(
             simplified["content"] = content
     except (KeyError, TypeError, IndexError) as e:
         simplified["error"] = str(e)
-        simplified["status_code"] = 500
+        simplified["status_code"] = "ERROR_IN_POSTPROCESSING"
 
     return simplified
 
@@ -133,7 +133,9 @@ def _process_and_simplify_results(
         output_path: Path to save simplified results
         custom_id_mapping: Dictionary mapping request strings to custom IDs
     """
-    with open(input_path, "r") as raw_file, open(output_path, "w") as out_file:
+    with open(input_path, "r", encoding="utf-8") as raw_file, open(
+        output_path, "w", encoding="utf-8"
+    ) as out_file:
         for i, line in enumerate(raw_file):
             try:
                 response_data = json.loads(line)
@@ -146,7 +148,7 @@ def _process_and_simplify_results(
                     logger.debug("would not find id for request:")
                     logger.debug(request_str)
                 simplified = simplify_vertex_response(response_data, custom_id)
-                out_file.write(json.dumps(simplified) + "\n")
+                out_file.write(json.dumps(simplified, ensure_ascii=False) + "\n")
             except (json.JSONDecodeError, IndexError) as e:
                 logger.error(f"Error processing line {i}: {e}")
                 continue
