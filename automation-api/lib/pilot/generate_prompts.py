@@ -328,15 +328,20 @@ if __name__ == "__main__":
         except json.JSONDecodeError:
             logger.warning(f"Could not parse model_parameters: {model_parameters}")
 
+    # Save question prompts DataFrame as CSV
+    csv_output_path = os.path.join(args.base_path, "question_prompts.csv")
+    question_prompts.write_csv(csv_output_path)
+    print(f"Saved question prompts to {csv_output_path}")
+
     # Save as JSONL file in selected format with model config prefix
-    output_path = os.path.join(
+    jsonl_output_path = os.path.join(
         args.base_path, f"{args.model_config_id}-question_prompts.jsonl"
     )
 
     if JsonlFormat(args.jsonl_format) == JsonlFormat.OPENAI:
         convert_to_jsonl_openai(
             question_prompts,
-            output_path,
+            jsonl_output_path,
             model=model_id,
             max_tokens=2000,  # Default max tokens
             temperature=temperature,
@@ -345,9 +350,9 @@ if __name__ == "__main__":
     else:
         convert_to_jsonl_vertex(
             question_prompts,
-            output_path,
+            jsonl_output_path,
             temperature=temperature,
             max_output_tokens=2000,
         )
 
-    print(f"Saved {len(question_prompts)} prompts to {output_path}")
+    print(f"Saved {len(question_prompts)} prompts to {jsonl_output_path}")
