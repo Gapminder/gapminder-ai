@@ -1,7 +1,6 @@
 import argparse
 import logging
 import os
-import re
 import time
 
 from lib.app_singleton import AppSingleton
@@ -23,9 +22,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Process batch prompts using Anthropic API"
     )
-    parser.add_argument(
-        "--input-jsonl", type=str, required=True, help="Path to input JSONL file"
-    )
+    parser.add_argument("input_jsonl", type=str, help="Path to input JSONL file")
     parser.add_argument(
         "--base-path",
         type=str,
@@ -41,20 +38,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        # Extract model_config_id from input filename
-        base_name = os.path.basename(args.input_jsonl)
-        match = re.match(r"^(.*?)-question_prompts\.jsonl$", base_name)
-        if not match:
-            raise ValueError(
-                f"Input filename {base_name} doesn't match expected pattern"
-            )
-        model_config_id = match.group(1)
-
-        # Generate output path
+        # Generate output path based on input filename
+        base_name = os.path.splitext(os.path.basename(args.input_jsonl))[0]
         output_dir = os.path.dirname(args.input_jsonl)
-        output_path = os.path.join(
-            output_dir, f"{model_config_id}-question_response.jsonl"
-        )
+        output_path = os.path.join(output_dir, f"{base_name}-response.jsonl")
 
         # Check for existing processing file
         processing_file = f"{output_path}.processing"

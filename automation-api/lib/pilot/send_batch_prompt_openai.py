@@ -1,9 +1,8 @@
 import argparse
 import logging
 import os
-import re
 import time
-from typing import Optional, Tuple
+from typing import Optional
 
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
@@ -20,27 +19,20 @@ logger.setLevel(logging.DEBUG)
 read_config()
 
 
-def get_batch_id_and_output_path(jsonl_path: str) -> Tuple[str, str]:
+def get_batch_id_and_output_path(jsonl_path: str) -> str:
     """
-    Extract batch ID and generate output path from input JSONL filename.
+    Generate output path from input JSONL filename.
 
     Args:
         jsonl_path: Path to input JSONL file
 
     Returns:
-        Tuple of (batch_id, output_path)
+        Path where response file will be saved
     """
-    # Extract base filename without extension
-    base_name = os.path.basename(jsonl_path)
-    match = re.match(r"^(.*?)-question_prompts\.jsonl$", base_name)
-    if not match:
-        raise ValueError(f"Input filename {base_name} doesn't match expected pattern")
-
-    model_conf_id = match.group(1)
+    # Get base filename without extension and output directory
+    base_name = os.path.splitext(os.path.basename(jsonl_path))[0]
     output_dir = os.path.dirname(jsonl_path)
-    output_path = os.path.join(output_dir, f"{model_conf_id}-question_response.jsonl")
-
-    return model_conf_id, output_path
+    return os.path.join(output_dir, f"{base_name}-response.jsonl")
 
 
 def send_batch_to_openai(jsonl_path: str) -> str:
@@ -54,7 +46,7 @@ def send_batch_to_openai(jsonl_path: str) -> str:
     Returns:
         The batch ID for tracking the request
     """
-    _, output_path = get_batch_id_and_output_path(jsonl_path)
+    output_path = get_batch_id_and_output_path(jsonl_path)
 
     # Check for existing processing file
     processing_file = f"{output_path}.processing"
@@ -121,7 +113,7 @@ if __name__ == "__main__":
     try:
         batch_id = send_batch_to_openai(args.jsonl_file)
         if args.wait:
-            output_path = get_batch_id_and_output_path(args.jsonl_file)[1]
+            output_path = get_batch_id_and_output_path(args.jsonl_file)
             result_path = wait_for_batch_completion(batch_id, output_path)
             if result_path:
                 print(f"Results saved to: {result_path}")
