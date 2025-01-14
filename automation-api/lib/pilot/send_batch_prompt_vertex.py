@@ -242,7 +242,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        # Get output path from input filename
+        # Extract model_config_id and output path from input filename
+        base_name = os.path.basename(args.input_jsonl)
+        match = re.match(r"^(.*?)-question_prompts\.jsonl$", base_name)
+        if not match:
+            raise ValueError(
+                f"Input filename {base_name} doesn't match expected pattern"
+            )
+        model_config_id = match.group(1)
+
+        # Get output path
         _, output_path = get_batch_id_and_output_path(args.input_jsonl)
 
         # Check for existing processing file

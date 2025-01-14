@@ -69,8 +69,7 @@ def download_batch_results(batch_id: str, output_path: str) -> str:
     batch = client.batches.retrieve(batch_id)
 
     # Download results file
-    with open(output_path, "w") as f:
-        client.files.content(batch.output_file_id).write_to_file(f)
+    client.files.content(batch.output_file_id).write_to_file(output_path)
 
     logger.info(f"Saved batch results to {output_path}")
     return output_path
@@ -165,6 +164,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
+        # Extract model_config_id from input filename
+        base_name = os.path.basename(args.jsonl_file)
+        match = re.match(r"^(.*?)-question_prompts\.jsonl$", base_name)
+        if not match:
+            raise ValueError(
+                f"Input filename {base_name} doesn't match expected pattern"
+            )
+        model_config_id = match.group(1)
+
         batch_id = send_batch_to_openai(args.jsonl_file)
         if args.wait:
             output_path = get_batch_id_and_output_path(args.jsonl_file)[1]
