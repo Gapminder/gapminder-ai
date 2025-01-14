@@ -3,6 +3,8 @@ import logging
 from typing import Any, Dict, Optional
 
 import anthropic
+from anthropic.types.message_create_params import MessageCreateParamsNonStreaming
+from anthropic.types.messages.batch_create_params import Request
 
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
@@ -40,9 +42,9 @@ def send_batch_file(jsonl_path: str) -> str:
             temperature = req["body"].get("temperature", 0.01)
 
             anthropic_requests.append(
-                client.messages.batches.Request(
+                Request(
                     custom_id=req["custom_id"],
-                    params=anthropic.types.MessageCreateParamsNonStreaming(
+                    params=MessageCreateParamsNonStreaming(
                         model=model,
                         max_tokens=max_tokens,
                         temperature=temperature,
