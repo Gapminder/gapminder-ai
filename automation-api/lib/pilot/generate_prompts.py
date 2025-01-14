@@ -315,6 +315,8 @@ if __name__ == "__main__":
 
     # Get model parameters
     model_id = model_config["model_id"][0]
+    if model_id.startswith("anthropic/"):
+        model_id = model_id.replace("anthropic/", "")
     model_parameters = model_config["model_parameters"][0]
 
     # Parse model parameters if they exist
