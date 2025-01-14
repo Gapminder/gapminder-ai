@@ -113,7 +113,9 @@ def process_batch_prompts(
     return batch_id
 
 
-def wait_for_batch_completion(batch_id: str, output_path: str) -> Optional[str]:
+def wait_for_batch_completion(
+    batch_id: str, output_path: str, model_config_id: str
+) -> Optional[str]:
     """
     Wait for a batch to complete and download results when ready.
 
@@ -138,12 +140,11 @@ def wait_for_batch_completion(batch_id: str, output_path: str) -> Optional[str]:
 
     # Read CSV using polars
     df = pl.read_csv(csv_path)
-    model_prefix = batch_id.split("-")[0]  # Get model_config prefix
 
-    # Create mapping from prompt text to ID with model prefix
+    # Create mapping from prompt text to ID with model_config_id prefix
     for row in df.iter_rows(named=True):
         prompt_text = row["question_prompt_text"]
-        custom_id = f"{model_prefix}-{row['question_prompt_id']}"
+        custom_id = f"{model_config_id}-{row['question_prompt_id']}"
         custom_id_mapping[prompt_text] = custom_id
 
     while True:
@@ -228,7 +229,9 @@ if __name__ == "__main__":
                 f.write(batch_id)
 
         if args.wait:
-            result_path = wait_for_batch_completion(batch_id, output_path)
+            result_path = wait_for_batch_completion(
+                batch_id, output_path, model_config_id
+            )
             if result_path:
                 print(f"Results saved to: {result_path}")
                 # Clean up processing file

@@ -100,10 +100,7 @@ def simplify_anthropic_response(response_data: Any) -> Dict[str, Any]:
     if status == "succeeded":
         simplified["content"] = response_data.result.message.content[0].text
     elif status == "errored":
-        simplified["error"] = {
-            "type": response_data.result.error.type,
-            "message": str(response_data.result.error),
-        }
+        simplified["error"] = (str(response_data.result.error),)
 
     return simplified
 
