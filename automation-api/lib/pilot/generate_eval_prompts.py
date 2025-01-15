@@ -207,7 +207,12 @@ def generate_eval_prompts(
                         option_c_correctness=question_row["option_c_correctness"],
                     )
 
-                    custom_id = f"{prompt_id}-eval-{metric_id}"
+                    # FIXME: anthropic expect custom id less than 64 chars.
+                    # We should just update the generate_prompt.py to use shorter
+                    # custom_id and no need to do it here.
+                    custom_id = f"{prompt_id}-{metric_id}".replace("-question-", "-q-")
+                    if len(custom_id) > 64:
+                        raise ValueError("custom_id too long")
                     prompt_id_mapping.append((custom_id, eval_prompt))
 
                     if format == JsonlFormat.OPENAI:
