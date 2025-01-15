@@ -56,6 +56,10 @@ def read_config() -> dict[str, str]:
         "VERTEXAI_PROJECT",
         "VERTEXAI_LOCATIONS",
         "VERTEX_SERVICE_ACCOUNT_CREDENTIALS",
+        "XAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "REDIS_HOST",
+        "REDIS_PORT",
     ]:
         config[key] = os.getenv(key=key, default="")
 
