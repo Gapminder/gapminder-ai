@@ -153,11 +153,11 @@ def generate_question_prompt_combinations(
         )
 
         # Create the prompt ID and text
-        question_prompt_id = f"question-{combo['question_id']}-{combo['variation_id']}"
+        question_prompt_id = f"{combo['question_id']}-{combo['variation_id']}"
         processed.append(
             {
-                "question_prompt_id": question_prompt_id,
-                "question_prompt_text": question_prompt_text,
+                "prompt_id": question_prompt_id,
+                "prompt_text": question_prompt_text,
             }
         )
 
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     # Generate question-prompt combinations
     question_prompts = generate_question_prompt_combinations(
         combined_questions, prompt_template_variations
-    )
+    ).rename({"question_prompt_id": "prompt_id", "question_prompt_text": "prompt_text"})
 
     # Find and validate model configuration
     model_config = model_configurations.filter(
@@ -328,15 +328,19 @@ if __name__ == "__main__":
         except json.JSONDecodeError:
             logger.warning(f"Could not parse model_parameters: {model_parameters}")
 
-    # Save question prompts DataFrame as CSV
-    csv_output_path = os.path.join(args.base_path, "question_prompts.csv")
-    question_prompts.write_csv(csv_output_path)
-    print(f"Saved question prompts to {csv_output_path}")
-
     # Save as JSONL file in selected format with model config prefix
     jsonl_output_path = os.path.join(
         args.base_path, f"{args.model_config_id}-question_prompts.jsonl"
     )
+
+    # Only save prompt mapping CSV for Vertex format
+    if JsonlFormat(args.jsonl_format) == JsonlFormat.VERTEX:
+        csv_output_path = os.path.join(
+            args.base_path,
+            f"{args.model_config_id}-question_prompts-prompt-mapping.csv",
+        )
+        question_prompts.write_csv(csv_output_path)
+        print(f"Saved prompt mapping to {csv_output_path}")
 
     if JsonlFormat(args.jsonl_format) == JsonlFormat.OPENAI:
         convert_to_jsonl_openai(
