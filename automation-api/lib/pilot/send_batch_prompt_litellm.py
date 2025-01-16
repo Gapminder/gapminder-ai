@@ -45,6 +45,9 @@ def process_single_prompt(data: Dict) -> Dict:
     """Process a single prompt using LiteLLM."""
     try:
         time.sleep(0.5)  # Add delay between requests
+        # add retry to request
+        if "num_retries" not in data.keys():
+            data["num_retries"] = 5
         response = litellm.completion(**data["body"])  # type: ignore
 
         # Format response like OpenAI batch API
