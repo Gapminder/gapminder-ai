@@ -194,7 +194,7 @@ def generate_eval_prompts(
                 question_responses = {
                     prompt_id: text
                     for prompt_id, text in responses.items()
-                    if f"question-{question_id}-" in prompt_id
+                    if f"-{question_id}-" in prompt_id
                 }
 
                 for prompt_id, response_text in question_responses.items():
