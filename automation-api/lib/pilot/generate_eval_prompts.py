@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 from enum import Enum
 from typing import Dict, List, Tuple
@@ -15,6 +16,7 @@ class JsonlFormat(Enum):
 
 
 logger = AppSingleton().get_logger()
+logger.setLevel(logging.DEBUG)
 
 
 def ensure_complete_options_with_correctness(
@@ -149,6 +151,7 @@ def read_responses(response_file: str) -> Dict[str, str]:
             data = json.loads(line)
             content = data.get("content")
             if content is None:
+                logger.debug(f"empty content: {line}")
                 continue
 
             custom_id = data.get("custom_id", "")
@@ -210,7 +213,7 @@ def generate_eval_prompts(
                     # FIXME: anthropic expect custom id less than 64 chars.
                     # We should just update the generate_prompt.py to use shorter
                     # custom_id and no need to do it here.
-                    custom_id = f"{prompt_id}-{metric_id}".replace("-question-", "-q-")
+                    custom_id = f"{prompt_id}-{metric_id}".replace("-question-", "-")
                     if len(custom_id) > 64:
                         raise ValueError("custom_id too long")
                     prompt_id_mapping.append((custom_id, eval_prompt))
