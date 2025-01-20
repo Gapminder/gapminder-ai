@@ -1,0 +1,4 @@
+evaluator,jsonl_format
+gemini-1.5-pro-002,vertex
+gpt-4o,openai
+claude-3-5-sonnet-20241022,openai

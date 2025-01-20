@@ -1,0 +1,5 @@
+model_config_id,model_id,model_parameters,repeat_times,memory,memory_size
+mc041,vertex_ai/gemini-1.5-pro-002,"{""temperature"": 0.01}",1,False,0
+mc043,anthropic/claude-3-5-sonnet-20241022,"{""temperature"": 0.01}",1,False,0
+mc044,fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct,"{""temperature"": 0.01}",1,False,0
+mc045,gpt-4o-2024-11-20,"{""temperature"": 0.01}",1,False,0
