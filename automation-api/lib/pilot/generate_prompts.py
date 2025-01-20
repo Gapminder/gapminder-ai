@@ -188,14 +188,14 @@ def convert_to_jsonl_openai(
             request_body = {
                 "model": model,
                 "messages": [
-                    {"role": "user", "content": row["question_prompt_text"]},
+                    {"role": "user", "content": row["prompt_text"]},
                 ],
                 "max_tokens": max_tokens,
                 "temperature": temperature,
             }
 
             request_obj = {
-                "custom_id": f"{id_prefix}{row['question_prompt_id']}",
+                "custom_id": f"{id_prefix}{row['prompt_id']}",
                 "method": "POST",
                 "url": "/v1/chat/completions",
                 "body": request_body,
@@ -228,7 +228,7 @@ def convert_to_jsonl_vertex(
                     "contents": [
                         {
                             "role": "user",
-                            "parts": [{"text": row["question_prompt_text"]}],
+                            "parts": [{"text": row["prompt_text"]}],
                         }
                     ],
                     "generationConfig": {
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     # Generate question-prompt combinations
     question_prompts = generate_question_prompt_combinations(
         combined_questions, prompt_template_variations
-    ).rename({"question_prompt_id": "prompt_id", "question_prompt_text": "prompt_text"})
+    )
 
     # Find and validate model configuration
     model_config = model_configurations.filter(

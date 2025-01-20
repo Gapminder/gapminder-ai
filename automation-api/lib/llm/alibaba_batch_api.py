@@ -12,8 +12,13 @@ from lib.config import read_config
 logger = AppSingleton().get_logger()
 logger.setLevel(logging.DEBUG)
 
-read_config()  # FIXME: maybe I should read config in application code, not lib code.
-client = OpenAI(base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
+config = (
+    read_config()
+)  # FIXME: maybe I should read config in application code, not lib code.
+api_key = config["DASHSCOPE_API_KEY"]
+client = OpenAI(
+    api_key=api_key, base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+)
 
 # Statuses that indicate the batch is still processing
 PROCESSING_STATUSES = {"validating", "in_progress", "finalizing"}
