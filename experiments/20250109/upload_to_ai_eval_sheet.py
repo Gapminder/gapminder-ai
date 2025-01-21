@@ -52,14 +52,19 @@ res = res.with_columns(
     pl.col("final_correctness").replace_strict(result_map).alias("result")
 )
 
-# Select relevant columns for upload
+# Select and rename columns for upload with correct order
 upload_df = res.select([
-    "model_config_id",
-    "question_id",
-    "prompt_variation_id",
-    "language",
-    "last_evaluation_datetime",
-    "result"
+    pl.col("question_id"),
+    pl.col("language"),
+    pl.col("prompt_variation_id"),
+    pl.col("model_config_id").alias("model_configuration_id"),
+    pl.col("last_evaluation_datetime"),
+    pl.col("percent_correct"),
+    pl.col("percent_wrong"),
+    pl.col("percent_very_wrong"),
+    pl.col("percent_eval_failed"),
+    pl.col("round").alias("rounds"),
+    pl.col("result")
 ])
 
 # Print shape and preview
