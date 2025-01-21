@@ -97,7 +97,8 @@ def simplify_openai_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
 
 def download_batch_job_output(batch_id: str, output_path: str) -> Optional[str]:
     """
-    Download and simplify results for a completed batch job.
+    Download and simplify results for a completed batch job, including both successful
+    responses and errors.
 
     Args:
         batch_id: The batch ID to download results for
@@ -115,25 +116,52 @@ def download_batch_job_output(batch_id: str, output_path: str) -> Optional[str]:
 
     # Create a temporary file for raw results
     temp_output = f"{output_path}.temp"
+    temp_errors = f"{output_path}.errors.temp"
 
     # Download raw results file
     client.files.content(batch.output_file_id).write_to_file(temp_output)
 
-    # Process and simplify the results
-    with open(temp_output, "r", encoding="utf-8") as raw_file, open(
-        output_path, "w", encoding="utf-8"
-    ) as out_file:
-        for line in raw_file:
-            try:
-                response_data = json.loads(line)
-                simplified = simplify_openai_response(response_data)
-                out_file.write(json.dumps(simplified, ensure_ascii=False) + "\n")
-            except json.JSONDecodeError as e:
-                logger.error(f"Error processing line: {e}")
-                continue
+    # Download error file if it exists
+    if batch.error_file_id:
+        client.files.content(batch.error_file_id).write_to_file(temp_errors)
+    else:
+        logger.info("No error file found for this batch")
 
-    # Clean up temporary file
-    os.remove(temp_output)
+    # Process and combine both files
+    with open(output_path, "w", encoding="utf-8") as out_file:
+        # Process successful responses
+        if os.path.exists(temp_output):
+            with open(temp_output, "r", encoding="utf-8") as raw_file:
+                for line in raw_file:
+                    try:
+                        response_data = json.loads(line)
+                        simplified = simplify_openai_response(response_data)
+                        out_file.write(
+                            json.dumps(simplified, ensure_ascii=False) + "\n"
+                        )
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Error processing line: {e}")
+                        continue
 
-    logger.info(f"Saved simplified batch results to {output_path}")
+        # Process error responses
+        if batch.error_file_id and os.path.exists(temp_errors):
+            with open(temp_errors, "r", encoding="utf-8") as error_file:
+                for line in error_file:
+                    try:
+                        response_data = json.loads(line)
+                        simplified = simplify_openai_response(response_data)
+                        out_file.write(
+                            json.dumps(simplified, ensure_ascii=False) + "\n"
+                        )
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Error processing error line: {e}")
+                        continue
+
+    # Clean up temporary files
+    if os.path.exists(temp_output):
+        os.remove(temp_output)
+    if os.path.exists(temp_errors):
+        os.remove(temp_errors)
+
+    logger.info(f"Saved combined batch results (including errors) to {output_path}")
     return output_path
