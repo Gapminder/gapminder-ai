@@ -34,25 +34,29 @@ res4.shape
 res = pl.concat([res1, res2, res3, res4])
 
 # Define mapping for correctness values
-result_map = {0: "fail", 1: "very_wrong", 2: "wrong", 3: "correct"}
+result_map = {-1: "n/a", 0: "fail", 1: "very_wrong", 2: "wrong", 3: "correct"}
 
 # Add language and evaluation time columns
 res = res.with_columns(
     pl.lit("en-US").alias("language"),
-    pl.lit("20250109").alias("last_evaluation_datetime")
+    pl.lit("20250109").alias("last_evaluation_datetime"),
+    pl.lit(1).alias("round"),
+    pl.lit(-1).alias("percent_eval_failed"),
+    pl.lit(-1).alias("percent_correct"),
+    pl.lit(-1).alias("percent_wrong"),
+    pl.lit(-1).alias("percent_very_wrong"),
 )
 
 # Map final_correctness to result using the mapping
 res = res.with_columns(
-    pl.col("final_correctness").map_dict(result_map).alias("result")
+    pl.col("final_correctness").replace_strict(result_map).alias("result")
 )
 
 # Select relevant columns for upload
 upload_df = res.select([
     "model_config_id",
-    "question_id", 
+    "question_id",
     "prompt_variation_id",
-    "response",
     "language",
     "last_evaluation_datetime",
     "result"
@@ -62,4 +66,5 @@ upload_df = res.select([
 print(upload_df.shape)
 print(upload_df.head())
 
+backup.columns
 
