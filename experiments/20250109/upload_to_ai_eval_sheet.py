@@ -33,6 +33,9 @@ res4.shape
 
 res = pl.concat([res1, res2, res3, res4])
 
+# Define mapping for correctness values
+result_map = {0: "fail", 1: "very_wrong", 2: "wrong", 3: "correct"}
+
 # Add language and evaluation time columns
 res = res.with_columns(
     pl.lit("en-US").alias("language"),
