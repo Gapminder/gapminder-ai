@@ -33,11 +33,30 @@ res4.shape
 
 res = pl.concat([res1, res2, res3, res4])
 
-res.shape
+# Add language and evaluation time columns
+res = res.with_columns(
+    pl.lit("en-US").alias("language"),
+    pl.lit("20250109").alias("last_evaluation_datetime")
+)
 
-last_eval_time = "20250109"
-lang = "en-US"
-result_map = {0: "fail", 1: "very_wrong", 2: "wrong", 3: "correct"}
+# Map final_correctness to result using the mapping
+res = res.with_columns(
+    pl.col("final_correctness").map_dict(result_map).alias("result")
+)
 
+# Select relevant columns for upload
+upload_df = res.select([
+    "model_config_id",
+    "question_id", 
+    "prompt_variation_id",
+    "response",
+    "language",
+    "last_evaluation_datetime",
+    "result"
+])
+
+# Print shape and preview
+print(upload_df.shape)
+print(upload_df.head())
 
 
