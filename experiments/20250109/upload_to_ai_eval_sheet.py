@@ -2,7 +2,6 @@
 Notebook to upload the results to ai eval sheets.
 """
 
-
 from lib.config import read_config
 from lib.pilot.utils import read_ai_eval_spreadsheet
 
@@ -53,19 +52,21 @@ res = res.with_columns(
 )
 
 # Select and rename columns for upload with correct order
-upload_df = res.select([
-    pl.col("question_id"),
-    pl.col("language"),
-    pl.col("prompt_variation_id"),
-    pl.col("model_config_id").alias("model_configuration_id"),
-    pl.col("last_evaluation_datetime"),
-    pl.col("percent_correct"),
-    pl.col("percent_wrong"),
-    pl.col("percent_very_wrong"),
-    pl.col("percent_eval_failed"),
-    pl.col("round").alias("rounds"),
-    pl.col("result")
-])
+upload_df = res.select(
+    [
+        pl.col("question_id"),
+        pl.col("language"),
+        pl.col("prompt_variation_id"),
+        pl.col("model_config_id").alias("model_configuration_id"),
+        pl.col("last_evaluation_datetime"),
+        pl.col("percent_correct"),
+        pl.col("percent_wrong"),
+        pl.col("percent_very_wrong"),
+        pl.col("percent_eval_failed"),
+        pl.col("round").alias("rounds"),
+        pl.col("result"),
+    ]
+)
 
 # Print shape and preview
 print(upload_df.shape)
@@ -73,3 +74,6 @@ print(upload_df.head())
 
 backup.columns
 
+
+# upload it
+ai_eval_sheet.evaluation_results.replace_data(upload_df.to_pandas())

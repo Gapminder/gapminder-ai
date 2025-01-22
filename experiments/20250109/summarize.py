@@ -8,14 +8,13 @@ from typing import Dict
 
 # File paths - edit these to point to your data files
 # REQUESTS_FILE = "./finished/mc044-question_prompts.jsonl"
-RESPONSES_FILE = "./finished/mc045-question_response.jsonl"
-EVAL1_FILE = "./finished/mc045-question_response-eval-prompts-gpt-4o-response.jsonl"
+RESPONSES_FILE = "./finished/mc043-question_response.jsonl"
+EVAL1_FILE = "./finished/mc043-question_response-eval-prompts-gpt-4o-response.jsonl"
 EVAL2_FILE = (
-    "./finished/mc045-question_response-eval-prompts-gemini-1-5-pro-002-response.jsonl"
+    "./finished/mc043-question_response-eval-prompts-gemini-1-5-pro-002-response.jsonl"
 )
-EVAL3_FILE = "./finished/"
-"mc045-question_response-eval-prompts-claude-3-5-sonnet-20241022-response.jsonl"
-OUTPUT_FILE = "./finished/mc045_output.parquet"
+EVAL3_FILE = "./finished/mc043-question_response-eval-prompts-claude-3-5-sonnet-20241022-response.jsonl"  # noqa
+OUTPUT_FILE = "./mc043_output.parquet"
 
 
 def load_jsonl(file_path: str) -> list[dict]:
