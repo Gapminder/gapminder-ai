@@ -7,19 +7,18 @@ from typing import Any, Dict, Optional
 from openai import OpenAI
 
 from lib.app_singleton import AppSingleton
-from lib.config import read_config
 
 logger = AppSingleton().get_logger()
 logger.setLevel(logging.DEBUG)
 
-read_config()  # FIXME: maybe I should read config in application code, not lib code.
-client = OpenAI()
 
 # Statuses that indicate the batch is still processing
 PROCESSING_STATUSES = {"validating", "in_progress", "finalizing"}
 
 
-def send_batch_file(jsonl_path: str, endpoint: str = "/v1/chat/completions") -> str:
+def send_batch_file(
+    client: OpenAI, jsonl_path: str, endpoint: str = "/v1/chat/completions"
+) -> str:
     """
     Send a JSONL file to OpenAI's batch API.
 
@@ -53,7 +52,7 @@ def send_batch_file(jsonl_path: str, endpoint: str = "/v1/chat/completions") -> 
     return batch.id
 
 
-def check_batch_job_status(batch_id: str) -> str:
+def check_batch_job_status(client: OpenAI, batch_id: str) -> str:
     """
     Get the current status of a batch job.
 
@@ -95,7 +94,9 @@ def simplify_openai_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
     return simplified
 
 
-def download_batch_job_output(batch_id: str, output_path: str) -> Optional[str]:
+def download_batch_job_output(
+    client: OpenAI, batch_id: str, output_path: str
+) -> Optional[str]:
     """
     Download and simplify results for a completed batch job, including both successful
     responses and errors.
