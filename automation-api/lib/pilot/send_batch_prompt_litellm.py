@@ -8,7 +8,7 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import litellm
 from litellm import Cache  # type: ignore
@@ -18,6 +18,17 @@ from lib.config import read_config
 
 logger = AppSingleton().get_logger()
 logger.setLevel(logging.DEBUG)
+
+# read env config
+config = read_config()
+
+# Provider-specific configurations
+PROVIDER_CONFIGS: Dict[str, Dict[str, Any]] = {
+    "alibaba": {
+        "api_key": config["DASHSCOPE_API_KEY"],
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    }
+}
 
 
 def get_batch_id_and_output_path(jsonl_path: str) -> Tuple[str, str]:
@@ -32,7 +43,6 @@ def get_batch_id_and_output_path(jsonl_path: str) -> Tuple[str, str]:
 
 def setup_litellm_cache() -> None:
     """Configure LiteLLM Redis cache with 60 day TTL."""
-    config = read_config()
     litellm.cache = Cache(  # type: ignore
         type="redis",
         host=config["REDIS_HOST"],
@@ -41,14 +51,20 @@ def setup_litellm_cache() -> None:
     )
 
 
-def process_single_prompt(data: Dict) -> Dict:
+def process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
     """Process a single prompt using LiteLLM."""
     try:
         time.sleep(0.5)  # Add delay between requests
         # add retry to request
         if "num_retries" not in data.keys():
             data["num_retries"] = 5
-        response = litellm.completion(**data["body"])  # type: ignore
+
+        # Merge provider config with request body if provider exists
+        request_body = data["body"].copy()
+        if provider and provider in PROVIDER_CONFIGS:
+            request_body.update(PROVIDER_CONFIGS[provider])
+
+        response = litellm.completion(**request_body)  # type: ignore
 
         # Format response like OpenAI batch API
         return {
@@ -68,7 +84,7 @@ def process_single_prompt(data: Dict) -> Dict:
 
 
 def process_batch_prompts(
-    input_jsonl_path: str, num_processes: int = 1
+    input_jsonl_path: str, num_processes: int = 1, provider: Optional[str] = None
 ) -> Optional[str]:
     """Process batch prompts using LiteLLM with multiprocessing."""
     logger = AppSingleton().get_logger()
@@ -84,9 +100,14 @@ def process_batch_prompts(
         # Process prompts using multiprocessing if enabled
         if num_processes > 1:
             with mp.Pool(processes=num_processes) as pool:
-                results = pool.map(process_single_prompt, all_prompts)
+                results = pool.starmap(
+                    process_single_prompt,
+                    [(prompt, provider) for prompt in all_prompts],
+                )
         else:
-            results = [process_single_prompt(prompt) for prompt in all_prompts]
+            results = [
+                process_single_prompt(prompt, provider) for prompt in all_prompts
+            ]
 
         # Write all results to output file
         with open(output_path, "w") as f:
@@ -118,10 +139,17 @@ if __name__ == "__main__":
         default=1,
         help="Number of processes to use (default: 1)",
     )
+    parser.add_argument(
+        "--provider",
+        type=str,
+        help="Custom provider name (e.g., alibaba)",
+    )
     args = parser.parse_args()
 
     try:
-        output_path = process_batch_prompts(args.jsonl_file, args.processes)
+        output_path = process_batch_prompts(
+            args.jsonl_file, args.processes, args.provider
+        )
         if output_path:
             print(f"Results saved to: {output_path}")
         else:
