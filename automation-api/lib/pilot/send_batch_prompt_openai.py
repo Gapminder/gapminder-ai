@@ -4,6 +4,8 @@ import os
 import time
 from typing import Optional
 
+from openai import OpenAI
+
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
 from lib.llm.openai_batch_api import (
@@ -16,7 +18,8 @@ from lib.llm.openai_batch_api import (
 logger = AppSingleton().get_logger()
 logger.setLevel(logging.DEBUG)
 
-read_config()
+config = read_config()
+client = OpenAI(api_key=config["OPENAI_API_KEY"])
 
 
 def get_batch_id_and_output_path(jsonl_path: str) -> str:
@@ -57,7 +60,7 @@ def send_batch_to_openai(jsonl_path: str) -> str:
             return f.read().strip()
 
     # Send batch to OpenAI
-    batch_id = send_batch_file(jsonl_path)
+    batch_id = send_batch_file(client, jsonl_path)
 
     # Create processing file with batch info
     with open(processing_file, "w") as f:
@@ -80,12 +83,12 @@ def wait_for_batch_completion(batch_id: str, output_path: str) -> Optional[str]:
     """
     logger.info(f"Waiting for batch {batch_id} to complete...")
     while True:
-        status = check_batch_job_status(batch_id)
+        status = check_batch_job_status(client, batch_id)
         logger.info(f"Batch status: {status}")
 
         if status == "completed":
             # Download results
-            return download_batch_job_output(batch_id, output_path)
+            return download_batch_job_output(client, batch_id, output_path)
         elif status in PROCESSING_STATUSES:
             # Still processing, wait before checking again
             time.sleep(60)
