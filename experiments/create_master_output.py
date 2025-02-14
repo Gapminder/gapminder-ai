@@ -44,15 +44,15 @@ def create_master_output(output_folder: str, language: str = "en-US") -> pl.Data
     )
 
 
-final_df1 = create_master_output("20250109")
+final_df1 = create_master_output("20250208")
 final_df1
 
-final_df1.write_csv("master_output_20250109.csv")
+final_df1.write_csv("master_output_20250208.csv")
 
-final_df2 = create_master_output("./20250120")
+final_df2 = create_master_output("./20250205")
 final_df2
 
-final_df2.write_csv("master_output_20250120.csv")
+final_df2.write_csv("master_output_20250205.csv")
 
 
 def create_combined_raw_output(output_folders: List[str]) -> pl.DataFrame:
@@ -75,10 +75,13 @@ def create_combined_raw_output(output_folders: List[str]) -> pl.DataFrame:
 
 
 raw_outputs = create_combined_raw_output(
-    ["./20240921-20241205/", "./20250109/", "./20250120/"]
+    ["./20240921-20241205/", "./20250109/", "./20250120/", "./20250205", "20250208"]
 )
 
 raw_outputs
+
+# mc039 is no longer the latest
+raw_outputs = raw_outputs.filter(pl.col("model_config_id") != "mc039")
 
 raw_outputs["question_id"].unique()
 
