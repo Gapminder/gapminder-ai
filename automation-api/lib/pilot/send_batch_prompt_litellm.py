@@ -5,7 +5,6 @@ import json
 import logging
 import multiprocessing as mp
 import os
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -54,10 +53,10 @@ def setup_litellm_cache() -> None:
 def process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
     """Process a single prompt using LiteLLM."""
     try:
-        time.sleep(0.5)  # Add delay between requests
+        # time.sleep(0.5)  # Add delay between requests
         # add retry to request
         if "num_retries" not in data.keys():
-            data["num_retries"] = 5
+            data["num_retries"] = 10
 
         # Merge provider config with request body if provider exists
         request_body = data["body"].copy()

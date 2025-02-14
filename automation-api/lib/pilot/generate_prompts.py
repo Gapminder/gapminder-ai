@@ -297,6 +297,11 @@ if __name__ == "__main__":
     prompt_template_variations = pl.read_csv(prompt_variations_path)
     model_configurations = pl.read_csv(model_configurations_path)
 
+    # Print experiment size information
+    print(f"Number of questions: {questions.height}")
+    print(f"Number of prompt templates: {prompt_template_variations.height}")
+    print(f"Total combinations: {questions.height * prompt_template_variations.height}")
+
     # Combine questions with options
     combined_questions = combine_questions_with_options(questions, question_options)
 
