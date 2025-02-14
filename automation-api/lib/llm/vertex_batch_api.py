@@ -49,7 +49,7 @@ def send_batch_file(
     input_uri = f"gs://{gcs_bucket}/{blob_path}"
 
     logger.info(f"Uploading {jsonl_path} to {input_uri}")
-    blob.upload_from_filename(jsonl_path)
+    blob.upload_from_filename(jsonl_path, timeout=20 * 60)
     logger.info("Upload complete")
 
     # Generate output URI
