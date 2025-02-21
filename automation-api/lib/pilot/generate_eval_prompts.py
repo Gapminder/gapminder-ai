@@ -290,23 +290,10 @@ if __name__ == "__main__":
         help="Path to response JSONL file",
     )
     parser.add_argument(
-        "--model",
-        type=str,
-        default="gpt-4",
-        help="Model to use for evaluation",
-    )
-    parser.add_argument(
         "--temperature",
         type=float,
         default=0.0,
         help="Temperature setting for generation",
-    )
-    parser.add_argument(
-        "--format",
-        type=str,
-        choices=[f.value for f in JsonlFormat],
-        default=JsonlFormat.OPENAI.value,
-        help="Format of JSONL output (openai or vertex)",
     )
     args = parser.parse_args()
 
@@ -315,11 +302,13 @@ if __name__ == "__main__":
     questions_path = os.path.join(sheets_dir, "questions.csv")
     question_options_path = os.path.join(sheets_dir, "question_options.csv")
     metrics_path = os.path.join(sheets_dir, "metrics.csv")
+    evaluators_path = os.path.join(sheets_dir, "evaluators.csv")
 
     # Read input files
     questions = pl.read_csv(questions_path)
     question_options = pl.read_csv(question_options_path)
     metrics = pl.read_csv(metrics_path)
+    evaluators = pl.read_csv(evaluators_path)
 
     # Combine questions with options and correctness
     combined_questions = combine_questions_with_options_and_correctness(
@@ -329,36 +318,38 @@ if __name__ == "__main__":
     # Read responses
     responses = read_responses(args.response_file)
 
-    # Generate output path based on response file and model
-    response_basename = os.path.splitext(os.path.basename(args.response_file))[0]
-    model_suffix = args.model.replace("/", "-").replace(
-        ".", ""
-    )  # Clean up model name for filename
-    output_path = os.path.join(
-        args.base_path, f"{response_basename}-eval-prompts-{model_suffix}.jsonl"
-    )
-
-    # Generate evaluation prompts
-    prompt_id_mapping = generate_eval_prompts(
-        combined_questions,
-        responses,
-        metrics,
-        output_path,
-        model=args.model,
-        temperature=args.temperature,
-        format=JsonlFormat(args.format),
-    )
-
-    print(f"Generated evaluation prompts in {output_path}")
-
-    # Save prompt ID mapping if using Vertex format
-    if args.format == JsonlFormat.VERTEX.value:
-        mapping_df = pl.DataFrame(
-            {
-                "prompt_id": [x[0] for x in prompt_id_mapping],
-                "prompt_text": [x[1] for x in prompt_id_mapping],
-            }
+    # Generate prompts for each evaluator
+    for evaluator in evaluators.iter_rows(named=True):
+        # Generate output path based on response file and evaluator
+        response_basename = os.path.splitext(os.path.basename(args.response_file))[0]
+        evaluator_suffix = evaluator["evaluator_id"].replace("/", "-").replace(".", "")
+        output_path = os.path.join(
+            args.base_path, f"{response_basename}-eval-prompts-{evaluator_suffix}.jsonl"
         )
-        mapping_path = output_path.replace(".jsonl", "-prompt-mapping.csv")
-        mapping_df.write_csv(mapping_path)
-        print(f"Generated prompt ID mapping in {mapping_path}")
+
+        # Generate evaluation prompts
+        prompt_id_mapping = generate_eval_prompts(
+            combined_questions,
+            responses,
+            metrics,
+            output_path,
+            model=evaluator["evaluator_id"],
+            temperature=args.temperature,
+            format=JsonlFormat(evaluator["jsonl_format"]),
+        )
+
+        print(
+            f"Generated evaluation prompts for {evaluator['evaluator_id']} in {output_path}"
+        )
+
+        # Save prompt ID mapping if using Vertex format
+        if evaluator["jsonl_format"] == JsonlFormat.VERTEX.value:
+            mapping_df = pl.DataFrame(
+                {
+                    "prompt_id": [x[0] for x in prompt_id_mapping],
+                    "prompt_text": [x[1] for x in prompt_id_mapping],
+                }
+            )
+            mapping_path = output_path.replace(".jsonl", "-prompt-mapping.csv")
+            mapping_df.write_csv(mapping_path)
+            print(f"Generated prompt ID mapping in {mapping_path}")
