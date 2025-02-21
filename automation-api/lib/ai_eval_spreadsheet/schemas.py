@@ -129,7 +129,6 @@ class Evaluator(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True)
 
     evaluator_id: str = Field("", title="Evaluator ID")
-    model_name: str = Field("", title="Model Name")
     provider: str = Field("", title="Provider")
     jsonl_format: str = Field("", title="Jsonl Format")
     is_active: bool = Field(True, title="Active")
