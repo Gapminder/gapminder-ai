@@ -5,7 +5,6 @@
 # for more info
 # Note that most types are str since spreadsheet columns can be formulas
 
-from typing import Optional
 
 import pandas as pd
 import pandera as pa
@@ -126,44 +125,17 @@ class MetricsDf(pa.DataFrameModel):
         coerce = True
 
 
-class EvalResult(BaseModel):
-    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
+class Evaluator(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True)
 
-    question_id: str = Field("", title="Question ID")
-    language: str = Field("", title="Language")
-    prompt_variation_id: str = Field("", title="Prompt variation ID")
-    model_configuration_id: str = Field("", title="Model Configuration ID")
-    last_evaluation_datetime: str = Field("", title="Last Evaluation")
-    percent_correct: Optional[float] = Field("", title="Percent Correct")
-    percent_wrong: Optional[float] = Field("", title="Percent Wrong")
-    percent_very_wrong: Optional[float] = Field("", title="Percent Very Wrong")
-    percent_eval_failed: Optional[float] = Field("", title="Percent Eval Failed")
-    rounds: int = Field(-1, title="Rounds")
-    result: str = Field("", title="Result")
+    evaluator_id: str = Field("", title="Evaluator ID")
+    model_name: str = Field("", title="Model Name")
+    provider: str = Field("", title="Provider")
+    jsonl_format: str = Field("", title="Jsonl Format")
+    is_active: bool = Field(True, title="Active")
 
 
-class EvalResultsDf(pa.DataFrameModel):
+class EvaluatorsDf(pa.DataFrameModel):
     class Config:
-        dtype = PydanticModel(EvalResult)
-        coerce = True
-
-
-class SessionResult(BaseModel):
-    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
-
-    session_id: str = Field("", title="Session ID")
-    session_time: str = Field("", title="Session Time")
-    prompt_variation_id: str = Field("", title="Prompt Variation ID")
-    model_configuration_id: str = Field("", title="Model Configuration ID")
-    survey_id: str = Field("", title="Survey ID")
-    question_id: str = Field("", title="Question ID")
-    language: str = Field("", title="Language")
-    question_number: int = Field(-1, title="Question No.")
-    output: str = Field("", title="Response Text")
-    grade: str = Field("", title="Grade")
-
-
-class SessionResultsDf(pa.DataFrameModel):
-    class Config:
-        dtype = PydanticModel(SessionResult)
+        dtype = PydanticModel(Evaluator)
         coerce = True
