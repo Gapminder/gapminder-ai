@@ -7,17 +7,12 @@ from anthropic.types.message_create_params import MessageCreateParamsNonStreamin
 from anthropic.types.messages.batch_create_params import Request
 
 from lib.app_singleton import AppSingleton
-from lib.config import read_config
 
 logger = AppSingleton().get_logger()
 logger.setLevel(logging.DEBUG)
 
-# Initialize Anthropic client
-read_config()  # FIXME: don't do read config in lib code
-client = anthropic.Anthropic()
 
-
-def send_batch_file(jsonl_path: str) -> str:
+def send_batch_file(client: anthropic.Anthropic, jsonl_path: str) -> str:
     """
     Send a batch of prompts to Anthropic API.
 
@@ -63,11 +58,12 @@ def send_batch_file(jsonl_path: str) -> str:
         raise
 
 
-def check_batch_job_status(batch_id: str) -> str:
+def check_batch_job_status(client: anthropic.Anthropic, batch_id: str) -> str:
     """
     Check the status of a batch job.
 
     Args:
+        client: Anthropic client
         batch_id: The batch ID to check
 
     Returns:
@@ -107,14 +103,16 @@ def simplify_anthropic_response(response_data: Any) -> Dict[str, Any]:
     return simplified
 
 
-def download_batch_job_output(batch_id: str, output_path: str) -> Optional[str]:
+def download_batch_job_output(
+    client: anthropic.Anthropic, batch_id: str, output_path: str
+) -> Optional[str]:
     """
     Download and process batch results.
 
     Args:
+        client: Anthropic client
         batch_id: The batch ID to download
         output_path: Path to save results
-        custom_id_mapping: Optional mapping of custom IDs
 
     Returns:
         Path to the output file

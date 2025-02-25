@@ -3,7 +3,10 @@ import os
 import time
 from typing import Optional
 
+import anthropic
+
 from lib.app_singleton import AppSingleton
+from lib.config import read_config
 from lib.llm.anthropic_batch_api import (
     check_batch_job_status,
     download_batch_job_output,
@@ -42,6 +45,11 @@ class AnthropicBatchJob:
         output_dir = os.path.dirname(self.jsonl_path)
         return os.path.join(output_dir, f"{base_name}-response.jsonl")
 
+    def _authorize_client(self) -> anthropic.Anthropic:
+        """Get authorized Anthropic client."""
+        config = read_config()
+        return anthropic.Anthropic(api_key=config["ANTHROPIC_API_KEY"])
+
     def send(self) -> str:
         """
         Submit batch job to Anthropic.
@@ -58,7 +66,8 @@ class AnthropicBatchJob:
                     return self._batch_id
 
             # Send batch to Anthropic
-            self._batch_id = send_batch_file(self.jsonl_path)
+            client = self._authorize_client()
+            self._batch_id = send_batch_file(client, self.jsonl_path)
 
             # Create processing file with batch info
             with open(self._processing_file, "w") as f:
@@ -77,7 +86,8 @@ class AnthropicBatchJob:
         Returns:
             status: Job status string ("ended", "processing")
         """
-        return check_batch_job_status(self.batch_id)
+        client = self._authorize_client()
+        return check_batch_job_status(client, self.batch_id)
 
     def download_results(self) -> Optional[str]:
         """
@@ -86,7 +96,8 @@ class AnthropicBatchJob:
         Returns:
             str: Path to the downloaded results, or None if download failed
         """
-        return download_batch_job_output(self.batch_id, self._output_path)
+        client = self._authorize_client()
+        return download_batch_job_output(client, self.batch_id, self._output_path)
 
     def wait_for_completion(self, poll_interval: int = 60) -> Optional[str]:
         """
