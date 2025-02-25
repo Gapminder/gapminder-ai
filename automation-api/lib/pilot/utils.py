@@ -1,3 +1,8 @@
+import os
+from datetime import datetime
+from typing import Tuple
+
+import polars as pl
 from pandera.errors import SchemaError
 
 from lib.ai_eval_spreadsheet.wrapper import (
@@ -31,3 +36,37 @@ def read_ai_eval_spreadsheet() -> AiEvalData:
         logger.error("Original data:")
         logger.error(err.data)  # invalid dataframe
         raise Exception("Data validation. Please fix and retry")
+
+
+def get_model_id(model_config_id: str, base_path: str = ".") -> str:
+    """Get model ID from gen_ai_config.csv"""
+    config_path = os.path.join(base_path, "ai_eval_sheets", "gen_ai_model_configs.csv")
+    model_configs = pl.read_csv(config_path)
+
+    config = model_configs.filter(pl.col("model_config_id") == model_config_id)
+    if config.height == 0:
+        raise ValueError(f"Model config ID {model_config_id} not found")
+
+    return config["model_id"][0]
+
+
+def get_batch_id_and_output_path(jsonl_path: str) -> Tuple[str, str]:
+    """
+    Generate batch ID and output path from input JSONL filename.
+
+    Args:
+        jsonl_path: Path to input JSONL file
+
+    Returns:
+        Tuple of (batch_id, output_path)
+    """
+    # Get base filename without extension
+    base_name = os.path.splitext(os.path.basename(jsonl_path))[0]
+    output_dir = os.path.dirname(jsonl_path)
+    output_path = os.path.join(output_dir, f"{base_name}-response.jsonl")
+
+    # Add timestamp to batch_id (YYYYMMDDHHMMSS format)
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    batch_id = f"{base_name}-{timestamp}"
+
+    return batch_id, output_path
