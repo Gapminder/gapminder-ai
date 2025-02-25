@@ -96,7 +96,7 @@ def check_batch_job_status(
 
 
 def simplify_vertex_response(
-    response_ Dict[str, Any], custom_id: Optional[str] = None
+    response_data: Dict[str, Any], custom_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Simplify Vertex AI batch response format to keep only essential information.
