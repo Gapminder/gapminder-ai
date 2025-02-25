@@ -137,7 +137,7 @@ class LiteLLMBatchJob:
         Unlike other batch APIs, LiteLLM processes all prompts immediately.
 
         Returns:
-            batch_id: Unique identifier for the batch job
+            result: the output path, or empty string if failed to send prompts
         """
         try:
             # Check if already completed
@@ -153,6 +153,7 @@ class LiteLLMBatchJob:
             if result:
                 self._is_completed = True
                 logger.info(f"Batch {self._batch_id} completed successfully.")
+                logger.info(f"Results saved to {result}")
                 return result
             else:
                 logger.error(f"Batch {self._batch_id} processing failed.")
@@ -166,11 +167,11 @@ class LiteLLMBatchJob:
         """
         Check status of the batch job.
 
-        For LiteLLM, this is either "completed" or "failed" since processing
+        For LiteLLM, this is either "completed" or unknown since processing
         happens synchronously in the send() method.
 
         Returns:
-            status: Job status string ("completed" or "failed")
+            status: Job status string ("completed" or "n/a")
         """
         if self._is_completed or os.path.exists(self._output_path):
             return "completed"
