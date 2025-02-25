@@ -16,118 +16,131 @@ from lib.llm.openai_batch_api import (
 logger = AppSingleton().get_logger()
 
 
-def _authorize_client(provider: str = "openai") -> OpenAI:
-    """Get authorized OpenAI client with Alibaba compatibility."""
-    config = read_config()
+class OpenAIBatchJob:
+    """Class for managing OpenAI batch jobs."""
 
-    if provider == "alibaba":
-        return OpenAI(
-            api_key=config["DASHSCOPE_API_KEY"],
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
-        )
-    return OpenAI(api_key=config["OPENAI_API_KEY"])
+    def __init__(self, jsonl_path: str, provider: str = "openai"):
+        """
+        Initialize a batch job.
 
+        Args:
+            jsonl_path: Path to JSONL file containing prompts
+            provider: API provider ("openai" or "alibaba")
+        """
+        self.jsonl_path = jsonl_path
+        self.provider = provider
+        self._batch_id = None
+        self._output_path = self._get_output_path()
+        self._processing_file = f"{self._output_path}.processing"
 
-def send_batch(
-    jsonl_path: str, endpoint: str = "/v1/chat/completions", provider: str = "openai"
-) -> str:
-    """Submit batch job to OpenAI.
+        # Check if job is already being processed
+        if os.path.exists(self._processing_file):
+            with open(self._processing_file, "r") as f:
+                self._batch_id = f.read().strip()
 
-    Args:
-        jsonl_path: Path to JSONL file containing prompts
-        endpoint: OpenAI API endpoint
+    def _get_output_path(self) -> str:
+        """Calculate output path from input path."""
+        batch_id = self.jsonl_path.replace(".jsonl", "")
+        return f"{batch_id}_output.jsonl"
 
-    Returns:
-        batch_id: Unique identifier for the batch job
-    """
-    try:
-        output_path = get_batch_metadata(jsonl_path)[1]
+    def _authorize_client(self) -> OpenAI:
+        """Get authorized OpenAI client with provider compatibility."""
+        config = read_config()
 
-        # Check for existing processing file
-        processing_file = f"{output_path}.processing"
-        if os.path.exists(processing_file):
-            logger.info("Batch already being processed.")
-            with open(processing_file, "r") as f:
-                return f.read().strip()
+        if self.provider == "alibaba":
+            return OpenAI(
+                api_key=config["DASHSCOPE_API_KEY"],
+                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+            )
+        return OpenAI(api_key=config["OPENAI_API_KEY"])
 
-        # Send batch to OpenAI
-        client = _authorize_client(provider)
-        batch_id = send_batch_file(client, jsonl_path, endpoint)
+    def send(self) -> str:
+        """
+        Submit batch job to API provider.
 
-        # Create processing file with batch info
-        with open(processing_file, "w") as f:
-            f.write(batch_id)
-            logger.info("Batch created successfully.")
+        Returns:
+            batch_id: Unique identifier for the batch job
+        """
+        try:
+            # Check for existing processing file
+            if os.path.exists(self._processing_file):
+                logger.info("Batch already being processed.")
+                with open(self._processing_file, "r") as f:
+                    self._batch_id = f.read().strip()
+                    return self._batch_id
 
-        return batch_id
-    except Exception as e:
-        logger.error(f"Error sending batch: {str(e)}")
-        raise
+            # Send batch to OpenAI
+            client = self._authorize_client()
+            self._batch_id = send_batch_file(
+                client, self.jsonl_path, endpoint="/v1/chat/completions"
+            )
 
+            # Create processing file with batch info
+            with open(self._processing_file, "w") as f:
+                f.write(self._batch_id)
+                logger.info("Batch created successfully.")
 
-def check_status(batch_id: str, provider: str = "openai") -> str:
-    """Check status of a batch job.
+            return self._batch_id
+        except Exception as e:
+            logger.error(f"Error sending batch: {str(e)}")
+            raise
 
-    Args:
-        batch_id: Batch job identifier
-        provider: API provider ("openai" or "alibaba")
+    def check_status(self) -> str:
+        """
+        Check status of the batch job.
 
-    Returns:
-        status: Job status string ("completed", "failed", "processing")
-    """
-    client = _authorize_client(provider)
-    return check_batch_job_status(client, batch_id)
+        Returns:
+            status: Job status string ("completed", "failed", "processing")
+        """
+        if not self._batch_id:
+            raise ValueError("No batch ID available. Call send() first.")
 
+        client = self._authorize_client()
+        return check_batch_job_status(client, self._batch_id)
 
-def download_results(
-    batch_id: str, output_path: str, provider: str = "openai"
-) -> Optional[str]:
-    """Download results of a completed batch job.
+    def download_results(self) -> Optional[str]:
+        """
+        Download results of a completed batch job.
 
-    Args:
-        batch_id: Batch job identifier
-        output_path: Path where to save the results
-        provider: API provider ("openai" or "alibaba")
+        Returns:
+            str: Path to the downloaded results, or None if download failed
+        """
+        if not self._batch_id:
+            raise ValueError("No batch ID available. Call send() first.")
 
-    Returns:
-        str: Path to the downloaded results, or None if download failed
-    """
-    client = _authorize_client(provider)
-    return download_batch_job_output(client, batch_id, output_path)
+        client = self._authorize_client()
+        return download_batch_job_output(client, self._batch_id, self._output_path)
 
+    def wait_for_completion(self, poll_interval: int = 30) -> Optional[str]:
+        """
+        Wait for batch job completion and download results.
 
-def wait_for_completion(
-    batch_id: str, output_path: str, poll_interval: int = 30, provider: str = "openai"
-) -> Optional[str]:
-    """Wait for batch job completion and download results.
+        Args:
+            poll_interval: Seconds between status checks
 
-    Args:
-        batch_id: Batch job identifier
-        output_path: Path where to save the results
-        poll_interval: Seconds between status checks
+        Returns:
+            str: Path to the downloaded results, or None if job failed
+        """
+        if not self._batch_id:
+            raise ValueError("No batch ID available. Call send() first.")
 
-    Returns:
-        str: Path to the downloaded results, or None if job failed
-    """
-    while True:
-        status = check_status(batch_id, provider)
-        if status == "completed":
-            return download_results(batch_id, output_path, provider)
-        elif status == "failed":
-            return None
-        time.sleep(poll_interval)
+        while True:
+            status = self.check_status()
+            if status == "completed":
+                return self.download_results()
+            elif status == "failed":
+                return None
+            time.sleep(poll_interval)
 
+    @property
+    def batch_id(self) -> str:
+        """Get the batch job ID."""
+        if self._batch_id:
+            return self._batch_id
+        else:
+            raise ValueError("The batch job is not started")
 
-def get_batch_metadata(jsonl_path: str) -> tuple[str, str]:
-    """Get batch ID and output path based on input file.
-
-    Args:
-        jsonl_path: Path to input JSONL file
-
-    Returns:
-        tuple: (batch_id, output_path)
-    """
-    # Implement the same logic as in current get_batch_id_and_output_path
-    batch_id = jsonl_path.replace(".jsonl", "")
-    output_path = f"{batch_id}_output.jsonl"
-    return batch_id, output_path
+    @property
+    def output_path(self) -> str:
+        """Get the output file path."""
+        return self._output_path
