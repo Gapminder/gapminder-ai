@@ -60,13 +60,25 @@ def get_batch_id_and_output_path(jsonl_path: str) -> Tuple[str, str]:
     Returns:
         Tuple of (batch_id, output_path)
     """
+    batch_id = generate_batch_id(jsonl_path)
+    output_path = get_output_path(jsonl_path)
+    return batch_id, output_path
+
+
+def get_output_path(jsonl_path: str) -> str:
     # Get base filename without extension
     base_name = os.path.splitext(os.path.basename(jsonl_path))[0]
     output_dir = os.path.dirname(jsonl_path)
     output_path = os.path.join(output_dir, f"{base_name}-response.jsonl")
 
+    return output_path
+
+
+def generate_batch_id(jsonl_path: str) -> str:
+    # Get base filename without extension
+    base_name = os.path.splitext(os.path.basename(jsonl_path))[0]
     # Add timestamp to batch_id (YYYYMMDDHHMMSS format)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     batch_id = f"{base_name}-{timestamp}"
 
-    return batch_id, output_path
+    return batch_id
