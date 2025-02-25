@@ -8,6 +8,7 @@ from openai import OpenAI
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
 from lib.llm.openai_batch_api import (
+    PROCESSING_STATUSES,
     check_batch_job_status,
     download_batch_job_output,
     send_batch_file,
@@ -124,13 +125,32 @@ class OpenAIBatchJob:
         if not self._batch_id:
             raise ValueError("No batch ID available. Call send() first.")
 
-        while True:
-            status = self.check_status()
-            if status == "completed":
-                return self.download_results()
-            elif status == "failed":
-                return None
-            time.sleep(poll_interval)
+        logger.info(f"Waiting for batch {self._batch_id} to complete...")
+        try:
+            while True:
+                status = self.check_status()
+                logger.info(f"Current status: {status}")
+
+                if status == "completed":
+                    logger.info(f"Batch {self._batch_id} completed successfully")
+                    result = self.download_results()
+                    # Clean up processing file
+                    if os.path.exists(self._processing_file):
+                        os.remove(self._processing_file)
+                    return result
+                elif status == "failed":
+                    logger.error(f"Batch {self._batch_id} failed")
+                    # Clean up processing file
+                    if os.path.exists(self._processing_file):
+                        os.remove(self._processing_file)
+                    return None
+                elif status not in PROCESSING_STATUSES:
+                    logger.warning(f"Unexpected status: {status}")
+
+                time.sleep(poll_interval)
+        except Exception as e:
+            logger.error(f"Error while waiting for batch completion: {str(e)}")
+            return None
 
     @property
     def batch_id(self) -> str:
