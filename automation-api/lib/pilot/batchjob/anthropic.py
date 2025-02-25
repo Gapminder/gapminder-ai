@@ -83,7 +83,7 @@ def check_batch_job_status(client: anthropic.Anthropic, batch_id: str) -> str:
         raise
 
 
-def simplify_anthropic_response(response_ Any) -> Dict[str, Any]:
+def simplify_anthropic_response(response_data: Any) -> Dict[str, Any]:
     """
     Simplify Anthropic response to consistent format.
 
