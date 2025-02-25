@@ -168,9 +168,8 @@ def generate_question_prompt_combinations(
 def convert_to_jsonl_openai(
     df: pl.DataFrame,
     output_path: str,
-    model: str = "gpt-3.5-turbo-0125",
-    max_tokens: int = 1000,
-    temperature: float = 0.7,
+    model: str,
+    model_parameters: dict,
     id_prefix: str = "",
 ) -> None:
     """
@@ -190,8 +189,7 @@ def convert_to_jsonl_openai(
                 "messages": [
                     {"role": "user", "content": row["prompt_text"]},
                 ],
-                "max_tokens": max_tokens,
-                "temperature": temperature,
+                **model_parameters,
             }
 
             request_obj = {
@@ -207,10 +205,7 @@ def convert_to_jsonl_openai(
 
 
 def convert_to_jsonl_vertex(
-    df: pl.DataFrame,
-    output_path: str,
-    temperature: float = 0.01,
-    max_output_tokens: int = 2000,
+    df: pl.DataFrame, output_path: str, model_parameters: dict
 ) -> None:
     """
     Convert a DataFrame of prompts to Vertex AI JSONL format for batch processing.
@@ -231,10 +226,7 @@ def convert_to_jsonl_vertex(
                             "parts": [{"text": row["prompt_text"]}],
                         }
                     ],
-                    "generationConfig": {
-                        "temperature": temperature,
-                        "max_output_tokens": max_output_tokens,
-                    },
+                    "generationConfig": model_parameters,
                     "safety_settings": [
                         {
                             "category": "HARM_CATEGORY_HARASSMENT",
@@ -324,14 +316,14 @@ if __name__ == "__main__":
         model_id = model_id.replace("anthropic/", "")
     model_parameters = model_config["model_parameters"][0]
 
-    # Parse model parameters if they exist
-    temperature = 0.01  # default
+    # parse the parameters
     if model_parameters is not None:
         try:
             params = json.loads(model_parameters)
-            temperature = params.get("temperature", temperature)
+            print(params)
         except json.JSONDecodeError:
             logger.warning(f"Could not parse model_parameters: {model_parameters}")
+            params = {}
 
     # Save as JSONL file in selected format with model config prefix
     jsonl_output_path = os.path.join(
@@ -352,16 +344,14 @@ if __name__ == "__main__":
             question_prompts,
             jsonl_output_path,
             model=model_id,
-            max_tokens=2000,  # Default max tokens
-            temperature=temperature,
+            model_parameters=params,
             id_prefix=f"{args.model_config_id}-",  # Use model_config_id as prefix
         )
     else:
         convert_to_jsonl_vertex(
             question_prompts,
             jsonl_output_path,
-            temperature=temperature,
-            max_output_tokens=2000,
+            model_parameters=params,
         )
 
     print(f"Saved {len(question_prompts)} prompts to {jsonl_output_path}")
