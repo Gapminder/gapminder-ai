@@ -132,7 +132,7 @@ class VertexBatchJob:
             str: Path to the downloaded results, or None if download failed
         """
         return _download_batch_job_output(
-            BatchPredictionJob(self.batch_id),
+            self.batch_id,
             self._output_path,
             self._custom_id_mapping,
         )
