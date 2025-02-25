@@ -77,10 +77,7 @@ class AnthropicBatchJob:
         Returns:
             status: Job status string ("ended", "processing")
         """
-        if not self._batch_id:
-            raise ValueError("No batch ID available. Call send() first.")
-
-        return check_batch_job_status(self._batch_id)
+        return check_batch_job_status(self.batch_id)
 
     def download_results(self) -> Optional[str]:
         """
@@ -89,10 +86,7 @@ class AnthropicBatchJob:
         Returns:
             str: Path to the downloaded results, or None if download failed
         """
-        if not self._batch_id:
-            raise ValueError("No batch ID available. Call send() first.")
-
-        return download_batch_job_output(self._batch_id, self._output_path)
+        return download_batch_job_output(self.batch_id, self._output_path)
 
     def wait_for_completion(self, poll_interval: int = 60) -> Optional[str]:
         """
@@ -104,24 +98,21 @@ class AnthropicBatchJob:
         Returns:
             str: Path to the downloaded results, or None if job failed
         """
-        if not self._batch_id:
-            raise ValueError("No batch ID available. Call send() first.")
-
-        logger.info(f"Waiting for batch {self._batch_id} to complete...")
+        logger.info(f"Waiting for batch {self.batch_id} to complete...")
         try:
             while True:
                 status = self.check_status()
                 logger.info(f"Current status: {status}")
 
                 if status == "ended":
-                    logger.info(f"Batch {self._batch_id} completed successfully")
+                    logger.info(f"Batch {self.batch_id} completed successfully")
                     result = self.download_results()
                     # Clean up processing file
                     if os.path.exists(self._processing_file):
                         os.remove(self._processing_file)
                     return result
                 elif status == "failed":
-                    logger.error(f"Batch {self._batch_id} failed")
+                    logger.error(f"Batch {self.batch_id} failed")
                     # Clean up processing file
                     if os.path.exists(self._processing_file):
                         os.remove(self._processing_file)
