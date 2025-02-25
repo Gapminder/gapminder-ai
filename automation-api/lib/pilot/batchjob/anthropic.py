@@ -12,95 +12,137 @@ from lib.llm.anthropic_batch_api import (
 
 logger = AppSingleton().get_logger()
 
-
-def send_batch(jsonl_path: str) -> str:
-    """Submit batch job to Anthropic.
-
-    Args:
-        jsonl_path: Path to JSONL file containing prompts
-
-    Returns:
-        batch_id: Unique identifier for the batch job
-    """
-    try:
-        output_path = get_batch_metadata(jsonl_path)[1]
-
-        # Check for existing processing file
-        processing_file = f"{output_path}.processing"
-        if os.path.exists(processing_file):
-            logger.info("Batch already being processed.")
-            with open(processing_file, "r") as f:
-                return f.read().strip()
-
-        # Send batch to Anthropic
-        batch_id = send_batch_file(jsonl_path)
-
-        # Create processing file with batch info
-        with open(processing_file, "w") as f:
-            f.write(batch_id)
-            logger.info("Batch created successfully.")
-
-        return batch_id
-    except Exception as e:
-        logger.error(f"Error sending batch: {str(e)}")
-        raise
+# Define processing statuses for Anthropic
+PROCESSING_STATUSES = {"processing"}
 
 
-def check_status(batch_id: str) -> str:
-    """Check status of a batch job.
+class AnthropicBatchJob:
+    """Class for managing Anthropic batch jobs."""
 
-    Args:
-        batch_id: Batch job identifier
+    def __init__(self, jsonl_path: str):
+        """
+        Initialize a batch job.
 
-    Returns:
-        status: Job status string ("ended", "processing")
-    """
-    return check_batch_job_status(batch_id)
+        Args:
+            jsonl_path: Path to JSONL file containing prompts
+        """
+        self.jsonl_path = jsonl_path
+        self._batch_id = None
+        self._output_path = self._get_output_path()
+        self._processing_file = f"{self._output_path}.processing"
 
+        # Check if job is already being processed
+        if os.path.exists(self._processing_file):
+            with open(self._processing_file, "r") as f:
+                self._batch_id = f.read().strip()
 
-def download_results(batch_id: str, output_path: str) -> Optional[str]:
-    """Download results of a completed batch job.
+    def _get_output_path(self) -> str:
+        """Calculate output path from input path."""
+        base_name = os.path.splitext(os.path.basename(self.jsonl_path))[0]
+        output_dir = os.path.dirname(self.jsonl_path)
+        return os.path.join(output_dir, f"{base_name}-response.jsonl")
 
-    Args:
-        batch_id: Batch job identifier
-        output_path: Path where to save the results
+    def send(self) -> str:
+        """
+        Submit batch job to Anthropic.
 
-    Returns:
-        str: Path to the downloaded results, or None if download failed
-    """
-    return download_batch_job_output(batch_id, output_path)
+        Returns:
+            batch_id: Unique identifier for the batch job
+        """
+        try:
+            # Check for existing processing file
+            if os.path.exists(self._processing_file):
+                logger.info("Batch already being processed.")
+                with open(self._processing_file, "r") as f:
+                    self._batch_id = f.read().strip()
+                    return self._batch_id
 
+            # Send batch to Anthropic
+            self._batch_id = send_batch_file(self.jsonl_path)
 
-def wait_for_completion(
-    batch_id: str, output_path: str, poll_interval: int = 60
-) -> Optional[str]:
-    """Wait for batch job completion and download results.
+            # Create processing file with batch info
+            with open(self._processing_file, "w") as f:
+                f.write(self._batch_id)
+                logger.info("Batch created successfully.")
 
-    Args:
-        batch_id: Batch job identifier
-        output_path: Path where to save the results
-        poll_interval: Seconds between status checks
+            return self._batch_id
+        except Exception as e:
+            logger.error(f"Error sending batch: {str(e)}")
+            raise
 
-    Returns:
-        str: Path to the downloaded results, or None if job failed
-    """
-    while True:
-        status = check_status(batch_id)
-        if status == "ended":
-            return download_results(batch_id, output_path)
-        time.sleep(poll_interval)
+    def check_status(self) -> str:
+        """
+        Check status of the batch job.
 
+        Returns:
+            status: Job status string ("ended", "processing")
+        """
+        if not self._batch_id:
+            raise ValueError("No batch ID available. Call send() first.")
 
-def get_batch_metadata(jsonl_path: str) -> tuple[str, str]:
-    """Get batch ID and output path based on input file.
+        return check_batch_job_status(self._batch_id)
 
-    Args:
-        jsonl_path: Path to input JSONL file
+    def download_results(self) -> Optional[str]:
+        """
+        Download results of a completed batch job.
 
-    Returns:
-        tuple: (batch_id, output_path)
-    """
-    base_name = os.path.splitext(os.path.basename(jsonl_path))[0]
-    output_dir = os.path.dirname(jsonl_path)
-    output_path = os.path.join(output_dir, f"{base_name}-response.jsonl")
-    return base_name, output_path
+        Returns:
+            str: Path to the downloaded results, or None if download failed
+        """
+        if not self._batch_id:
+            raise ValueError("No batch ID available. Call send() first.")
+
+        return download_batch_job_output(self._batch_id, self._output_path)
+
+    def wait_for_completion(self, poll_interval: int = 60) -> Optional[str]:
+        """
+        Wait for batch job completion and download results.
+
+        Args:
+            poll_interval: Seconds between status checks
+
+        Returns:
+            str: Path to the downloaded results, or None if job failed
+        """
+        if not self._batch_id:
+            raise ValueError("No batch ID available. Call send() first.")
+
+        logger.info(f"Waiting for batch {self._batch_id} to complete...")
+        try:
+            while True:
+                status = self.check_status()
+                logger.info(f"Current status: {status}")
+
+                if status == "ended":
+                    logger.info(f"Batch {self._batch_id} completed successfully")
+                    result = self.download_results()
+                    # Clean up processing file
+                    if os.path.exists(self._processing_file):
+                        os.remove(self._processing_file)
+                    return result
+                elif status == "failed":
+                    logger.error(f"Batch {self._batch_id} failed")
+                    # Clean up processing file
+                    if os.path.exists(self._processing_file):
+                        os.remove(self._processing_file)
+                    return None
+                elif status not in PROCESSING_STATUSES:
+                    logger.warning(f"Unexpected status: {status}")
+
+                time.sleep(poll_interval)
+        except Exception as e:
+            logger.error(f"Error while waiting for batch completion: {str(e)}")
+            return None
+
+    @property
+    def batch_id(self) -> str:
+        """Get the batch job ID."""
+        if self._batch_id:
+            return self._batch_id
+        else:
+            raise ValueError("The batch job is not started")
+
+    @property
+    def output_path(self) -> str:
+        """Get the output file path."""
+        return self._output_path
