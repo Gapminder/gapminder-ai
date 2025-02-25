@@ -1,7 +1,6 @@
 """Vertex AI batch processing implementation."""
 import os
 import time
-from datetime import datetime
 from typing import Dict, Optional
 
 import polars as pl
@@ -56,12 +55,14 @@ class VertexBatchJob:
         config_path = os.path.join("ai_eval_sheets", "gen_ai_model_configs.csv")
         model_configs = pl.read_csv(config_path)
 
-        config = model_configs.filter(pl.col("model_config_id") == self._model_config_id)
+        config = model_configs.filter(
+            pl.col("model_config_id") == self._model_config_id
+        )
         if config.height == 0:
             raise ValueError(f"Model config ID {self._model_config_id} not found")
 
         self._model_id = config["model_id"][0]
-        return self._model_id
+        return self._model_id  # type: ignore
 
     def _get_output_path(self) -> str:
         """Calculate output path from input path."""
@@ -71,7 +72,9 @@ class VertexBatchJob:
 
     def _get_custom_id_mapping(self) -> Dict[str, str]:
         """Generate custom ID mapping from prompt mapping CSV."""
-        mapping_path = self._output_path.replace("-response.jsonl", "-prompt-mapping.csv")
+        mapping_path = self._output_path.replace(
+            "-response.jsonl", "-prompt-mapping.csv"
+        )
         if not os.path.exists(mapping_path):
             raise ValueError(f"Prompt mapping CSV not found: {mapping_path}")
 

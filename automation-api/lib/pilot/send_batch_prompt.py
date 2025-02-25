@@ -1,31 +1,23 @@
 """Main entry point for batch prompt processing with LLM providers."""
 import argparse
 import logging
+from typing import Dict, Type
 
 from lib.app_singleton import AppSingleton
-from lib.pilot.batchjob import anthropic as anthropic_batch
-from lib.pilot.batchjob import openai as openai_batch
-from lib.pilot.batchjob import vertex as vertex_batch
+from lib.pilot.batchjob.anthropic import AnthropicBatchJob
+from lib.pilot.batchjob.openai import OpenAIBatchJob
+from lib.pilot.batchjob.vertex import VertexBatchJob
 
 logger = AppSingleton().get_logger()
 logger.setLevel(logging.DEBUG)
 
-PROVIDER_HANDLERS = {
-    "openai": openai_batch,
-    "anthropic": anthropic_batch,
-    "vertex": vertex_batch,
-    "alibaba": openai_batch,  # Share OpenAI implementation
+# Map provider names to their batch job classes
+PROVIDER_CLASSES: Dict[str, Type] = {
+    "openai": OpenAIBatchJob,
+    "anthropic": AnthropicBatchJob,
+    "vertex": VertexBatchJob,
+    "alibaba": OpenAIBatchJob,  # Share OpenAI implementation
 }
-
-
-def get_provider_handler(provider: str):
-    """Get the appropriate batch processing module for the provider."""
-    provider = provider.lower()
-    if provider not in PROVIDER_HANDLERS:
-        raise ValueError(
-            f"Unsupported provider: {provider}. Supported providers: {list(PROVIDER_HANDLERS.keys())}"
-        )
-    return PROVIDER_HANDLERS[provider]
 
 
 def main():
@@ -50,29 +42,28 @@ def main():
     args = parser.parse_args()
 
     try:
-        handler = get_provider_handler(args.provider)
-        output_path = handler.get_batch_metadata(args.jsonl_file)[1]
+        # Get the appropriate batch job class
+        BatchJobClass = PROVIDER_CLASSES[args.provider.lower()]
 
-        # Run batch processing using provider's interface
-        if args.provider in ["openai", "alibaba"]:
-            batch_id = handler.send_batch(args.jsonl_file, provider=args.provider)
-            if args.wait:
-                result_path = handler.wait_for_completion(
-                    batch_id, output_path, provider=args.provider
-                )
-                if result_path:
-                    print(f"Results saved to: {result_path}")
-            else:
-                print(f"Batch ID: {batch_id}")
+        # Create batch job instance
+        if args.provider.lower() in ["openai", "alibaba"]:
+            # OpenAI and Alibaba need provider parameter
+            batch_job = BatchJobClass(args.jsonl_file, provider=args.provider.lower())
         else:
-            # Original logic for other providers
-            batch_id = handler.send_batch(args.jsonl_file)
-            if args.wait:
-                result_path = handler.wait_for_completion(batch_id, output_path)
-                if result_path:
-                    print(f"Results saved to: {result_path}")
+            # Other providers don't need provider parameter
+            batch_job = BatchJobClass(args.jsonl_file)
+
+        # Send the batch
+        batch_id = batch_job.send()
+        print(f"Batch ID: {batch_id}")
+
+        # Wait for completion if requested
+        if args.wait:
+            result_path = batch_job.wait_for_completion()
+            if result_path:
+                print(f"Results saved to: {result_path}")
             else:
-                print(f"Batch ID: {batch_id}")
+                print("Batch processing failed or was cancelled.")
 
     except Exception as e:
         logger.error(f"Error processing batch: {str(e)}")
