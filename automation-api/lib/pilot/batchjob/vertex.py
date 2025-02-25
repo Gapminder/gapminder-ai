@@ -13,18 +13,186 @@ from vertexai.batch_prediction import BatchPredictionJob
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
+from ..utils import get_batch_id_and_output_path
+
 logger = AppSingleton().get_logger()
 
 # Define processing statuses for Vertex AI
-PROCESSING_STATUSES = {"JOB_STATE_RUNNING", "JOB_STATE_PENDING", "JOB_STATE_QUEUED"}
+_PROCESSING_STATUSES = {"JOB_STATE_RUNNING", "JOB_STATE_PENDING", "JOB_STATE_QUEUED"}
 
 
-def send_batch_file(
+class VertexBatchJob:
+    """Class for managing Vertex AI batch jobs."""
+
+    def __init__(self, jsonl_path: str, model_id: str):
+        """
+        Initialize a batch job.
+
+        Note:
+            Vertex AI doesn't support setting model in the
+            jsonl prompts. So we need to set it when initialization.
+            and note that model id (eg gemini-pro-1.0) is not
+            model config id (eg mc041).
+
+        Args:
+            jsonl_path: Path to JSONL file containing prompts
+            model_id: The model to send to
+        """
+        self.jsonl_path = jsonl_path
+        _, output_path = get_batch_id_and_output_path(jsonl_path)
+        self._batch_id = None
+        self._output_path = output_path
+        self._processing_file = f"{self._output_path}.processing"
+        self._model_id = model_id
+
+        # find custom id mapping file
+        # because vertex AI doesn't support custom id in the
+        # request file, so we create a local file for custom id.
+        mapping_path = self._output_path.replace(
+            "-response.jsonl", "-prompt-mapping.csv"
+        )
+        if not os.path.exists(mapping_path):
+            raise ValueError(f"Prompt mapping CSV file not found: {mapping_path}")
+        self._custom_id_mapping = {}
+        # Read CSV using polars
+        df = pl.read_csv(mapping_path)
+
+        # Create mapping from prompt text to ID
+        for row in df.iter_rows(named=True):
+            prompt_text = row["prompt_text"]
+            custom_id = row["prompt_id"]
+            self._custom_id_mapping[prompt_text] = custom_id
+
+            # Check if job is already being processed
+            if os.path.exists(self._processing_file):
+                with open(self._processing_file, "r") as f:
+                    self._batch_id = f.read().strip()
+
+        # initial vertexai
+        config = read_config()
+
+        project_id = config.get("VERTEXAI_PROJECT")
+        if not project_id:
+            raise ValueError("VERTEXAI_PROJECT not found in configuration")
+        self._project_id = project_id
+
+        gcs_bucket = os.getenv("GCS_BUCKET")
+        if not gcs_bucket:
+            raise ValueError("GCS_BUCKET environment variable is required")
+        self._gcs_bucket = gcs_bucket
+
+        vertexai.init(project=project_id, location="us-central1")
+
+    def send(self) -> str:
+        """
+        Submit batch job to Vertex AI.
+
+        Returns:
+            batch_id: Unique identifier for the batch job
+        """
+        try:
+            # Check for existing processing file
+            if os.path.exists(self._processing_file):
+                logger.info("Batch already being processed.")
+                with open(self._processing_file, "r") as f:
+                    self._batch_id = f.read().strip()
+                    return self._batch_id
+
+            # Submit batch job
+            self._batch_id = _send_batch_file(
+                jsonl_path=self.jsonl_path,
+                model_id=self._model_id,
+                gcs_bucket=self._gcs_bucket,
+            )
+
+            # Create processing file with batch info
+            with open(self._processing_file, "w") as f:
+                f.write(self._batch_id)
+                logger.info("Batch created successfully.")
+
+            return self._batch_id
+        except Exception as e:
+            logger.error(f"Error sending batch: {str(e)}")
+            raise
+
+    def check_status(self) -> str:
+        """
+        Check status of the batch job.
+
+        Returns:
+            status: Job status string (e.g., "JOB_STATE_SUCCEEDED")
+        """
+        return _check_batch_job_status(self.batch_id)
+
+    def download_results(self) -> Optional[str]:
+        """
+        Download results of a completed batch job.
+
+        Returns:
+            str: Path to the downloaded results, or None if download failed
+        """
+        return _download_batch_job_output(
+            BatchPredictionJob(self.batch_id),
+            self._output_path,
+            self._custom_id_mapping,
+        )
+
+    def wait_for_completion(self, poll_interval: int = 60) -> Optional[str]:
+        """
+        Wait for batch job completion and download results.
+
+        Args:
+            poll_interval: Seconds between status checks
+
+        Returns:
+            str: Path to the downloaded results, or None if job failed
+        """
+        logger.info(f"Waiting for batch {self.batch_id} to complete...")
+        try:
+            while True:
+                status = self.check_status()
+                logger.info(f"Current status: {status}")
+
+                if status == "JOB_STATE_SUCCEEDED":
+                    logger.info(f"Batch {self.batch_id} completed successfully")
+                    result = self.download_results()
+                    # Clean up processing file
+                    if os.path.exists(self._processing_file):
+                        os.remove(self._processing_file)
+                    return result
+                elif status in {"JOB_STATE_FAILED", "JOB_STATE_CANCELLED"}:
+                    logger.error(f"Batch {self.batch_id} failed with status {status}")
+                    # Clean up processing file
+                    if os.path.exists(self._processing_file):
+                        os.remove(self._processing_file)
+                    return None
+                elif status not in _PROCESSING_STATUSES:
+                    logger.warning(f"Unexpected status: {status}")
+
+                time.sleep(poll_interval)
+        except Exception as e:
+            logger.error(f"Error while waiting for batch completion: {str(e)}")
+            return None
+
+    @property
+    def batch_id(self) -> str:
+        """Get the batch job ID."""
+        if self._batch_id:
+            return self._batch_id
+        else:
+            raise ValueError("The batch job is not started")
+
+    @property
+    def output_path(self) -> str:
+        """Get the output file path."""
+        return self._output_path
+
+
+# Below are helper functions
+def _send_batch_file(
     jsonl_path: str,
     model_id: str,
     gcs_bucket: str,
-    project_id: str,
-    location: str = "us-central1",
 ) -> str:
     """
     Send a JSONL file to Vertex AI's batch API.
@@ -33,15 +201,10 @@ def send_batch_file(
         jsonl_path: Path to the JSONL file containing prompts
         model_id: Vertex AI model ID
         gcs_bucket: GCS bucket name
-        project_id: GCP project ID
-        location: GCP region
 
     Returns:
         The batch job resource name for tracking the request
     """
-    # Initialize Vertex AI
-    vertexai.init(project=project_id, location=location)
-
     # Upload to GCS with timestamp folder
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = os.path.basename(jsonl_path)
@@ -74,33 +237,22 @@ def send_batch_file(
     return batch_job.resource_name
 
 
-def check_batch_job_status(
-    batch_id: str, project_id: str, location: str = "us-central1"
-) -> str:
+def _check_batch_job_status(batch_id: str) -> str:
     """
     Get the current status of a batch job.
 
     Args:
         batch_id: The batch job resource name
-        project_id: GCP project ID
-        location: GCP region
 
     Returns:
         Current status of the batch job
     """
-    try:
-        # This will use the existing initialization if available
-        vertexai.init(project=project_id, location=location)
-    except Exception:
-        # Already initialized, continue
-        pass
-
     batch_job = BatchPredictionJob(batch_id)
     batch_job.refresh()
     return batch_job.state.name
 
 
-def simplify_vertex_response(
+def _simplify_vertex_response(
     response_data: Dict[str, Any], custom_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
@@ -157,19 +309,17 @@ def _process_and_simplify_results(
                 if not custom_id:
                     logger.debug("would not find id for request:")
                     logger.debug(request_str)
-                simplified = simplify_vertex_response(response_data, custom_id)
+                simplified = _simplify_vertex_response(response_data, custom_id)
                 out_file.write(json.dumps(simplified, ensure_ascii=False) + "\n")
             except (json.JSONDecodeError, IndexError) as e:
                 logger.error(f"Error processing line {i}: {e}")
                 continue
 
 
-def download_batch_job_output(
+def _download_batch_job_output(
     batch_id: str,
     output_path: str,
-    project_id: str,
     custom_id_mapping: Dict[str, str],
-    location: str = "us-central1",
 ) -> Optional[str]:
     """
     Download and simplify results for a completed batch job.
@@ -184,7 +334,6 @@ def download_batch_job_output(
     Returns:
         Path to the downloaded results file if successful, None if batch not completed
     """
-    vertexai.init(project=project_id, location=location)
     batch_job = BatchPredictionJob(batch_id)
 
     if not batch_job.has_succeeded:
@@ -226,210 +375,3 @@ def download_batch_job_output(
 
     logger.info(f"Saved simplified batch results to {output_path}")
     return output_path
-
-
-class VertexBatchJob:
-    """Class for managing Vertex AI batch jobs."""
-
-    def __init__(self, jsonl_path: str):
-        """
-        Initialize a batch job.
-
-        Args:
-            jsonl_path: Path to JSONL file containing prompts
-        """
-        self.jsonl_path = jsonl_path
-        self._batch_id = None
-        self._output_path = self._get_output_path()
-        self._processing_file = f"{self._output_path}.processing"
-        self._model_config_id = self._extract_model_config_id()
-        self._model_id = None
-
-        # Check if job is already being processed
-        if os.path.exists(self._processing_file):
-            with open(self._processing_file, "r") as f:
-                self._batch_id = f.read().strip()
-
-    def _init_vertex_ai(self) -> str:
-        """
-        Initialize Vertex AI with project configuration.
-
-        Returns:
-            project_id: The GCP project ID
-        """
-        config = read_config()
-        project_id = config.get("VERTEXAI_PROJECT")
-        if not project_id:
-            raise ValueError("VERTEXAI_PROJECT not found in configuration")
-
-        try:
-            # This will use the existing initialization if available
-            vertexai.init(project=project_id, location="us-central1")
-        except Exception:
-            # Already initialized, continue
-            pass
-
-        return project_id
-
-    def _extract_model_config_id(self) -> str:
-        """Extract model_config_id from filename."""
-        base_name = os.path.splitext(os.path.basename(self.jsonl_path))[0]
-        return base_name.split("-")[0]
-
-    def _get_model_id(self) -> str:
-        """Get model ID from gen_ai_config.csv."""
-        if self._model_id:
-            return self._model_id
-
-        config_path = os.path.join("ai_eval_sheets", "gen_ai_model_configs.csv")
-        model_configs = pl.read_csv(config_path)
-
-        config = model_configs.filter(
-            pl.col("model_config_id") == self._model_config_id
-        )
-        if config.height == 0:
-            raise ValueError(f"Model config ID {self._model_config_id} not found")
-
-        self._model_id = config["model_id"][0]
-        return self._model_id  # type: ignore
-
-    def _get_output_path(self) -> str:
-        """Calculate output path from input path."""
-        base_name = os.path.splitext(os.path.basename(self.jsonl_path))[0]
-        output_dir = os.path.dirname(self.jsonl_path)
-        return os.path.join(output_dir, f"{base_name}-response.jsonl")
-
-    def _get_custom_id_mapping(self) -> Dict[str, str]:
-        """Generate custom ID mapping from prompt mapping CSV."""
-        mapping_path = self._output_path.replace(
-            "-response.jsonl", "-prompt-mapping.csv"
-        )
-        if not os.path.exists(mapping_path):
-            raise ValueError(f"Prompt mapping CSV not found: {mapping_path}")
-
-        df = pl.read_csv(mapping_path)
-        return {
-            row["prompt_text"]: row["prompt_id"] for row in df.iter_rows(named=True)
-        }
-
-    def send(self) -> str:
-        """
-        Submit batch job to Vertex AI.
-
-        Returns:
-            batch_id: Unique identifier for the batch job
-        """
-        try:
-            # Check for existing processing file
-            if os.path.exists(self._processing_file):
-                logger.info("Batch already being processed.")
-                with open(self._processing_file, "r") as f:
-                    self._batch_id = f.read().strip()
-                    return self._batch_id
-
-            # Get configuration
-            project_id = self._init_vertex_ai()
-            gcs_bucket = os.getenv("GCS_BUCKET")
-
-            if not gcs_bucket:
-                raise ValueError("Missing GCS_BUCKET environment variable")
-
-            # Get model ID
-            model_id = self._get_model_id()
-
-            # Submit batch job
-            self._batch_id = send_batch_file(
-                jsonl_path=self.jsonl_path,
-                model_id=model_id,
-                gcs_bucket=gcs_bucket,
-                project_id=project_id,
-            )
-
-            # Create processing file with batch info
-            with open(self._processing_file, "w") as f:
-                f.write(self._batch_id)
-                logger.info("Batch created successfully.")
-
-            return self._batch_id
-        except Exception as e:
-            logger.error(f"Error sending batch: {str(e)}")
-            raise
-
-    def check_status(self) -> str:
-        """
-        Check status of the batch job.
-
-        Returns:
-            status: Job status string (e.g., "JOB_STATE_SUCCEEDED")
-        """
-        project_id = self._init_vertex_ai()
-        return check_batch_job_status(self.batch_id, project_id)
-
-    def download_results(self) -> Optional[str]:
-        """
-        Download results of a completed batch job.
-
-        Returns:
-            str: Path to the downloaded results, or None if download failed
-        """
-        project_id = self._init_vertex_ai()
-
-        # Get custom ID mapping
-        custom_id_mapping = self._get_custom_id_mapping()
-
-        return download_batch_job_output(
-            batch_id=self.batch_id,
-            output_path=self._output_path,
-            project_id=project_id,
-            custom_id_mapping=custom_id_mapping,
-        )
-
-    def wait_for_completion(self, poll_interval: int = 60) -> Optional[str]:
-        """
-        Wait for batch job completion and download results.
-
-        Args:
-            poll_interval: Seconds between status checks
-
-        Returns:
-            str: Path to the downloaded results, or None if job failed
-        """
-        logger.info(f"Waiting for batch {self.batch_id} to complete...")
-        try:
-            while True:
-                status = self.check_status()
-                logger.info(f"Current status: {status}")
-
-                if status == "JOB_STATE_SUCCEEDED":
-                    logger.info(f"Batch {self.batch_id} completed successfully")
-                    result = self.download_results()
-                    # Clean up processing file
-                    if os.path.exists(self._processing_file):
-                        os.remove(self._processing_file)
-                    return result
-                elif status in {"JOB_STATE_FAILED", "JOB_STATE_CANCELLED"}:
-                    logger.error(f"Batch {self.batch_id} failed with status {status}")
-                    # Clean up processing file
-                    if os.path.exists(self._processing_file):
-                        os.remove(self._processing_file)
-                    return None
-                elif status not in PROCESSING_STATUSES:
-                    logger.warning(f"Unexpected status: {status}")
-
-                time.sleep(poll_interval)
-        except Exception as e:
-            logger.error(f"Error while waiting for batch completion: {str(e)}")
-            return None
-
-    @property
-    def batch_id(self) -> str:
-        """Get the batch job ID."""
-        if self._batch_id:
-            return self._batch_id
-        else:
-            raise ValueError("The batch job is not started")
-
-    @property
-    def output_path(self) -> str:
-        """Get the output file path."""
-        return self._output_path
