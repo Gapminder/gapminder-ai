@@ -88,8 +88,13 @@ def check_batch_job_status(
     Returns:
         Current status of the batch job
     """
-    # FIXME: don't init each time..
-    vertexai.init(project=project_id, location=location)
+    try:
+        # This will use the existing initialization if available
+        vertexai.init(project=project_id, location=location)
+    except Exception:
+        # Already initialized, continue
+        pass
+
     batch_job = BatchPredictionJob(batch_id)
     batch_job.refresh()
     return batch_job.state.name
@@ -245,6 +250,27 @@ class VertexBatchJob:
             with open(self._processing_file, "r") as f:
                 self._batch_id = f.read().strip()
 
+    def _init_vertex_ai(self) -> str:
+        """
+        Initialize Vertex AI with project configuration.
+
+        Returns:
+            project_id: The GCP project ID
+        """
+        config = read_config()
+        project_id = config.get("VERTEXAI_PROJECT")
+        if not project_id:
+            raise ValueError("VERTEXAI_PROJECT not found in configuration")
+
+        try:
+            # This will use the existing initialization if available
+            vertexai.init(project=project_id, location="us-central1")
+        except Exception:
+            # Already initialized, continue
+            pass
+
+        return project_id
+
     def _extract_model_config_id(self) -> str:
         """Extract model_config_id from filename."""
         base_name = os.path.splitext(os.path.basename(self.jsonl_path))[0]
@@ -302,18 +328,14 @@ class VertexBatchJob:
                     return self._batch_id
 
             # Get configuration
-            config = read_config()
-            project_id = config.get("VERTEXAI_PROJECT")
+            project_id = self._init_vertex_ai()
             gcs_bucket = os.getenv("GCS_BUCKET")
 
-            if not project_id or not gcs_bucket:
-                raise ValueError("Missing Vertex AI configuration (project or bucket)")
+            if not gcs_bucket:
+                raise ValueError("Missing GCS_BUCKET environment variable")
 
             # Get model ID
             model_id = self._get_model_id()
-
-            # Initialize Vertex AI
-            vertexai.init(project=project_id, location="us-central1")
 
             # Submit batch job
             self._batch_id = send_batch_file(
@@ -340,11 +362,7 @@ class VertexBatchJob:
         Returns:
             status: Job status string (e.g., "JOB_STATE_SUCCEEDED")
         """
-        config = read_config()
-        project_id = config.get("VERTEXAI_PROJECT")
-        if not project_id:
-            raise ValueError("VERTEXAI_PROJECT not found in configuration")
-
+        project_id = self._init_vertex_ai()
         return check_batch_job_status(self.batch_id, project_id)
 
     def download_results(self) -> Optional[str]:
@@ -354,10 +372,7 @@ class VertexBatchJob:
         Returns:
             str: Path to the downloaded results, or None if download failed
         """
-        config = read_config()
-        project_id = config.get("VERTEXAI_PROJECT")
-        if not project_id:
-            raise ValueError("VERTEXAI_PROJECT not found in configuration")
+        project_id = self._init_vertex_ai()
 
         # Get custom ID mapping
         custom_id_mapping = self._get_custom_id_mapping()
