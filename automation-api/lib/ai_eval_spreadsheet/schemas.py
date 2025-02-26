@@ -99,6 +99,7 @@ class GenAiModelConfig(BaseModel):
     include_in_next_evaluation: bool = Field(False, title="Include in next evaluation")
     model_config_id: str = Field("", title="Model configuration ID")
     model_id: str = Field("", title="Model ID")
+    name: str = Field("", title="Name")
     model_parameters: str = Field("", title="Model Parameters")
     repeat_times: int = Field(-1, title="Repeat Times")
     memory: bool = Field(False, title="Memory")
@@ -126,12 +127,10 @@ class MetricsDf(pa.DataFrameModel):
 
 
 class Evaluator(BaseModel):
-    model_config = ConfigDict(coerce_numbers_to_str=True)
-
     evaluator_id: str = Field("", title="Evaluator ID")
     provider: str = Field("", title="Provider")
     jsonl_format: str = Field("", title="Jsonl Format")
-    is_active: bool = Field(True, title="Active")
+    parameters: str = Field("", title="Parameters")
 
 
 class EvaluatorsDf(pa.DataFrameModel):
