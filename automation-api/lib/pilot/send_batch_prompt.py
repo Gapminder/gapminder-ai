@@ -56,16 +56,16 @@ def main():
         method = args.method.lower()
         # Create batch job instance
         if method == "openai":
-            provider = args.provider.lower()
-            if provider:
+            if args.provider:
+                provider = args.provider.lower()
                 batch_job = OpenAIBatchJob(args.jsonl_file, provider=provider)
             else:
                 batch_job = OpenAIBatchJob(args.jsonl_file)
         elif method in ["anthropic", "vertex"]:
             batch_job = PROVIDER_CLASSES[method](args.jsonl_file)
         else:
-            provider = args.provider.lower()
-            if provider:
+            if args.provider:
+                provider = args.provider.lower()
                 batch_job = LiteLLMBatchJob(
                     args.jsonl_file, provider=provider, num_processes=args.processes
                 )
