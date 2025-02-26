@@ -165,9 +165,9 @@ def generate_eval_prompts(
     responses: Dict[str, str],
     metrics: pl.DataFrame,
     output_path: str,
-    model: str = "gpt-4",
-    temperature: float = 0.0,
-    format: JsonlFormat = JsonlFormat.OPENAI,
+    model: str,
+    model_parameters: dict,
+    format: JsonlFormat,
 ) -> List[Tuple[str, str]]:
     """
     Generate evaluation prompts for each response and metric.
@@ -178,7 +178,8 @@ def generate_eval_prompts(
         metrics: DataFrame with evaluation metric templates
         output_path: Path to save output JSONL file
         model: Model to use for evaluation
-        temperature: Temperature setting for generation
+        model_parameters: parameters to the eval model
+        format: json format to use
     """
     prompt_id_mapping = []
 
@@ -223,8 +224,7 @@ def generate_eval_prompts(
                         eval_request = {
                             "model": model,
                             "messages": [{"role": "user", "content": eval_prompt}],
-                            "temperature": temperature,
-                            "max_tokens": 2000,
+                            **model_parameters,
                         }
 
                         # Create the full request object with custom ID
@@ -243,10 +243,7 @@ def generate_eval_prompts(
                                         "parts": [{"text": eval_prompt}],
                                     }
                                 ],
-                                "generationConfig": {
-                                    "temperature": temperature,
-                                    "max_output_tokens": 2000,
-                                },
+                                "generationConfig": model_parameters,
                                 "safety_settings": [
                                     {
                                         "category": "HARM_CATEGORY_HARASSMENT",
@@ -278,22 +275,16 @@ def generate_eval_prompts(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate evaluation prompts")
     parser.add_argument(
-        "--base-path",
-        type=str,
-        default=".",
-        help="Base directory containing ai_eval_sheets folder",
-    )
-    parser.add_argument(
-        "--response-file",
+        "response-file",
         type=str,
         required=True,
         help="Path to response JSONL file",
     )
     parser.add_argument(
-        "--temperature",
-        type=float,
-        default=0.0,
-        help="Temperature setting for generation",
+        "--base-path",
+        type=str,
+        default=".",
+        help="Base directory containing ai_eval_sheets folder",
     )
     args = parser.parse_args()
 
@@ -322,10 +313,11 @@ if __name__ == "__main__":
     for evaluator in evaluators.iter_rows(named=True):
         # Generate output path based on response file and evaluator
         response_basename = os.path.splitext(os.path.basename(args.response_file))[0]
-        evaluator_suffix = evaluator["evaluator_id"].replace("/", "-").replace(".", "")
+        evaluator_id = evaluator["evaluator_id"].replace(".", "")
         output_path = os.path.join(
-            args.base_path, f"{response_basename}-eval-prompts-{evaluator_suffix}.jsonl"
+            args.base_path, f"{response_basename}-eval-prompts-{evaluator_id}.jsonl"
         )
+        model_parameters = json.loads(evaluator["parameters"])
 
         # Generate evaluation prompts
         prompt_id_mapping = generate_eval_prompts(
@@ -334,7 +326,7 @@ if __name__ == "__main__":
             metrics,
             output_path,
             model=evaluator["evaluator_id"],
-            temperature=args.temperature,
+            model_parameters=model_parameters,
             format=JsonlFormat(evaluator["jsonl_format"]),
         )
 
