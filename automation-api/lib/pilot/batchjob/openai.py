@@ -10,6 +10,7 @@ from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
 from ..utils import generate_batch_id, get_output_path
+from .base import BaseBatchJob
 
 logger = AppSingleton().get_logger()
 
@@ -29,7 +30,7 @@ def _get_client(provider) -> OpenAI:
     return OpenAI(api_key=config["OPENAI_API_KEY"])
 
 
-class OpenAIBatchJob:
+class OpenAIBatchJob(BaseBatchJob):
     """Class for managing OpenAI batch jobs."""
 
     def __init__(self, jsonl_path: str, provider: str = "openai"):

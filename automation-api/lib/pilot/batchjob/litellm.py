@@ -11,6 +11,7 @@ from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
 from ..utils import get_output_path
+from .base import BaseBatchJob
 
 logger = AppSingleton().get_logger()
 
@@ -104,7 +105,7 @@ def _process_batch_prompts(
         return None
 
 
-class LiteLLMBatchJob:
+class LiteLLMBatchJob(BaseBatchJob):
     """Class for managing LiteLLM batch jobs."""
 
     def __init__(

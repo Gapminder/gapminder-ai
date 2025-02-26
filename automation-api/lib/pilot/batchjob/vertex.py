@@ -14,6 +14,7 @@ from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
 from ..utils import get_batch_id_and_output_path
+from .base import BaseBatchJob
 
 logger = AppSingleton().get_logger()
 
@@ -21,7 +22,7 @@ logger = AppSingleton().get_logger()
 _PROCESSING_STATUSES = {"JOB_STATE_RUNNING", "JOB_STATE_PENDING", "JOB_STATE_QUEUED"}
 
 
-class VertexBatchJob:
+class VertexBatchJob(BaseBatchJob):
     """Class for managing Vertex AI batch jobs."""
 
     def __init__(self, jsonl_path: str, model_id: str):

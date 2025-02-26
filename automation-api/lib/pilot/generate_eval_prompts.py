@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 import polars as pl
 
 from lib.app_singleton import AppSingleton
+from lib.pilot.send_batch_prompt import process_batch
 
 
 class JsonlFormat(Enum):
@@ -286,6 +287,11 @@ if __name__ == "__main__":
         default=".",
         help="Base directory containing ai_eval_sheets folder",
     )
+    parser.add_argument(
+        "--send",
+        action="store_true",
+        help="Send generated prompts immediately after creation",
+    )
     args = parser.parse_args()
 
     # Construct input paths
@@ -345,3 +351,15 @@ if __name__ == "__main__":
             mapping_path = output_path.replace(".jsonl", "-prompt-mapping.csv")
             mapping_df.write_csv(mapping_path)
             print(f"Generated prompt ID mapping in {mapping_path}")
+
+        # Send prompts immediately if requested
+        if args.send:
+            method = evaluator["provider"]
+
+            # Process the batch
+            print(f"Sending prompts for {evaluator['evaluator_id']}...")
+            process_batch(
+                jsonl_file=output_path,
+                method=method,
+                wait=False,  # don't wait, just send all evals
+            )

@@ -12,6 +12,7 @@ from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
 from ..utils import get_output_path
+from .base import BaseBatchJob
 
 logger = AppSingleton().get_logger()
 
@@ -25,7 +26,7 @@ def _get_client() -> anthropic.Anthropic:
     return anthropic.Anthropic(api_key=config["ANTHROPIC_API_KEY"])
 
 
-class AnthropicBatchJob:
+class AnthropicBatchJob(BaseBatchJob):
     """Class for managing Anthropic batch jobs."""
 
     def __init__(self, jsonl_path: str):
