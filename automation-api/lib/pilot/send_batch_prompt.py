@@ -50,6 +50,11 @@ def main():
         type=str,
         help="Custom provider name (e.g., alibaba)",
     )
+    parser.add_argument(
+        "--model-id",
+        type=str,
+        help="the model id for vertex AI",
+    )
     args = parser.parse_args()
 
     try:
@@ -61,8 +66,12 @@ def main():
                 batch_job = OpenAIBatchJob(args.jsonl_file, provider=provider)
             else:
                 batch_job = OpenAIBatchJob(args.jsonl_file)
-        elif method in ["anthropic", "vertex"]:
-            batch_job = PROVIDER_CLASSES[method](args.jsonl_file)
+        elif method == "anthropic":
+            batch_job = AnthropicBatchJob(args.jsonl_file)
+        elif method == "vertex":
+            if not args.model_id:
+                raise ValueError("Please provide model id (--model-id) for vertex AI")
+            batch_job = VertexBatchJob(args.json_file, args.model_id)
         else:
             if args.provider:
                 provider = args.provider.lower()
