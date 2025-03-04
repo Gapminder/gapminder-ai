@@ -63,27 +63,48 @@ def load_jsonl(file_path: Path) -> List[Dict]:
         return [json.loads(line) for line in f]
 
 
-def extract_custom_id_info(custom_id: str, expected_model_id: str) -> Dict[str, str]:
-    """Parse custom_id structure and validate model ID."""
-    parts = [p for p in custom_id.split("-") if p not in {"question", "q", "eval"}]
+def extract_custom_id_info(
+    custom_id: str, expected_model_config_id: str
+) -> Dict[str, str]:
+    """Extract info from custom_id and validate model_config_id matches expected"""
+    parts = custom_id.split("-")
+    excludes = ["question", "q", "eval"]
+    parts = [x for x in parts if x not in excludes]
 
-    if parts[0] != expected_model_id:
-        raise ValueError(f"Model ID mismatch in custom_id: {custom_id}")
+    # First part should be model_config_id
+    model_config_id = parts[0]
+    if model_config_id != expected_model_config_id:
+        raise ValueError(
+            f"Model config ID mismatch: expected {expected_model_config_id}, "
+            f"got {model_config_id} in custom_id {custom_id}"
+        )
 
-    field_names = ["model_config_id", "question_id", "prompt_variation_id"]
-    if len(parts) > 3:
-        field_names.append("metric_id")
-
-    return dict(zip(field_names, parts))
+    if len(parts) == 3:  # question responses
+        return dict(
+            zip(["model_config_id", "question_id", "prompt_variation_id"], parts)
+        )
+    else:
+        return dict(
+            zip(
+                ["model_config_id", "question_id", "prompt_variation_id", "metric_id"],
+                parts,
+            )
+        )
 
 
 # FIXME: this is a shortcut, we should get proper dict from the
 # AI eval sheet configuration.
-def extract_score(eval_text: str) -> int:
-    """Extract score from evaluation text (A=0, B=1, C=2, D=3)."""
-    grade_map = {"A": 0, "B": 1, "C": 2, "D": 3}
-    last_word = eval_text.strip().split()[-1].upper()
-    return grade_map.get(last_word, -1)
+def extract_score(eval_text):
+    mapping = {"A": 0, "B": 1, "C": 2, "D": 3}
+    # get the last line
+    last_line = eval_text.strip().split("\n")[-1]
+    # be defensive, get the last word of this line, make it uppercase
+    grade = last_line.split(" ")[-1].upper()
+    try:
+        return mapping[grade]
+    except KeyError:
+        print(f"ERROR getting score: \n ... {eval_text[-30:]}")
+        return -1
 
 
 def process_responses(responses: List[Dict], model_id: str) -> List[Dict]:
@@ -121,14 +142,24 @@ def process_evals(
     return processed
 
 
-def pivot_eval_df(df: pl.DataFrame, evaluator_prefix: str) -> pl.DataFrame:
-    """Pivot evaluation dataframe to metric-based columns."""
-    return df.pivot(
-        values=f"{evaluator_prefix}_score",
+def pivot_eval_df(df: pl.DataFrame, evalulator_prefix: str) -> pl.DataFrame:
+    """Pivot evaluation dataframe to have metric_id values as columns"""
+    pivoted = df.pivot(
+        values=f"{evalulator_prefix}_score",
         index=["model_config_id", "question_id", "prompt_variation_id"],
         on="metric_id",
         aggregate_function="first",
-    ).rename(lambda c: f"{evaluator_prefix}_{c}" if c != "metric_id" else c)
+    )
+
+    # Rename columns to include evaluator name
+    new_columns = []
+    for col in pivoted.columns:
+        if col in ["model_config_id", "question_id", "prompt_variation_id"]:
+            new_columns.append(col)
+        else:
+            new_columns.append(f"{evalulator_prefix}_{col}")
+
+    return pivoted.rename(dict(zip(pivoted.columns, new_columns)))
 
 
 def calculate_final_score(scores: List[int]) -> int:
@@ -138,7 +169,14 @@ def calculate_final_score(scores: List[int]) -> int:
         score_counts[score] = score_counts.get(score, 0) + 1
 
     max_count = max(score_counts.values(), default=0)
-    return next((s for s, c in score_counts.items() if c == max_count), 0)
+    if max_count >= 2:
+        # Return the score that appears at least twice
+        return next(
+            score for score, count in score_counts.items() if count == max_count
+        )
+    else:
+        # All scores different
+        return 0
 
 
 def process_group(
@@ -154,7 +192,13 @@ def process_group(
     # Process evaluations
     eval_dfs = []
     for eval_path in eval_paths:
-        evaluator_id = eval_path.stem.split("-")[-2]
+        eval_file_match = re.match(
+            r".+?-question_prompts-response-eval-prompts-(?P<evaluator_id>.+?)-response\.jsonl$",
+            eval_path.name,
+        )
+        evaluator_id = (
+            eval_file_match.group("evaluator_id") if eval_file_match else "unknown"
+        )
         prefix = get_evaluator_prefix(evaluator_id)
         evals = load_jsonl(eval_path)
         eval_df = pl.DataFrame(process_evals(evals, prefix, model_id))
@@ -166,6 +210,22 @@ def process_group(
         combined_df = combined_df.join(
             df, on=["model_config_id", "question_id", "prompt_variation_id"], how="left"
         )
+
+    # Fill null evaluation scores with -1
+    # And fille null response with n/a
+    # Identify evaluation columns by excluding the joining columns
+    # and response column
+    joining_columns = [
+        "model_config_id",
+        "question_id",
+        "prompt_variation_id",
+        "response",
+    ]
+    eval_columns = [col for col in combined_df.columns if col not in joining_columns]
+
+    combined_df = combined_df.with_columns(
+        [pl.col(col).fill_null(-1) for col in eval_columns]
+    ).with_columns(pl.col("response").fill_null("NOT_ANSWERED"))
 
     # Add final correctness score
     score_cols = [c for c in combined_df.columns if c.endswith("_correctness")]
