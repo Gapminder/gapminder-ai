@@ -112,9 +112,9 @@ def combine_questions_with_options_and_correctness(
     column_mapping = {}
     for letter in ["A", "B", "C"]:
         column_mapping[f"question_option_{letter}"] = f"option_{letter.lower()}"
-        column_mapping[
-            f"correctness_of_answer_option_{letter}"
-        ] = f"option_{letter.lower()}_correctness"
+        column_mapping[f"correctness_of_answer_option_{letter}"] = (
+            f"option_{letter.lower()}_correctness"
+        )
 
     # Join with questions dataframe and rename columns
     combined = questions.join(

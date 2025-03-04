@@ -1,4 +1,5 @@
 """Base class for batch job implementations."""
+
 import abc
 import os
 import time

@@ -1,4 +1,5 @@
 """Vertex AI batch processing implementation."""
+
 import json
 import os
 import time
@@ -296,9 +297,10 @@ def _process_and_simplify_results(
         output_path: Path to save simplified results
         custom_id_mapping: Dictionary mapping request strings to custom IDs
     """
-    with open(input_path, "r", encoding="utf-8") as raw_file, open(
-        output_path, "w", encoding="utf-8"
-    ) as out_file:
+    with (
+        open(input_path, "r", encoding="utf-8") as raw_file,
+        open(output_path, "w", encoding="utf-8") as out_file,
+    ):
         for i, line in enumerate(raw_file):
             try:
                 response_data = json.loads(line)
