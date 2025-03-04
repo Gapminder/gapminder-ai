@@ -13,20 +13,25 @@ from ..utils import generate_batch_id, get_output_path
 from .base import BaseBatchJob
 
 logger = AppSingleton().get_logger()
+config = read_config()
 
 # Statuses that indicate the batch is still processing
 _PROCESSING_STATUSES = {"validating", "in_progress", "finalizing"}
 
 
+# Provider-specific configurations
+_PROVIDER_CONFIGS: Dict[str, Dict[str, Any]] = {
+    "alibaba": {
+        "api_key": config.get("DASHSCOPE_API_KEY", ""),
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    }
+}
+
+
 def _get_client(provider) -> OpenAI:
     """Get authorized OpenAI client with provider compatibility."""
-    config = read_config()
-
-    if provider == "alibaba":
-        return OpenAI(
-            api_key=config["DASHSCOPE_API_KEY"],
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
-        )
+    if provider in _PROVIDER_CONFIGS:
+        return OpenAI(**_PROVIDER_CONFIGS[provider])
     return OpenAI(api_key=config["OPENAI_API_KEY"])
 
 

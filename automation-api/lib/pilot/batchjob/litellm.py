@@ -14,95 +14,15 @@ from ..utils import get_output_path
 from .base import BaseBatchJob
 
 logger = AppSingleton().get_logger()
+config = read_config()
 
 # Provider-specific configurations
 _PROVIDER_CONFIGS: Dict[str, Dict[str, Any]] = {
     "alibaba": {
-        "api_key": read_config().get("DASHSCOPE_API_KEY", ""),
+        "api_key": config.get("DASHSCOPE_API_KEY", ""),
         "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
     }
 }
-
-
-def _setup_litellm_cache() -> None:
-    """Configure LiteLLM Redis cache with 60 day TTL."""
-    config = read_config()
-    if "REDIS_HOST" in config and "REDIS_PORT" in config:
-        litellm.cache = Cache(  # type: ignore
-            type="redis",
-            host=config["REDIS_HOST"],
-            port=config["REDIS_PORT"],
-            ttl=60 * 24 * 60 * 60,  # 60 days in seconds
-        )
-
-
-def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
-    """Process a single prompt using LiteLLM."""
-    try:
-        # Add retry to request if not already specified
-        if "num_retries" not in data.keys():
-            data["num_retries"] = 10
-
-        # Merge provider config with request body if provider exists
-        request_body = data["body"].copy()
-        if provider and provider in _PROVIDER_CONFIGS:
-            request_body.update(_PROVIDER_CONFIGS[provider])
-
-        response = litellm.completion(**request_body)  # type: ignore
-
-        # Format response like OpenAI batch API
-        return {
-            "custom_id": data.get("custom_id"),
-            "status_code": 200,
-            "content": response.choices[0].message.content,
-            "error": None,
-        }
-    except Exception as e:
-        # Handle errors like OpenAI batch API
-        return {
-            "custom_id": data.get("custom_id"),
-            "status_code": 500,
-            "content": None,
-            "error": str(e),
-        }
-
-
-def _process_batch_prompts(
-    input_jsonl_path: str,
-    output_path: str,
-    num_processes: int = 1,
-    provider: Optional[str] = None,
-) -> Optional[str]:
-    """Process batch prompts using LiteLLM with multiprocessing."""
-    try:
-        _setup_litellm_cache()
-
-        # Read all prompts into memory
-        with open(input_jsonl_path) as f:
-            all_prompts = [json.loads(line) for line in f]
-
-        # Process prompts using multiprocessing if enabled
-        if num_processes > 1:
-            with mp.Pool(processes=num_processes) as pool:
-                results = pool.starmap(
-                    _process_single_prompt,
-                    [(prompt, provider) for prompt in all_prompts],
-                )
-        else:
-            results = [
-                _process_single_prompt(prompt, provider) for prompt in all_prompts
-            ]
-
-        # Write all results to output file
-        with open(output_path, "w") as f:
-            for result in results:
-                f.write(json.dumps(result) + "\n")
-
-        return output_path
-
-    except Exception as e:
-        logger.error(f"Error processing batch prompts: {str(e)}")
-        return None
 
 
 class LiteLLMBatchJob(BaseBatchJob):
@@ -191,3 +111,84 @@ class LiteLLMBatchJob(BaseBatchJob):
     def output_path(self) -> str:
         """Get the output file path."""
         return self._output_path
+
+
+# helper functions
+def _setup_litellm_cache() -> None:
+    """Configure LiteLLM Redis cache with 60 day TTL."""
+    if "REDIS_HOST" in config and "REDIS_PORT" in config:
+        litellm.cache = Cache(  # type: ignore
+            type="redis",
+            host=config["REDIS_HOST"],
+            port=config["REDIS_PORT"],
+            ttl=60 * 24 * 60 * 60,  # 60 days in seconds
+        )
+
+
+def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
+    """Process a single prompt using LiteLLM."""
+    try:
+        # Add retry to request if not already specified
+        if "num_retries" not in data.keys():
+            data["num_retries"] = 10
+
+        # Merge provider config with request body if provider exists
+        request_body = data["body"].copy()
+        if provider and provider in _PROVIDER_CONFIGS:
+            request_body.update(_PROVIDER_CONFIGS[provider])
+
+        response = litellm.completion(**request_body)  # type: ignore
+
+        # Format response like OpenAI batch API
+        return {
+            "custom_id": data.get("custom_id"),
+            "status_code": 200,
+            "content": response.choices[0].message.content,
+            "error": None,
+        }
+    except Exception as e:
+        # Handle errors like OpenAI batch API
+        return {
+            "custom_id": data.get("custom_id"),
+            "status_code": 500,
+            "content": None,
+            "error": str(e),
+        }
+
+
+def _process_batch_prompts(
+    input_jsonl_path: str,
+    output_path: str,
+    num_processes: int = 1,
+    provider: Optional[str] = None,
+) -> Optional[str]:
+    """Process batch prompts using LiteLLM with multiprocessing."""
+    try:
+        _setup_litellm_cache()
+
+        # Read all prompts into memory
+        with open(input_jsonl_path) as f:
+            all_prompts = [json.loads(line) for line in f]
+
+        # Process prompts using multiprocessing if enabled
+        if num_processes > 1:
+            with mp.Pool(processes=num_processes) as pool:
+                results = pool.starmap(
+                    _process_single_prompt,
+                    [(prompt, provider) for prompt in all_prompts],
+                )
+        else:
+            results = [
+                _process_single_prompt(prompt, provider) for prompt in all_prompts
+            ]
+
+        # Write all results to output file
+        with open(output_path, "w") as f:
+            for result in results:
+                f.write(json.dumps(result) + "\n")
+
+        return output_path
+
+    except Exception as e:
+        logger.error(f"Error processing batch prompts: {str(e)}")
+        return None
