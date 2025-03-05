@@ -7,7 +7,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import polars as pl
 
@@ -243,8 +243,19 @@ def process_group(
     logger.info(f"Processed {model_id} → {output_path}")
 
 
-def main():
-    """Command line interface for processing experiment results."""
+def main(input_dir: Path, output_dir: Optional[Path] = None) -> None:
+    """Process experiment results from input_dir and save to output_dir."""
+    output_dir = output_dir or input_dir
+    output_dir.mkdir(exist_ok=True)
+
+    file_groups = find_file_groups(input_dir)
+    for model_id, (resp_path, eval_paths) in file_groups.items():
+        logger.info(f"Processing {model_id}...")
+        process_group(resp_path, eval_paths, output_dir)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(
         description="Generate consolidated Parquet files from experiment JSONL results"
     )
@@ -260,15 +271,4 @@ def main():
     )
 
     args = parser.parse_args()
-    output_dir = args.output_dir or args.input_dir
-    output_dir.mkdir(exist_ok=True)
-
-    file_groups = find_file_groups(args.input_dir)
-    for model_id, (resp_path, eval_paths) in file_groups.items():
-        logger.info(f"Processing {model_id}...")
-        process_group(resp_path, eval_paths, output_dir)
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    main()
+    main(args.input_dir, args.output_dir)
