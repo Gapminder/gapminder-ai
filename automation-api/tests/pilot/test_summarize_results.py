@@ -3,7 +3,12 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from lib.pilot.summarize_results import extract_custom_id_info, extract_score, main
+from lib.pilot.summarize_results import (
+    calculate_final_score,
+    extract_custom_id_info,
+    extract_score,
+    main,
+)
 
 # Test data directory
 TEST_DATA_DIR = Path(__file__).parent / "data" / "example_batch"
@@ -52,6 +57,7 @@ def test_extract_score():
     assert extract_score("The answer deserves a B\nB") == 1
     assert extract_score("This response is a C quality answer\n\nC") == 2
     assert extract_score("Final grade: D\nD") == 3
+    assert extract_score("???") == -1
 
 
 def test_extract_custom_id():
@@ -67,3 +73,43 @@ def test_extract_custom_id():
     assert info["question_id"] == "q42"
     assert info["prompt_variation_id"] == "pv7"
     assert info["metric_id"] == "correctness"
+
+
+def test_calculate_final_score():
+    """Test score calculation logic with various scenarios"""
+
+    # Basic cases
+    assert (
+        calculate_final_score([0, 0, 0]) == 0
+    ), "All identical scores should return that score"
+    assert calculate_final_score([1, 1, 2]) == 1, "Clear majority should win"
+
+    # Tie cases
+    assert (
+        calculate_final_score([2, 2, 1, 1, 3]) == 0
+    ), "Should be zero when there is no winner"
+    assert (
+        calculate_final_score([0, 1, 2, 3]) == 0
+    ), "All different scores should return 0"
+
+    # Edge cases
+    assert calculate_final_score([]) == 0, "Empty list should return 0"
+    assert (
+        calculate_final_score([-1, -1, 2]) == -1
+    ), "Error scores should be counted normally"
+    assert (
+        calculate_final_score([-1, 0, 1, 2]) == 0
+    ), "All different with error score should return 0"
+
+    # Mixed cases
+    assert (
+        calculate_final_score([0, 1, -1, -1]) == -1
+    ), "Error scores can win if they have majority"
+    assert (
+        calculate_final_score([0, 0, 1, -1, -1]) == 0
+    ), "Normal scores can win over error scores"
+
+    # Longer lists
+    assert (
+        calculate_final_score([1, 2, 3, 2, 2, 1, 3, 3, 3, 3]) == 3
+    ), "Should handle longer lists"
