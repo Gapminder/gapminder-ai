@@ -95,15 +95,21 @@ def extract_custom_id_info(
 # FIXME: this is a shortcut, we should get proper dict from the
 # AI eval sheet configuration.
 def extract_score(eval_text):
+    """Extract A/B/C/D letter grade from eval text, returning score from 0-3."""
     mapping = {"A": 0, "B": 1, "C": 2, "D": 3}
-    # get the last line
-    last_line = eval_text.strip().split("\n")[-1]
-    # be defensive, get the last word of this line, make it uppercase
-    grade = last_line.split(" ")[-1].upper()
+
+    # Handle null or non-string responses
+    if eval_text is None or not isinstance(eval_text, str):
+        return -1
+
     try:
-        return mapping[grade]
-    except KeyError:
-        print(f"ERROR getting score: \n ... {eval_text[-30:]}")
+        # Get the last line
+        last_line = eval_text.strip().split("\n")[-1]
+        # Be defensive, get the last word of this line, make it uppercase
+        grade = last_line.split(" ")[-1].upper()
+        return mapping.get(grade, -1)  # Use get with default instead of try/except
+    except Exception as e:
+        logger.info(f"ERROR getting score: {str(e)}\nText: {str(eval_text)[:30]}...")
         return -1
 
 
