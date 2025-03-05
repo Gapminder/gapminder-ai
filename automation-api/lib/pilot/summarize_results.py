@@ -6,6 +6,7 @@ import argparse
 import json
 import logging
 import re
+from glob import glob
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -270,6 +271,43 @@ def process_group(
     logger.info(f"Processed {model_id} → {output_path}")
 
 
+def create_master_output(input_dir: str, language: str = "en-US") -> pl.DataFrame:
+    """Create a master output DataFrame from parquet files in a folder.
+
+    Args:
+        output_folder: Folder containing parquet files with results
+        language: Language code to add to results (default: "en-US")
+
+    Returns:
+        DataFrame with standardized columns for upload
+    """
+    # Define mapping for correctness values
+    result_map = {-1: "n/a", 0: "fail", 1: "very_wrong", 2: "wrong", 3: "correct"}
+
+    # Read and combine all parquet files
+    res_list = [pl.read_parquet(x) for x in glob(f"{input_dir}/*parquet")]
+    res = pl.concat(res_list)
+
+    # Add metadata columns and map correctness
+    res = res.with_columns(
+        pl.lit(language).alias("language"),
+        pl.lit(input_dir.split("/")[-1]).alias("last_evaluation_datetime"),
+        pl.col("final_correctness").replace_strict(result_map).alias("result"),
+    )
+
+    # Select and rename columns for upload with correct order
+    return res.select(
+        [
+            pl.col("question_id"),
+            pl.col("language"),
+            pl.col("prompt_variation_id"),
+            pl.col("model_config_id").alias("model_configuration_id"),
+            pl.col("last_evaluation_datetime"),
+            pl.col("result"),
+        ]
+    )
+
+
 def main(input_dir: Path, output_dir: Optional[Path] = None) -> None:
     """Process experiment results from input_dir and save to output_dir."""
     output_dir = output_dir or input_dir
@@ -279,6 +317,22 @@ def main(input_dir: Path, output_dir: Optional[Path] = None) -> None:
     for model_id, (resp_path, eval_paths) in file_groups.items():
         logger.info(f"Processing {model_id}...")
         process_group(resp_path, eval_paths, output_dir)
+
+    # Combine all parquet to create a master output csv file
+    # I need to provide the fullpath, because it is needed for
+    # computing the evaluation date.
+    master_output = create_master_output(str(input_dir.resolve()))
+
+    # Extract the basename from output_dir for the filename suffix
+    basename = output_dir.name
+
+    # Create the output CSV filename with the basename as suffix
+    csv_output_path = output_dir / f"master_output_{basename}.csv"
+
+    # Write to CSV with the correct filename
+    master_output.write_csv(csv_output_path)
+    logger.info(f"Created master output file: {csv_output_path}")
+    logger.info("now you can archive/remove all jsonl files.")
 
 
 if __name__ == "__main__":

@@ -32,7 +32,9 @@ def test_main_processing(example_data_dir, tmp_path):
 
     # Verify output files were created
     output_files = list(tmp_path.glob("*.parquet"))
-    assert len(output_files) == 2, "Should generate 2 output files"
+    assert len(output_files) == 2, "Should generate 2 parquet files"
+    master_output_file = list(tmp_path.glob("master_output*.csv"))
+    assert len(master_output_file) == 1, "Should generate 1 master output"
 
     # Check the content of the output file
     df = pl.read_parquet(output_files[0])
