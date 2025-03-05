@@ -1,0 +1,5 @@
+{"custom_id": "mc039-1541-no_option_letter-correctness", "status_code": 200, "content": "D\nD", "error": null}
+{"custom_id": "mc039-1541-v_sensetive-correctness", "status_code": 200, "content": "B", "error": null}
+{"custom_id": "mc039-1541-v_pick_most_correct-correctness", "status_code": 200, "content": "C", "error": null}
+{"custom_id": "mc039-1541-v_nobody_knows-correctness", "status_code": 200, "content": "\n\nD", "error": null}
+{"custom_id": "mc039-1541-v_help_me_guess-correctness", "status_code": 500, "content": null, "error": "failed"}
