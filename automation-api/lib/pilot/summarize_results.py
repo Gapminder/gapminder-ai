@@ -169,20 +169,41 @@ def pivot_eval_df(df: pl.DataFrame, evalulator_prefix: str) -> pl.DataFrame:
 
 
 def calculate_final_score(scores: List[int]) -> int:
-    """Determine final score by majority vote."""
+    """Determine final score by majority vote.
+
+    Rules:
+    1. If all scores are -1, return -1
+    2. Remove all -1 scores before next steps
+    3. If there's a clear majority winner, return that winner
+    4. Otherwise, return 0
+    """
+    # Remove all -1 scores
+    filtered_scores = [score for score in scores if score != -1]
+
+    # If no valid scores left(i.e all are -1), return -1
+    if not filtered_scores:
+        return -1
+
+    # Count occurrences of each score
     score_counts: Dict[int, int] = {}
-    for score in scores:
+    for score in filtered_scores:
         score_counts[score] = score_counts.get(score, 0) + 1
 
-    max_count = max(score_counts.values(), default=0)
-    if max_count >= 2:
-        # Return the score that appears at least twice
-        return next(
-            score for score, count in score_counts.items() if count == max_count
-        )
-    else:
-        # All scores different
-        return 0
+    # Find the most common score and its count
+    most_common_score = 0
+    max_count = 0
+
+    for score, count in score_counts.items():
+        if count > max_count:
+            max_count = count
+            most_common_score = score
+
+    # Check if this is a clear winner (no other score has the same count)
+    is_clear_winner = (
+        sum(1 for count in score_counts.values() if count == max_count) == 1
+    )
+
+    return most_common_score if is_clear_winner else 0
 
 
 def process_group(
