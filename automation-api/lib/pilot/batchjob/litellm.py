@@ -139,13 +139,21 @@ def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
             request_body.update(_PROVIDER_CONFIGS[provider])
 
         response = litellm.completion(**request_body)  # type: ignore
+        content = response.choices[0].message.content
+        try:  # when citations available, add them to the content.
+            citation_str = "\n".join(
+                f"[{n+1}]: {link}" for n, link in enumerate(response.citations)
+            )
+            content = f"{content}\nCitations:\n{citation_str}"
+        except AttributeError:
+            pass
 
         # Format response like OpenAI batch API
         # TODO: add citation data if available.
         return {
             "custom_id": data.get("custom_id"),
             "status_code": 200,
-            "content": response.choices[0].message.content,
+            "content": content,
             "error": None,
         }
     except Exception as e:
