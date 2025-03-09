@@ -3,256 +3,240 @@
 # %autoreload 2
 
 # +
-import logging
-from datetime import datetime
-from functools import partial
-from collections import Counter
-
-import pandas as pd
-
-from lib.app_singleton import AppSingleton
-from lib.pilot.helpers import (
-    create_question_data_for_eval,
-    create_question_data_for_test,
-    get_model,
-    get_model_configs,
-    get_prompt_variants,
-    get_questions,
-    read_ai_eval_spreadsheet,
-    run_survey,
-    run_survey_n_round,
-    get_survey_hash
-)
-from lib.ai_eval_spreadsheet.schemas import EvalResultsDf, SessionResultsDf
-
-from random import shuffle, sample
-from itertools import product
-
 # set up logger
+import logging
+from lib.app_singleton import AppSingleton
+
 logger = AppSingleton().get_logger()
-logger.setLevel(logging.DEBUG)
-# -
-
-# # 1. read ai eval spreadsheet
-
-sheet = read_ai_eval_spreadsheet()
-
-# # 2. build question dataset
-
-# +
-# create a list of Question Objects.
-questions = get_questions(sheet)
-
-questions
+# change to logging.DEBUG to see DEBUG message
+logger.setLevel(logging.INFO)
 # -
 
 
 
-# # 3. construct search space and gather session results
-
-model_configs = get_model_configs(sheet)
-prompt_variants = get_prompt_variants(sheet)
-
-model_configs
-
-prompt_variants
+# # 1. download ai eval spreadsheet to a local folder
 
 # +
-# define a llm to check result correctness.
+from lib.pilot.generate_experiment import save_sheets_as_csv
 
-# eval_llm = get_model('gpt-3.5-turbo', 'OpenAI', {})  # use this to check answers with openai
-eval_llm = get_model("fakellm", "Dummy", {"answer_list": ["1", "2", "3"]})
+experiment_top_level_dir = "../../experiments/"
+
+saved = save_sheets_as_csv(experiment_top_level_dir)
+
+print("\nSaved the following files:")
+for sheet_name, file_path in saved.items():
+    print(f"{sheet_name}: {file_path}")
 # -
 
-# create survey, which is a tuple of (survey_id, questions)
-survey_id = get_survey_hash(questions)
-survey = (survey_id, questions)
-survey
+# # 2. Generate experiment data for model(s)
 
 # +
-# we can evaluate one prompt/model pair using run_survey and run_survey_n_round
-# run_survey_n_round will run n times according to model config.
-# run_survey only runs one time.
-# use verbose=True to get formatted prompt to be sent to LLM.
+import lib.pilot.generate_prompts as gp
 
-# NOTE: if the prompt has `history` field but model donesn't have memory=True, and vice visa, it will result in error.
-run_survey(
-    survey,
-    prompt_variants[0],
-    model_configs[1],
-    eval_llm,
-    verbose=True
+experiment_dir = "../../experiments/20250306/"
+
+# TODO: maybe add a function to easily display all model name and model config id. 
+# Make it easy to find the model config id
+
+# 
+gp.main(experiment_dir, model_config_id="mc049", jsonl_format="openai")
+# add more if there are more models to do
+# jsonl_format should be either openai or vertex
+# gp.main(experiment_dir, "mc050", "vertex")
+# -
+# # 3. Send prompts and get back results
+
+from lib.pilot.send_batch_prompt import process_batch
+
+# +
+jsonl_files = [
+    {"filepath": '../../experiments/20250306/mc049-question_prompts.jsonl', "method": "openai"},
+    # add more here if there are other jsonl files...
+]
+
+# first, just send all batches
+for f in jsonl_files:
+    process_batch(f["filepath"], f["method"], wait=False)
+# -
+
+
+# wait until all batch finished and download results
+for f in jsonl_files:
+    process_batch(f["filepath"], f["method"], wait=True)
+
+# ## 3.1 Check if there are questions the chatbot failed to answer
+#
+# API issues, or insufficient fund etc would make the chatbot fail to answer some questions. 
+
+# TODO: move utility functions to a module.
+import json
+from typing import List
+
+
+# +
+def load_jsonl(file_path: str) -> list[dict]:
+    """Load a jsonl file into a list of dictionaries.
+
+    Args:
+        file_path: Path to the .jsonl file
+
+    Returns:
+        List of dictionaries, one per line in the file
+    """
+    data = []
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            data.append(json.loads(line))
+    return data
+
+
+def save_jsonl(data: list[dict], file_path: str) -> None:
+    """Save a list of dictionaries to a jsonl file.
+
+    Args:
+        data: List of dictionaries to save
+        file_path: Path to save the .jsonl file
+    """
+    with open(file_path, "w", encoding="utf-8") as f:
+        for item in data:
+            f.write(json.dumps(item) + "\n")
+
+
+def merge_successful_responses(
+    response_files: list[str], output_file_path: str
+) -> None:
+    """Merge multiple response files, keeping only successful responses.
+
+    Args:
+        response_files: List of paths to response jsonl files
+        output_file_path: Path to save merged successful responses
+    """
+    successful_responses: List[dict] = []
+
+    for file_path in response_files:
+        responses = load_jsonl(file_path)
+        # Filter successful responses
+        successful_responses.extend(
+            resp
+            for resp in responses
+            if resp.get("status_code") == 200
+        )
+
+    # Save merged successful responses
+    save_jsonl(successful_responses, output_file_path)
+    print(
+        f"Saved {len(successful_responses)} successful responses to {output_file_path}"
+    )
+
+
+def filter_and_save_error_requests(
+    request_file_path: str, response_file_path: str, output_file_path: str
+) -> None:
+    """Filter requests with error responses and save to output file.
+
+    Args:
+        request_file_path: Path to requests jsonl file
+        response_file_path: Path to responses jsonl file
+        output_file_path: Path to save errored requests
+    """
+    requests = load_jsonl(request_file_path)
+    responses = load_jsonl(response_file_path)
+
+    # Create a dict mapping custom_id to response
+    response_dict = {resp["custom_id"]: resp for resp in responses}
+
+    # Filter requests where corresponding response has error
+    error_requests = [
+        req
+        for req in requests
+        if response_dict.get(req["custom_id"], {}).get("status_code") != 200
+    ]
+
+    print(f"Found {len(error_requests)} requests with errors")
+
+    # Show first error request and response for debugging
+    # if error_requests:
+    #     req = error_requests[0]
+    #     custom_id = req['custom_id']
+    #     print(f"First error request (custom_id: {custom_id}):")
+    #     print("Request:", req)
+    #     print("Response:", response_dict[custom_id])
+    #     print("\n" + "="*80 + "\n")
+
+    # Save error requests to output file
+    save_jsonl(error_requests, output_file_path)
+    print(f"Saved {len(error_requests)} error requests to {output_file_path}")
+
+
+# -
+
+filter_and_save_error_requests(
+    request_file_path="../../experiments/20250306/mc049-question_prompts.jsonl",
+    response_file_path="../../experiments/20250306/mc049-question_prompts-response.jsonl",
+    output_file_path="../../experiments/20250306/mc049-question_prompts-part2.jsonl"
 )
 
-
 # +
-# the past evaluation records
-evaluated_configs = sheet.session_results.data.df[
-    ["model_configuration_id", "prompt_variation_id", "survey_id"]
-].drop_duplicates()
-
-evaluated_configs
+# after step 3.2, we can test it again
+# filter_and_save_error_requests(
+#     request_file_path="../../experiments/20250306/mc049-question_prompts-part2.jsonl",
+#     response_file_path="../../experiments/20250306/mc049-question_prompts-part2-response.jsonl",
+#     output_file_path="../../experiments/20250306/mc049-question_prompts-part3.jsonl"
+# )
 # -
 
-# whether run all configurations.
-# If set to TRUE, all model configuration/prompt variation pairs will be evaluated.
-# If set to FALSE, the model configuration/prompt variation pairs which are in the evaluated_configs will be skipped.
-RERUN_ALL = True
 
-# create a new survey from the list of questions.
-# survey ID is based on question_id for each question. The order of questions
-# will also affect the survey ID.
-shuffle(questions)
-survey_id = get_survey_hash(questions)
-survey = (survey_id, questions)
-survey
+
+# ### if necessary. send the other prompts again
 
 # +
-# define a llm to check result correctness.
+jsonlfile = '../../experiments/20250306/mc049-question_prompts-part2.jsonl'
 
-eval_llm = get_model('gpt-3.5-turbo', 'OpenAI', {})  # use this to check answers with openai
-# eval_llm = get_model("fakellm", "Dummy", {"answer_list": ["1", "2", "3"]})
-
-# +
-# iterate over search space
-search_space = product(model_configs, prompt_variants)
-
-session_result = []
-
-for model_conf, prompt_var in search_space:
-    model, conf = model_conf
-    model_config_id = conf.model_config_id
-    prompt_var_id = prompt_var.variation_id
-
-    # check if the prompt and model conf can be used together.
-    # if prompt template includes `history` key, then model should have memory=True, and vice visa
-    if ("{history}" in prompt_var.question_prompt_template and not conf.memory):
-        logger.warning(f"{prompt_var_id}, {model_config_id}:")
-        logger.warning("prompt template has history but model memory is not enabled. Skipped")
-        continue
-    if ("{history}" not in prompt_var.question_prompt_template and conf.memory):
-        logger.warning(f"{prompt_var_id}, {model_config_id}:")
-        logger.warning("model memory is enabled but prompt template does not support history. Skipped")
-        continue
-    is_evaluated = evaluated_configs.loc[
-        (evaluated_configs["model_configuration_id"] == model_config_id)
-        & (evaluated_configs["prompt_variation_id"] == prompt_var_id)
-        & (evaluated_configs["survey_id"] == survey_id)
-    ]
-    if is_evaluated.empty:
-        session_result.append(
-            (
-                (survey_id, model_config_id, prompt_var_id),
-                run_survey_n_round(
-                    survey=survey,
-                    prompt_var=prompt_var,
-                    model_conf=model_conf,
-                    eval_llm=eval_llm
-                ),
-            )
-        )
-    elif RERUN_ALL is True:
-        session_result.append(
-            (
-                (survey_id, model_config_id, prompt_var_id),
-                run_survey_n_round(
-                    survey=survey,
-                    prompt_var=prompt_var,
-                    model_conf=model_conf,
-                    eval_llm=eval_llm
-                ),
-            )
-        )
-    else:
-        logger.debug(
-            f"({model_config_id}, {prompt_var_id}, {survey_id}) has been evaluated."
-        )
-
-
-# +
-# create a dataframe and upload the session results:
-
-session_recs = []
-for _, lst in session_result:
-    session_recs.extend(lst)
+process_batch(jsonlfile, "openai", False)
 # -
 
-session_df = pd.DataFrame.from_records(session_recs)
-session_df = SessionResultsDf.validate(session_df)
-session_df
 
-if RERUN_ALL:
-    sheet.session_results.replace_data(session_df)
-else:
-    sheet.session_results.append_data(session_df)
+process_batch(jsonlfile, "openai", True)
 
+# merge the results after we have all 
+response_files = ["../../experiments/20250306/mc049-question_prompts-response.jsonl", "../../experiments/20250306/mc049-question_prompts-part2-response.jsonl"]
+output_file = "../../experiments/20250306/mc049-question_prompts-response.jsonl"
+merge_successful_responses(response_files, output_file)
 
 
 
-# # 4. construct the evaluation result dataframe
 
-session_df = sheet.session_results.data.df
 
-session_df['session_time'] = pd.to_datetime(session_df['session_time'])
 
-gs = session_df.groupby(["prompt_variation_id", "model_configuration_id", "question_id"])
+# # 4. generate evaluator prompts, and send them
 
-gs.get_group(('a', 'mc001', '1655'))
+import lib.pilot.generate_eval_prompts as gep
 
 # +
-report_df_records = []
+base_path = "../../experiments/20250306/"
+response_file = "../../experiments/20250306/mc049-question_prompts-response.jsonl"
 
-for g, df in gs:
-    pid, mid, qid = g
-    total_count = df.shape[0]
-    last_eval_time = df.session_time.max()
-    
-    # compute grade metrics
-    grade_counts = Counter(df["grade"].values)
-    top2 = grade_counts.most_common(2)
-    # print(len(top2))
-    if len(top2) == 1 or top2[0][1] != top2[1][1]:
-        result = top2[0][0]
-    else:
-        logger.debug(f"can not determine the result: {top2}")
-        result = 'n/a'
-        
-    pcorrect = grade_counts.get("correct", 0) / total_count
-    pwrong = grade_counts.get("wrong", 0) / total_count
-    pvery_wrong = grade_counts.get("very wrong", 0) / total_count
-    pfailed = grade_counts.get("failed", 0) / total_count
-        
-    rec = {
-        "last_evaluation_datetime": last_eval_time,
-        "question_id": qid,
-        "model_configuration_id": mid,
-        "prompt_variation_id": pid,
-        "percent_correct": pcorrect,
-        "percent_wrong": pwrong,
-        "percent_very_wrong": pvery_wrong,
-        "percent_eval_failed": pfailed,
-        "rounds": total_count,
-        "result": result
-    }
-    report_df_records.append(rec)
+gep.main(base_path, response_file, send=True)
 # -
 
-report_df = pd.DataFrame.from_records(report_df_records)
-
-report_df = EvalResultsDf.validate(report_df)
-
-report_df
 
 
 
-# +
-# upload to google spreadsheet
 
-if RERUN_ALL:
-    sheet.evaluation_results.replace_data(report_df)
-else:
-    # There is a bug in below append_data function
-    sheet.evaluation_results.append_data(report_df)
+
+
+# ## 4.1 if errors...
 
 # +
-# done!
+# follow what we do in 3.1
+# -
+
+
+
+# # 5. create summarized output
+
+
+
+
+
+
