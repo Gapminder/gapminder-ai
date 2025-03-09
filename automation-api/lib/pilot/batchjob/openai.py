@@ -222,20 +222,26 @@ def _simplify_openai_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Simplified response dictionary containing only essential fields
     """
+    status_code = response_data.get("response", {}).get("status_code")
     simplified = {
         "custom_id": response_data.get("custom_id"),
-        "status_code": response_data.get("response", {}).get("status_code"),
+        "status_code": status_code,
         "content": None,
-        "error": response_data.get("error"),
+        "error": None,
     }
 
     # Extract content from choices if available
-    try:
+    if status_code == 200:
         choices = response_data.get("response", {}).get("body", {}).get("choices", [])
         if choices and len(choices) > 0:
             simplified["content"] = choices[0]["message"]["content"]
-    except (KeyError, TypeError):
-        pass
+    else:
+        error = response_data.get("error")
+        if error:
+            simplified["error"] = error
+        # sometimes there is no error message, we create one
+        else:
+            simplified["error"] = f"Error: status code {status_code}"
 
     return simplified
 

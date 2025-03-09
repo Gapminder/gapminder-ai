@@ -112,9 +112,9 @@ def combine_questions_with_options_and_correctness(
     column_mapping = {}
     for letter in ["A", "B", "C"]:
         column_mapping[f"question_option_{letter}"] = f"option_{letter.lower()}"
-        column_mapping[f"correctness_of_answer_option_{letter}"] = (
-            f"option_{letter.lower()}_correctness"
-        )
+        column_mapping[
+            f"correctness_of_answer_option_{letter}"
+        ] = f"option_{letter.lower()}_correctness"
 
     # Join with questions dataframe and rename columns
     combined = questions.join(
@@ -273,29 +273,9 @@ def generate_eval_prompts(
     return prompt_id_mapping
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate evaluation prompts")
-    parser.add_argument(
-        "response-file",
-        type=str,
-        required=True,
-        help="Path to response JSONL file",
-    )
-    parser.add_argument(
-        "--base-path",
-        type=str,
-        default=".",
-        help="Base directory containing ai_eval_sheets folder",
-    )
-    parser.add_argument(
-        "--send",
-        action="store_true",
-        help="Send generated prompts immediately after creation",
-    )
-    args = parser.parse_args()
-
+def main(base_path, response_file, send):
     # Construct input paths
-    sheets_dir = os.path.join(args.base_path, "ai_eval_sheets")
+    sheets_dir = os.path.join(base_path, "ai_eval_sheets")
     questions_path = os.path.join(sheets_dir, "questions.csv")
     question_options_path = os.path.join(sheets_dir, "question_options.csv")
     metrics_path = os.path.join(sheets_dir, "metrics.csv")
@@ -313,15 +293,15 @@ if __name__ == "__main__":
     )
 
     # Read responses
-    responses = read_responses(args.response_file)
+    responses = read_responses(response_file)
 
     # Generate prompts for each evaluator
     for evaluator in evaluators.iter_rows(named=True):
         # Generate output path based on response file and evaluator
-        response_basename = os.path.splitext(os.path.basename(args.response_file))[0]
+        response_basename = os.path.splitext(os.path.basename(response_file))[0]
         evaluator_id = evaluator["evaluator_id"].replace(".", "")
         output_path = os.path.join(
-            args.base_path, f"{response_basename}-eval-prompts-{evaluator_id}.jsonl"
+            base_path, f"{response_basename}-eval-prompts-{evaluator_id}.jsonl"
         )
         model_parameters = json.loads(evaluator["parameters"])
 
@@ -353,7 +333,7 @@ if __name__ == "__main__":
             print(f"Generated prompt ID mapping in {mapping_path}")
 
         # Send prompts immediately if requested
-        if args.send:
+        if send:
             method = evaluator["provider"]
 
             # Process the batch
@@ -363,3 +343,27 @@ if __name__ == "__main__":
                 method=method,
                 wait=False,  # don't wait, just send all evals
             )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate evaluation prompts")
+    parser.add_argument(
+        "response-file",
+        type=str,
+        required=True,
+        help="Path to response JSONL file",
+    )
+    parser.add_argument(
+        "--base-path",
+        type=str,
+        default=".",
+        help="Base directory containing ai_eval_sheets folder",
+    )
+    parser.add_argument(
+        "--send",
+        action="store_true",
+        help="Send generated prompts immediately after creation",
+    )
+    args = parser.parse_args()
+
+    main(args.base_path, args.response_file, args.send)

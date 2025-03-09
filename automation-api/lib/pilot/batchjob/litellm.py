@@ -141,6 +141,7 @@ def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
         response = litellm.completion(**request_body)  # type: ignore
 
         # Format response like OpenAI batch API
+        # TODO: add citation data if available.
         return {
             "custom_id": data.get("custom_id"),
             "status_code": 200,

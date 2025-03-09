@@ -1,7 +1,6 @@
 """Main entry point for batch prompt processing with LLM providers."""
 
 import argparse
-import logging
 from typing import Dict, Optional, Type
 
 from lib.app_singleton import AppSingleton
@@ -12,7 +11,6 @@ from lib.pilot.batchjob.openai import OpenAIBatchJob
 from lib.pilot.batchjob.vertex import VertexBatchJob
 
 logger = AppSingleton().get_logger()
-logger.setLevel(logging.DEBUG)
 
 # Map provider names to their batch job classes
 PROVIDER_CLASSES: Dict[str, Type] = {

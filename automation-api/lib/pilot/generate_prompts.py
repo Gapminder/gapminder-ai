@@ -253,31 +253,9 @@ def convert_to_jsonl_vertex(
             f.write(f"{json_line}\n")
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate question prompts")
-    parser.add_argument(
-        "--base-path",
-        type=str,
-        default=".",
-        help="Base directory containing ai_eval_sheets folder",
-    )
-    parser.add_argument(
-        "--model-config-id",
-        type=str,
-        required=True,
-        help="ID of the model configuration to use",
-    )
-    parser.add_argument(
-        "--jsonl-format",
-        type=str,
-        choices=[f.value for f in JsonlFormat],
-        default=JsonlFormat.OPENAI.value,
-        help="Format of JSONL output (openai or vertex)",
-    )
-    args = parser.parse_args()
-
+def main(base_path, model_config_id, jsonl_format):
     # Construct input paths
-    sheets_dir = os.path.join(args.base_path, "ai_eval_sheets")
+    sheets_dir = os.path.join(base_path, "ai_eval_sheets")
     questions_path = os.path.join(sheets_dir, "questions.csv")
     question_options_path = os.path.join(sheets_dir, "question_options.csv")
     prompt_variations_path = os.path.join(sheets_dir, "prompt_variations.csv")
@@ -304,11 +282,11 @@ if __name__ == "__main__":
 
     # Find and validate model configuration
     model_config = model_configurations.filter(
-        pl.col("model_config_id") == args.model_config_id
+        pl.col("model_config_id") == model_config_id
     )
 
     if model_config.height == 0:
-        raise ValueError(f"Model config ID {args.model_config_id} not found")
+        raise ValueError(f"Model config ID {model_config_id} not found")
 
     # Get model parameters
     model_id = model_config["model_id"][0]
@@ -327,25 +305,25 @@ if __name__ == "__main__":
 
     # Save as JSONL file in selected format with model config prefix
     jsonl_output_path = os.path.join(
-        args.base_path, f"{args.model_config_id}-question_prompts.jsonl"
+        base_path, f"{model_config_id}-question_prompts.jsonl"
     )
 
     # Only save prompt mapping CSV for Vertex format
-    if JsonlFormat(args.jsonl_format) == JsonlFormat.VERTEX:
+    if JsonlFormat(jsonl_format) == JsonlFormat.VERTEX:
         csv_output_path = os.path.join(
-            args.base_path,
-            f"{args.model_config_id}-question_prompts-prompt-mapping.csv",
+            base_path,
+            f"{model_config_id}-question_prompts-prompt-mapping.csv",
         )
         question_prompts.write_csv(csv_output_path)
         print(f"Saved prompt mapping to {csv_output_path}")
 
-    if JsonlFormat(args.jsonl_format) == JsonlFormat.OPENAI:
+    if JsonlFormat(jsonl_format) == JsonlFormat.OPENAI:
         convert_to_jsonl_openai(
             question_prompts,
             jsonl_output_path,
             model=model_id,
             model_parameters=params,
-            id_prefix=f"{args.model_config_id}-",  # Use model_config_id as prefix
+            id_prefix=f"{model_config_id}-",  # Use model_config_id as prefix
         )
     else:
         convert_to_jsonl_vertex(
@@ -355,3 +333,29 @@ if __name__ == "__main__":
         )
 
     print(f"Saved {len(question_prompts)} prompts to {jsonl_output_path}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate question prompts")
+    parser.add_argument(
+        "--base-path",
+        type=str,
+        default=".",
+        help="Base directory containing ai_eval_sheets folder",
+    )
+    parser.add_argument(
+        "--model-config-id",
+        type=str,
+        required=True,
+        help="ID of the model configuration to use",
+    )
+    parser.add_argument(
+        "--jsonl-format",
+        type=str,
+        choices=[f.value for f in JsonlFormat],
+        default=JsonlFormat.OPENAI.value,
+        help="Format of JSONL output (openai or vertex)",
+    )
+    args = parser.parse_args()
+
+    main(args.base_path, args.model_config_id, args.jsonl_format)

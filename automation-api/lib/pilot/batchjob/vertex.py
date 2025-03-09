@@ -280,8 +280,8 @@ def _simplify_vertex_response(
             content = candidates[0].get("content", {}).get("parts", [{}])[0].get("text")
             simplified["content"] = content
     except (KeyError, TypeError, IndexError) as e:
+        # FIXME: should read error from the response_data.
         simplified["error"] = str(e)
-        simplified["status_code"] = "ERROR_IN_POSTPROCESSING"
 
     return simplified
 
