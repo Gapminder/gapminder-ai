@@ -299,7 +299,7 @@ def main(base_path, response_file, send):
     for evaluator in evaluators.iter_rows(named=True):
         # Generate output path based on response file and evaluator
         response_basename = os.path.splitext(os.path.basename(response_file))[0]
-        evaluator_id = evaluator["evaluator_id"].replace(".", "")
+        evaluator_id = evaluator["evaluator_id"].split("/")[-1].replace(".", "-")
         output_path = os.path.join(
             base_path, f"{response_basename}-eval-prompts-{evaluator_id}.jsonl"
         )
