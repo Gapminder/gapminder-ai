@@ -10,8 +10,15 @@ from lib.app_singleton import AppSingleton
 logger = AppSingleton().get_logger()
 # change to logging.DEBUG to see DEBUG message
 logger.setLevel(logging.INFO)
-# -
+# +
+# helper function to make setting file paths easier
+import os.path as osp
 
+def get_file(experiment_dir, filename):
+    return osp.join(experiment_dir, filename)
+
+
+# -
 
 
 # # 1. download ai eval spreadsheet to a local folder
@@ -30,10 +37,10 @@ for sheet_name, file_path in saved.items():
 
 # # 2. Generate experiment data for model(s)
 
+experiment_dir = "../../experiments/20250306/"
+
 # +
 import lib.pilot.generate_prompts as gp
-
-experiment_dir = "../../experiments/20250306/"
 
 # TODO: maybe add a function to easily display all model name and model config id. 
 # Make it easy to find the model config id
@@ -50,7 +57,8 @@ from lib.pilot.send_batch_prompt import process_batch
 
 # +
 jsonl_files = [
-    {"filepath": '../../experiments/20250306/mc049-question_prompts.jsonl', "method": "openai"},
+    {"filepath": get_file(experiment_dir, 
+                          'mc049-question_prompts.jsonl'), "method": "openai"},
     # add more here if there are other jsonl files...
 ]
 
@@ -113,13 +121,20 @@ def merge_successful_responses(
     """
     successful_responses: List[dict] = []
 
+    def _is_succeeded(req):
+        status_code = req.get("status_code")
+        status = req.get("status")
+        if status_code == 200 or status == "succeeded":
+            return True
+        return False
+
     for file_path in response_files:
         responses = load_jsonl(file_path)
         # Filter successful responses
         successful_responses.extend(
             resp
             for resp in responses
-            if resp.get("status_code") == 200
+            if _is_succeeded(resp)
         )
 
     # Save merged successful responses
@@ -142,14 +157,21 @@ def filter_and_save_error_requests(
     requests = load_jsonl(request_file_path)
     responses = load_jsonl(response_file_path)
 
-    # Create a dict mapping custom_id to response
+    # Create a dict mapping custom_id to response  # FIXME: too complex
     response_dict = {resp["custom_id"]: resp for resp in responses}
+
+    def _is_succeeded(req):
+        status_code = response_dict.get(req["custom_id"], {}).get("status_code")
+        status = response_dict.get(req["custom_id"], {}).get("status")
+        if status_code == 200 or status == "succeeded":
+            return True
+        return False
 
     # Filter requests where corresponding response has error
     error_requests = [
         req
         for req in requests
-        if response_dict.get(req["custom_id"], {}).get("status_code") != 200
+        if not _is_succeeded(req)
     ]
 
     print(f"Found {len(error_requests)} requests with errors")
@@ -171,9 +193,9 @@ def filter_and_save_error_requests(
 # -
 
 filter_and_save_error_requests(
-    request_file_path="../../experiments/20250306/mc049-question_prompts.jsonl",
-    response_file_path="../../experiments/20250306/mc049-question_prompts-response.jsonl",
-    output_file_path="../../experiments/20250306/mc049-question_prompts-part2.jsonl"
+    request_file_path=get_file(experiment_dir, "mc049-question_prompts.jsonl"),
+    response_file_path=get_file(experiment_dir, "mc049-question_prompts-response.jsonl"),
+    output_file_path=get_file(experiment_dir, "mc049-question_prompts-part2.jsonl")
 )
 
 # +
@@ -199,24 +221,39 @@ process_batch(jsonlfile, "openai", False)
 process_batch(jsonlfile, "openai", True)
 
 # merge the results after we have all 
-response_files = ["../../experiments/20250306/mc049-question_prompts-response.jsonl", "../../experiments/20250306/mc049-question_prompts-part2-response.jsonl"]
-output_file = "../../experiments/20250306/mc049-question_prompts-response.jsonl"
+response_files = [
+    get_file(experiment_dir, "mc049-question_prompts-response.jsonl"),
+    get_file(experiment_dir, "mc049-question_prompts-part2-response.jsonl")
+]
+output_file = get_file(experiment_dir, "mc049-question_prompts-response.jsonl")
 merge_successful_responses(response_files, output_file)
 
+# +
+# finally remove the other files
+import os
 
+files_to_remove = [
+    get_file(experiment_dir, "mc049-question_prompts-part2-response.jsonl"),
+    get_file(experiment_dir, "mc049-question_prompts-part2.jsonl")
+]
+
+for f in files_to_remove:
+    os.remove(f)
+# -
 
 
 
 
 # # 4. generate evaluator prompts, and send them
 
-import lib.pilot.generate_eval_prompts as gep
+from lib.pilot.generate_eval_prompts import main as generate_eval_prompts
 
 # +
 base_path = "../../experiments/20250306/"
-response_file = "../../experiments/20250306/mc049-question_prompts-response.jsonl"
+response_file = get_file(base_path, "mc049-question_prompts-response.jsonl")
 
-gep.main(base_path, response_file, send=True)
+# this module will generate all eval prompts using the information in the Evaluators sheet from AI Eval Sheet. 
+generate_eval_prompts(base_path, response_file, send=True)  # send=True: send after creating the jsonl. 
 # -
 
 
@@ -229,14 +266,64 @@ gep.main(base_path, response_file, send=True)
 
 # +
 # follow what we do in 3.1
+# filter_and_save_error_requests(
+#     request_file_path=get_file(experiment_dir, "mc049-question_prompts.jsonl"),
+#     response_file_path=get_file(experiment_dir, "mc049-question_prompts-response.jsonl"),
+#     output_file_path=get_file(experiment_dir, "mc049-question_prompts-part2.jsonl")
+# )
+# +
+# send part2
+# jsonlfile = '../../experiments/20250306/mc049-question_prompts-part2.jsonl'
+
+# process_batch(jsonlfile, "openai", False)
+
+# +
+# merge the results after we have all 
+# response_files = [
+#     get_file(experiment_dir, "mc049-question_prompts-response.jsonl"),
+#     get_file(experiment_dir, "mc049-question_prompts-part2-response.jsonl")
+# ]
+# output_file = get_file(experiment_dir, "mc049-question_prompts-response.jsonl")
+# merge_successful_responses(response_files, output_file)
+
+
+# +
+# remove part2 files
+# files_to_remove = [
+#     get_file(experiment_dir, "mc049-question_prompts-response-eval-prompts-claude-3-7-sonnet-20250219-part2.jsonl"),
+#     get_file(experiment_dir, "mc049-question_prompts-response-eval-prompts-claude-3-7-sonnet-20250219-part2-response.jsonl")
+# ]
+
+# for f in files_to_remove:
+#     os.remove(f)
 # -
 
 
 
 # # 5. create summarized output
 
+from lib.pilot.summarize_results import main as summarize_results
+from pathlib import Path
+
+summarize_results(Path("../../experiments/20250306/"))
 
 
 
 
 
+# +
+# checking the results
+
+# +
+import polars as pl
+
+results = pl.read_parquet("../../experiments/20250306/mc049_output.parquet")
+# -
+
+results
+
+results.filter(pl.col("response") == "", pl.col("final_correctness") != 0)
+
+# +
+# above shows some possible issues in the evaluation: some times the response is empty but evaluators aggreed it's correct.
+# TODO: handle empty responses properly.
