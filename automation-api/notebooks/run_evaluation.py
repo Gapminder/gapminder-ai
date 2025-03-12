@@ -305,7 +305,7 @@ generate_eval_prompts(base_path, response_file, send=True)  # send=True: send af
 from lib.pilot.summarize_results import main as summarize_results
 from pathlib import Path
 
-summarize_results(Path("../../experiments/20250306/"))
+summarize_results(Path("../../experiments/20250306"))
 
 
 
@@ -327,3 +327,82 @@ results.filter(pl.col("response") == "", pl.col("final_correctness") != 0)
 # +
 # above shows some possible issues in the evaluation: some times the response is empty but evaluators aggreed it's correct.
 # TODO: handle empty responses properly.
+# -
+
+
+
+
+
+# # 6. create a parquet containing all latest responses from the models
+
+# +
+from glob import glob
+
+def create_combined_raw_output(output_folders: List[str]) -> pl.DataFrame:
+    """Create a combined DataFrame from raw parquet files in multiple folders.
+
+    Args:
+        output_folders: List of folders containing raw parquet files
+
+    Returns:
+        Combined DataFrame with all raw data
+    """
+    # Find all parquet files in all folders
+    parquet_files = []
+    for folder in output_folders:
+        parquet_files.extend(glob(f"{folder}/*parquet"))
+
+    # Read and combine all parquet files
+    dfs = [pl.read_parquet(file) for file in parquet_files]
+
+    # make sure columns are in same order.
+    cols = dfs[0].columns
+    dfs = [df.select(cols) for df in dfs]
+    
+    return pl.concat(dfs)
+
+
+# -
+
+raw_outputs = create_combined_raw_output(
+    [
+        "../../experiments/20240921-20241205/", 
+        "../../experiments/20250109/", 
+        "../../experiments/20250120/", 
+        "../../experiments/20250205", 
+        "../../experiments/20250208",
+        "../../experiments/20250306/"
+    ]
+)
+
+
+raw_outputs
+
+
+
+
+
+# +
+# mc039 is no longer the latest
+raw_outputs = raw_outputs.filter(pl.col("model_config_id") != "mc039")
+
+raw_outputs["question_id"].unique()
+
+raw_outputs.write_parquet("../../experiments/latest_model_responses.parquet")
+# -
+
+
+
+
+# # Misc
+
+
+# +
+# let's check some responses from mc049 - o3 mini 
+# -
+
+o3 = raw_outputs.filter(pl.col("model_config_id") == "mc049")
+
+o3.filter(pl.col("final_correctness") != 3)[999].to_pandas().values
+
+
