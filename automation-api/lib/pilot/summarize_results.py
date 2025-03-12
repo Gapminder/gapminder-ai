@@ -287,6 +287,11 @@ def create_master_output(input_dir: str, language: str = "en-US") -> pl.DataFram
 
     # Read and combine all parquet files
     res_list = [pl.read_parquet(x) for x in glob(f"{input_dir}/*parquet")]
+
+    # make sure the columns are in same order
+    cols = res_list[0].columns
+    res_list = [r.select(cols) for r in res_list]
+
     res = pl.concat(res_list)
 
     # Add metadata columns and map correctness
