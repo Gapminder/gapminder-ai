@@ -85,6 +85,7 @@ class GenAiModel(BaseModel):
     model_id: str = Field("", title="Model ID")
     vendor: str = Field("", title="Vendor")
     model_name: str = Field("", title="Model name")
+    model_published_date: str = Field("", title="Model Publish Date")
 
 
 class GenAiModelsDf(pa.DataFrameModel):
@@ -131,6 +132,7 @@ class Evaluator(BaseModel):
     provider: str = Field("", title="Provider")
     jsonl_format: str = Field("", title="Jsonl Format")
     parameters: str = Field("", title="Parameters")
+    metric_prefix: str = Field("", title="Metric Prefix")
 
 
 class EvaluatorsDf(pa.DataFrameModel):
