@@ -17,11 +17,12 @@ logger = logging.getLogger(__name__)
 
 def get_evaluator_prefix(evaluator_id: str) -> str:
     """Map evaluator ID to column prefix using simple substring matching."""
+    # FIXME: put the prefix into ai eval sheet
     evaluator_id = evaluator_id.lower()
     if "claude" in evaluator_id:
         return "claude"
     elif "gpt" in evaluator_id:
-        return "gpt"
+        return "gpt4"
     elif "gemini" in evaluator_id:
         return "gemini"
     return evaluator_id.replace("-", "_")
