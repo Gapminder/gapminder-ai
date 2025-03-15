@@ -1,0 +1,3 @@
+model_config_id,model_id,name,model_parameters,repeat_times,memory,memory_size
+mc054,perplexity/sonar,Sonar (Feb 2025),"{""temperature"": 0.01, ""max_tokens"": 3000}",1,False,0
+mc055,perplexity/sonar-reasoning,Sonar Reasoning (Feb 2025),"{""temperature"": 0.01, ""max_tokens"": 5000}",1,False,0
