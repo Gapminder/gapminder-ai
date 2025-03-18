@@ -4,6 +4,7 @@ import argparse
 from typing import Dict, Optional, Type
 
 from lib.app_singleton import AppSingleton
+from lib.config import read_config
 from lib.pilot.batchjob.anthropic import AnthropicBatchJob
 from lib.pilot.batchjob.base import BaseBatchJob
 from lib.pilot.batchjob.litellm import LiteLLMBatchJob
@@ -112,6 +113,9 @@ def process_batch(
 def main():
     """Command line interface for batch processing."""
     args = parse_args()
+    # Read configuration from environment variables
+    read_config()
+
     process_batch(
         args.jsonl_file,
         args.method,
