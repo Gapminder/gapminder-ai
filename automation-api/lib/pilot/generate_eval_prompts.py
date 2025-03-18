@@ -348,9 +348,8 @@ def main(base_path, response_file, send):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate evaluation prompts")
     parser.add_argument(
-        "response-file",
+        "response_file",
         type=str,
-        required=True,
         help="Path to response JSONL file",
     )
     parser.add_argument(
