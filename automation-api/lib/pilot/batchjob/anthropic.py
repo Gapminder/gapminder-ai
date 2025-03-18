@@ -165,21 +165,10 @@ def _send_batch_file(client: anthropic.Anthropic, jsonl_path: str) -> str:
         # Convert to Anthropic format
         anthropic_requests = []
         for req in requests:
-            messages = req["body"]["messages"]
-            content = messages[0]["content"]  # Assuming single user message
-            model = req["body"]["model"]
-            max_tokens = req["body"].get("max_tokens", 2048)
-            temperature = req["body"].get("temperature", 0.01)
-
             anthropic_requests.append(
                 Request(
                     custom_id=req["custom_id"],
-                    params=MessageCreateParamsNonStreaming(
-                        model=model,
-                        max_tokens=max_tokens,
-                        temperature=temperature,
-                        messages=[{"role": "user", "content": content}],
-                    ),
+                    params=MessageCreateParamsNonStreaming(**req["body"]),
                 )
             )
 
