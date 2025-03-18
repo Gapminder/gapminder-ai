@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument(
         "--method",
         type=str,
-        default="openai",
+        required=True,
         choices=list(PROVIDER_CLASSES.keys()),
         help="LLM provider to use for processing",
     )
