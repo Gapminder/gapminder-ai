@@ -1,5 +1,6 @@
 """Mistral batch processing implementation."""
 
+import json
 import os
 import time
 from typing import Any, Dict, Optional
@@ -23,6 +24,40 @@ _TERMINAL_STATUSES = {"SUCCESS", "FAILED", "TIMEOUT_EXCEEDED", "CANCELLED"}
 def _get_client() -> Mistral:
     """Get authorized Mistral client."""
     return Mistral(api_key=config["MISTRAL_API_KEY"])
+
+
+def _simplify_mistral_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Simplify Mistral batch response format to keep only essential information.
+
+    Args:
+        response_data: Raw response data from Mistral batch API
+
+    Returns:
+        Simplified response dictionary containing only essential fields
+    """
+    status_code = response_data.get("response", {}).get("status_code")
+    simplified = {
+        "custom_id": response_data.get("custom_id"),
+        "status_code": status_code,
+        "content": None,
+        "error": None,
+    }
+
+    # Extract content from choices if available
+    if status_code == 200:
+        choices = response_data.get("response", {}).get("body", {}).get("choices", [])
+        if choices and len(choices) > 0:
+            simplified["content"] = choices[0]["message"]["content"]
+    else:
+        error = response_data.get("error")
+        if error:
+            simplified["error"] = error
+        # sometimes there is no error message, we create one
+        else:
+            simplified["error"] = f"Error: status code {status_code}"
+
+    return simplified
 
 
 class MistralBatchJob(BaseBatchJob):
@@ -161,6 +196,8 @@ class MistralBatchJob(BaseBatchJob):
 
             # Create output file path
             output_file_path = self._output_path
+            temp_output = f"{self._output_path}.temp"
+            error_temp_path = f"{self._output_path}.errors.temp"
 
             # Download output file
             if batch_job.output_file:
@@ -168,18 +205,15 @@ class MistralBatchJob(BaseBatchJob):
                     file_id=batch_job.output_file
                 )
 
-                with open(output_file_path, "w", encoding="utf-8") as f:
+                with open(temp_output, "w", encoding="utf-8") as f:
                     if hasattr(output_content, "stream"):
                         for chunk in output_content.stream:
                             f.write(chunk.decode("utf-8"))
                     else:
                         f.write(output_content)
 
-                logger.info(f"Saved batch results to {output_file_path}")
-
-                # Download and append error file if it exists
+                # Download error file if it exists
                 if batch_job.error_file:
-                    error_temp_path = f"{self._output_path}.errors.temp"
                     error_content = self._client.files.download(
                         file_id=batch_job.error_file
                     )
@@ -191,18 +225,49 @@ class MistralBatchJob(BaseBatchJob):
                         else:
                             f.write(error_content)
 
-                    # Append error content to main output file
-                    with open(error_temp_path, "r", encoding="utf-8") as error_file:
-                        with open(output_file_path, "a", encoding="utf-8") as main_file:
+                # Process and simplify both files
+                with open(output_file_path, "w", encoding="utf-8") as out_file:
+                    # Process successful responses
+                    if os.path.exists(temp_output):
+                        with open(temp_output, "r", encoding="utf-8") as raw_file:
+                            for line in raw_file:
+                                try:
+                                    response_data = json.loads(line)
+                                    simplified = _simplify_mistral_response(
+                                        response_data
+                                    )
+                                    out_file.write(
+                                        json.dumps(simplified, ensure_ascii=False)
+                                        + "\n"
+                                    )
+                                except json.JSONDecodeError as e:
+                                    logger.error(f"Error processing line: {e}")
+                                    continue
+
+                    # Process error responses
+                    if batch_job.error_file and os.path.exists(error_temp_path):
+                        with open(error_temp_path, "r", encoding="utf-8") as error_file:
                             for line in error_file:
-                                main_file.write(line)
+                                try:
+                                    response_data = json.loads(line)
+                                    simplified = _simplify_mistral_response(
+                                        response_data
+                                    )
+                                    out_file.write(
+                                        json.dumps(simplified, ensure_ascii=False)
+                                        + "\n"
+                                    )
+                                except json.JSONDecodeError as e:
+                                    logger.error(f"Error processing error line: {e}")
+                                    continue
 
-                    # Clean up temp file
-                    if os.path.exists(error_temp_path):
-                        os.remove(error_temp_path)
+                # Clean up temporary files
+                if os.path.exists(temp_output):
+                    os.remove(temp_output)
+                if os.path.exists(error_temp_path):
+                    os.remove(error_temp_path)
 
-                    logger.info(f"Added error results to {output_file_path}")
-
+                logger.info(f"Saved simplified batch results to {output_file_path}")
                 return output_file_path
             else:
                 logger.error("No output file available for this batch")
