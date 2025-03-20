@@ -56,7 +56,12 @@ def parse_args():
     parser.add_argument(
         "--model-id",
         type=str,
-        help="the model id for vertex AI",
+        help="Model ID to use (required for vertex AI and recommended for mistral)",
+    )
+    parser.add_argument(
+        "--timeout-hours",
+        type=int,
+        help="Number of hours after which the job should expire (default: 24, max: 168)",
     )
     return parser.parse_args()
 
@@ -68,12 +73,13 @@ def process_batch(
     processes: int = 1,
     provider: Optional[str] = None,
     model_id: Optional[str] = None,
+    timeout_hours: Optional[int] = None,
 ):
     """Process a batch of prompts."""
     try:
         # Read configuration from environment variables
-        config = read_config()
-        
+        read_config()
+
         method = method.lower()
         # Create batch job instance
         if method == "openai":
@@ -89,7 +95,9 @@ def process_batch(
                 raise ValueError("Please provide model id (--model-id) for vertex AI")
             batch_job = VertexBatchJob(jsonl_file, model_id)
         elif method == "mistral":
-            batch_job = MistralBatchJob(jsonl_file)
+            batch_job = MistralBatchJob(
+                jsonl_file, model_id=model_id, timeout_hours=timeout_hours
+            )
         else:
             if provider:
                 provider = provider.lower()
@@ -120,8 +128,6 @@ def process_batch(
 def main():
     """Command line interface for batch processing."""
     args = parse_args()
-    # Read configuration from environment variables
-    read_config()
 
     process_batch(
         args.jsonl_file,
@@ -130,6 +136,7 @@ def main():
         args.processes,
         args.provider,
         args.model_id,
+        args.timeout_hours,
     )
 
 

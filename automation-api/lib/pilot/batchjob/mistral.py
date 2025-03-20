@@ -1,6 +1,5 @@
 """Mistral batch processing implementation."""
 
-import json
 import os
 import time
 from typing import Any, Dict, Optional
@@ -17,7 +16,7 @@ logger = AppSingleton().get_logger()
 config = read_config()
 
 # Statuses for batch processing
-_PROCESSING_STATUSES = {"QUEUED", "RUNNING"}
+_PROCESSING_STATUSES = {"QUEUED", "RUNNING", "CANCELLATION_REQUESTED"}
 _TERMINAL_STATUSES = {"SUCCESS", "FAILED", "TIMEOUT_EXCEEDED", "CANCELLED"}
 
 
@@ -29,14 +28,23 @@ def _get_client() -> Mistral:
 class MistralBatchJob(BaseBatchJob):
     """Class for managing Mistral batch jobs."""
 
-    def __init__(self, jsonl_path: str):
+    def __init__(
+        self,
+        jsonl_path: str,
+        model_id: Optional[str] = None,
+        timeout_hours: Optional[int] = None,
+    ):
         """
         Initialize a batch job.
 
         Args:
             jsonl_path: Path to JSONL file containing prompts
+            model_id: Mistral model ID to use (e.g., mistral-small-latest, codestral-latest)
+            timeout_hours: Number of hours after which the job should expire (default: 24, max: 168)
         """
         self.jsonl_path = jsonl_path
+        self.model_id = model_id or "mistral-small-latest"
+        self.timeout_hours = timeout_hours
         self._batch_id = None
         self._output_path = get_output_path(jsonl_path)
         self._processing_file = f"{self._output_path}.processing"
@@ -70,25 +78,34 @@ class MistralBatchJob(BaseBatchJob):
                     "file_name": os.path.basename(self.jsonl_path),
                     "content": open(self.jsonl_path, "rb"),
                 },
-                purpose="batch"
+                purpose="batch",
             )
-            
+
             batch_id = generate_batch_id(self.jsonl_path)
-            
-            # Create the batch job
-            batch_job = self._client.batch.jobs.create(
-                input_files=[batch_file.id],
-                model="mistral-small-latest",  # Default model, can be parameterized
-                endpoint="/v1/chat/completions",
-                metadata={"batch_id": batch_id}
-            )
-            
-            self._batch_id = batch_job.id
+
+            # Create the batch job with additional parameters
+            create_params: Dict[str, Any] = {
+                "input_files": [batch_file.id],
+                "model": self.model_id,
+                "endpoint": "/v1/chat/completions",
+                "metadata": {"batch_id": batch_id},
+            }
+
+            # Add timeout_hours if specified
+            if self.timeout_hours is not None:
+                timeout_value = self.timeout_hours
+                if timeout_value > 168:
+                    timeout_value = 168  # Cap at 7 days
+                create_params["timeout_hours"] = timeout_value
+
+            batch_job = self._client.batch.jobs.create(**create_params)
+
+            self._batch_id = str(batch_job.id)
 
             # Create processing file with batch info
             with open(self._processing_file, "w") as f:
                 f.write(self._batch_id)
-                logger.info("Batch created successfully.")
+                logger.info(f"Batch created successfully with model {self.model_id}")
 
             return self._batch_id
         except Exception as e:
@@ -104,7 +121,23 @@ class MistralBatchJob(BaseBatchJob):
         """
         try:
             batch_job = self._client.batch.jobs.get(job_id=self.batch_id)
-            return batch_job.status
+            status = batch_job.status
+
+            # Log additional statistics if available
+            if hasattr(batch_job, "total_requests") and hasattr(
+                batch_job, "succeeded_requests"
+            ):
+                total = batch_job.total_requests or 0
+                succeeded = batch_job.succeeded_requests or 0
+                failed = batch_job.failed_requests or 0
+
+                if total > 0:
+                    percent_done = round(((succeeded + failed) / total) * 100, 2)
+                    logger.info(
+                        f"Progress: {percent_done}% ({succeeded} succeeded, {failed} failed, {total} total)"
+                    )
+
+            return status
         except Exception as e:
             logger.error(f"Error checking batch status: {str(e)}")
             raise
@@ -119,56 +152,62 @@ class MistralBatchJob(BaseBatchJob):
         try:
             # Get batch job details
             batch_job = self._client.batch.jobs.get(job_id=self.batch_id)
-            
+
             if batch_job.status != "SUCCESS":
-                logger.error(f"Cannot download results - batch status is {batch_job.status}")
+                logger.error(
+                    f"Cannot download results - batch status is {batch_job.status}"
+                )
                 return None
-                
+
             # Create output file path
             output_file_path = self._output_path
-            
+
             # Download output file
             if batch_job.output_file:
-                output_content = self._client.files.download(file_id=batch_job.output_file)
-                
+                output_content = self._client.files.download(
+                    file_id=batch_job.output_file
+                )
+
                 with open(output_file_path, "w", encoding="utf-8") as f:
-                    if hasattr(output_content, 'stream'):
+                    if hasattr(output_content, "stream"):
                         for chunk in output_content.stream:
                             f.write(chunk.decode("utf-8"))
                     else:
                         f.write(output_content)
-                
+
                 logger.info(f"Saved batch results to {output_file_path}")
-                
+
                 # Download and append error file if it exists
                 if batch_job.error_file:
                     error_temp_path = f"{self._output_path}.errors.temp"
-                    error_content = self._client.files.download(file_id=batch_job.error_file)
-                    
+                    error_content = self._client.files.download(
+                        file_id=batch_job.error_file
+                    )
+
                     with open(error_temp_path, "w", encoding="utf-8") as f:
-                        if hasattr(error_content, 'stream'):
+                        if hasattr(error_content, "stream"):
                             for chunk in error_content.stream:
                                 f.write(chunk.decode("utf-8"))
                         else:
                             f.write(error_content)
-                    
+
                     # Append error content to main output file
                     with open(error_temp_path, "r", encoding="utf-8") as error_file:
                         with open(output_file_path, "a", encoding="utf-8") as main_file:
                             for line in error_file:
                                 main_file.write(line)
-                    
+
                     # Clean up temp file
                     if os.path.exists(error_temp_path):
                         os.remove(error_temp_path)
-                    
+
                     logger.info(f"Added error results to {output_file_path}")
-                
+
                 return output_file_path
             else:
                 logger.error("No output file available for this batch")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error downloading batch results: {str(e)}")
             return None
@@ -196,7 +235,7 @@ class MistralBatchJob(BaseBatchJob):
                     if os.path.exists(self._processing_file):
                         os.remove(self._processing_file)
                     return result
-                elif status in {"FAILED", "TIMEOUT_EXCEEDED", "CANCELLED"}:
+                elif status in _TERMINAL_STATUSES:
                     logger.error(f"Batch {self.batch_id} ended with status: {status}")
                     # Clean up processing file
                     if os.path.exists(self._processing_file):
