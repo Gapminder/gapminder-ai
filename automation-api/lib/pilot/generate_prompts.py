@@ -11,6 +11,7 @@ from lib.app_singleton import AppSingleton
 class JsonlFormat(Enum):
     OPENAI = "openai"
     VERTEX = "vertex"
+    MISTRAL = "mistral"
 
 
 logger = AppSingleton().get_logger()
@@ -204,6 +205,42 @@ def convert_to_jsonl_openai(
             f.write(f"{json_line}\n")
 
 
+def convert_to_jsonl_mistral(
+    df: pl.DataFrame,
+    output_path: str,
+    model_parameters: dict,
+    id_prefix: str = "",
+) -> None:
+    """
+    Convert a DataFrame of prompts to Mistral JSONL format for batch processing.
+
+    Args:
+        df: DataFrame with columns [question_prompt_id, question_prompt_text]
+        output_path: Path to save JSONL file
+        model_parameters: Parameters for the model
+        id_prefix: Prefix to add to custom_id
+    """
+    with open(output_path, "w", encoding="utf-8") as f:
+        for row in df.iter_rows(named=True):
+            # Create the body with messages and parameters
+            body = {
+                "messages": [
+                    {"role": "user", "content": row["prompt_text"]},
+                ],
+                **model_parameters,
+            }
+
+            # Create the request object
+            request_obj = {
+                "custom_id": f"{id_prefix}{row['prompt_id']}",
+                "body": body,
+            }
+
+            # Use json.dumps to ensure proper JSON formatting and UTF-8 encoding
+            json_line = json.dumps(request_obj, ensure_ascii=False)
+            f.write(f"{json_line}\n")
+
+
 def convert_to_jsonl_vertex(
     df: pl.DataFrame, output_path: str, model_parameters: dict
 ) -> None:
@@ -317,6 +354,7 @@ def main(base_path, model_config_id, jsonl_format):
         question_prompts.write_csv(csv_output_path)
         print(f"Saved prompt mapping to {csv_output_path}")
 
+    # Convert to appropriate JSONL format
     if JsonlFormat(jsonl_format) == JsonlFormat.OPENAI:
         convert_to_jsonl_openai(
             question_prompts,
@@ -325,7 +363,14 @@ def main(base_path, model_config_id, jsonl_format):
             model_parameters=params,
             id_prefix=f"{model_config_id}-",  # Use model_config_id as prefix
         )
-    else:
+    elif JsonlFormat(jsonl_format) == JsonlFormat.MISTRAL:
+        convert_to_jsonl_mistral(
+            question_prompts,
+            jsonl_output_path,
+            model_parameters=params,
+            id_prefix=f"{model_config_id}-",  # Use model_config_id as prefix
+        )
+    else:  # Vertex format
         convert_to_jsonl_vertex(
             question_prompts,
             jsonl_output_path,
@@ -354,7 +399,7 @@ if __name__ == "__main__":
         type=str,
         choices=[f.value for f in JsonlFormat],
         default=JsonlFormat.OPENAI.value,
-        help="Format of JSONL output (openai or vertex)",
+        help="Format of JSONL output (openai, vertex, or mistral)",
     )
     args = parser.parse_args()
 
