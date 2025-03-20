@@ -8,6 +8,7 @@ from lib.config import read_config
 from lib.pilot.batchjob.anthropic import AnthropicBatchJob
 from lib.pilot.batchjob.base import BaseBatchJob
 from lib.pilot.batchjob.litellm import LiteLLMBatchJob
+from lib.pilot.batchjob.mistral import MistralBatchJob
 from lib.pilot.batchjob.openai import OpenAIBatchJob
 from lib.pilot.batchjob.vertex import VertexBatchJob
 
@@ -19,6 +20,7 @@ PROVIDER_CLASSES: Dict[str, Type] = {
     "anthropic": AnthropicBatchJob,
     "vertex": VertexBatchJob,
     "litellm": LiteLLMBatchJob,
+    "mistral": MistralBatchJob,
 }
 
 
@@ -69,6 +71,9 @@ def process_batch(
 ):
     """Process a batch of prompts."""
     try:
+        # Read configuration from environment variables
+        config = read_config()
+        
         method = method.lower()
         # Create batch job instance
         if method == "openai":
@@ -83,6 +88,8 @@ def process_batch(
             if not model_id:
                 raise ValueError("Please provide model id (--model-id) for vertex AI")
             batch_job = VertexBatchJob(jsonl_file, model_id)
+        elif method == "mistral":
+            batch_job = MistralBatchJob(jsonl_file)
         else:
             if provider:
                 provider = provider.lower()

@@ -1,11 +1,11 @@
-"""OpenAI batch processing implementation."""
+"""Mistral batch processing implementation."""
 
 import json
 import os
 import time
 from typing import Any, Dict, Optional
 
-from mistral import Mistral
+from mistralai import Mistral
 
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
@@ -16,38 +16,28 @@ from .base import BaseBatchJob
 logger = AppSingleton().get_logger()
 config = read_config()
 
-# Statuses that indicate the batch is still processing
-_PROCESSING_STATUSES = {"validating", "in_progress", "finalizing"}
+# Statuses for batch processing
+_PROCESSING_STATUSES = {"QUEUED", "RUNNING"}
+_TERMINAL_STATUSES = {"SUCCESS", "FAILED", "TIMEOUT_EXCEEDED", "CANCELLED"}
 
 
-# Provider-specific configurations
-_PROVIDER_CONFIGS: Dict[str, Dict[str, Any]] = {
-    "alibaba": {
-        "api_key": config.get("DASHSCOPE_API_KEY", ""),
-        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    }
-}
-
-
-def _get_client(provider) -> Mistral:
-    """Get authorized OpenAI client with provider compatibility."""
+def _get_client() -> Mistral:
+    """Get authorized Mistral client."""
     return Mistral(api_key=config["MISTRAL_API_KEY"])
 
 
-class OpenAIBatchJob(BaseBatchJob):
-    """Class for managing OpenAI batch jobs."""
+class MistralBatchJob(BaseBatchJob):
+    """Class for managing Mistral batch jobs."""
 
-    def __init__(self, jsonl_path: str, provider: str = "openai"):
+    def __init__(self, jsonl_path: str):
         """
         Initialize a batch job.
 
         Args:
             jsonl_path: Path to JSONL file containing prompts
-            provider: API provider ("openai" or "alibaba")
         """
         self.jsonl_path = jsonl_path
         self._batch_id = None
-        self._provider = provider
         self._output_path = get_output_path(jsonl_path)
         self._processing_file = f"{self._output_path}.processing"
 
@@ -57,11 +47,11 @@ class OpenAIBatchJob(BaseBatchJob):
                 self._batch_id = f.read().strip()
 
         # initialize client
-        self._client = _get_client(provider)
+        self._client = _get_client()
 
     def send(self) -> str:
         """
-        Submit batch job to API provider.
+        Submit batch job to Mistral API.
 
         Returns:
             batch_id: Unique identifier for the batch job
@@ -74,11 +64,26 @@ class OpenAIBatchJob(BaseBatchJob):
                     self._batch_id = f.read().strip()
                     return self._batch_id
 
-            # Send batch to OpenAI
-            client = self._client
-            self._batch_id = _send_batch_file(
-                client, self.jsonl_path, endpoint="/v1/chat/completions"
+            # Upload the file
+            batch_file = self._client.files.upload(
+                file={
+                    "file_name": os.path.basename(self.jsonl_path),
+                    "content": open(self.jsonl_path, "rb"),
+                },
+                purpose="batch"
             )
+            
+            batch_id = generate_batch_id(self.jsonl_path)
+            
+            # Create the batch job
+            batch_job = self._client.batch.jobs.create(
+                input_files=[batch_file.id],
+                model="mistral-small-latest",  # Default model, can be parameterized
+                endpoint="/v1/chat/completions",
+                metadata={"batch_id": batch_id}
+            )
+            
+            self._batch_id = batch_job.id
 
             # Create processing file with batch info
             with open(self._processing_file, "w") as f:
@@ -95,9 +100,14 @@ class OpenAIBatchJob(BaseBatchJob):
         Check status of the batch job.
 
         Returns:
-            status: Job status string ("completed", "failed", "processing")
+            status: Job status string
         """
-        return _check_batch_job_status(self._client, self.batch_id)
+        try:
+            batch_job = self._client.batch.jobs.get(job_id=self.batch_id)
+            return batch_job.status
+        except Exception as e:
+            logger.error(f"Error checking batch status: {str(e)}")
+            raise
 
     def download_results(self) -> Optional[str]:
         """
@@ -106,9 +116,62 @@ class OpenAIBatchJob(BaseBatchJob):
         Returns:
             str: Path to the downloaded results, or None if download failed
         """
-        return _download_batch_job_output(
-            self._client, self.batch_id, self._output_path
-        )
+        try:
+            # Get batch job details
+            batch_job = self._client.batch.jobs.get(job_id=self.batch_id)
+            
+            if batch_job.status != "SUCCESS":
+                logger.error(f"Cannot download results - batch status is {batch_job.status}")
+                return None
+                
+            # Create output file path
+            output_file_path = self._output_path
+            
+            # Download output file
+            if batch_job.output_file:
+                output_content = self._client.files.download(file_id=batch_job.output_file)
+                
+                with open(output_file_path, "w", encoding="utf-8") as f:
+                    if hasattr(output_content, 'stream'):
+                        for chunk in output_content.stream:
+                            f.write(chunk.decode("utf-8"))
+                    else:
+                        f.write(output_content)
+                
+                logger.info(f"Saved batch results to {output_file_path}")
+                
+                # Download and append error file if it exists
+                if batch_job.error_file:
+                    error_temp_path = f"{self._output_path}.errors.temp"
+                    error_content = self._client.files.download(file_id=batch_job.error_file)
+                    
+                    with open(error_temp_path, "w", encoding="utf-8") as f:
+                        if hasattr(error_content, 'stream'):
+                            for chunk in error_content.stream:
+                                f.write(chunk.decode("utf-8"))
+                        else:
+                            f.write(error_content)
+                    
+                    # Append error content to main output file
+                    with open(error_temp_path, "r", encoding="utf-8") as error_file:
+                        with open(output_file_path, "a", encoding="utf-8") as main_file:
+                            for line in error_file:
+                                main_file.write(line)
+                    
+                    # Clean up temp file
+                    if os.path.exists(error_temp_path):
+                        os.remove(error_temp_path)
+                    
+                    logger.info(f"Added error results to {output_file_path}")
+                
+                return output_file_path
+            else:
+                logger.error("No output file available for this batch")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error downloading batch results: {str(e)}")
+            return None
 
     def wait_for_completion(self, poll_interval: int = 30) -> Optional[str]:
         """
@@ -126,15 +189,15 @@ class OpenAIBatchJob(BaseBatchJob):
                 status = self.check_status()
                 logger.info(f"Current status: {status}")
 
-                if status == "completed":
+                if status == "SUCCESS":
                     logger.info(f"Batch {self.batch_id} completed successfully")
                     result = self.download_results()
                     # Clean up processing file
                     if os.path.exists(self._processing_file):
                         os.remove(self._processing_file)
                     return result
-                elif status == "failed":
-                    logger.error(f"Batch {self.batch_id} failed")
+                elif status in {"FAILED", "TIMEOUT_EXCEEDED", "CANCELLED"}:
+                    logger.error(f"Batch {self.batch_id} ended with status: {status}")
                     # Clean up processing file
                     if os.path.exists(self._processing_file):
                         os.remove(self._processing_file)
@@ -146,6 +209,21 @@ class OpenAIBatchJob(BaseBatchJob):
         except Exception as e:
             logger.error(f"Error while waiting for batch completion: {str(e)}")
             return None
+
+    def cancel(self) -> bool:
+        """
+        Request cancellation of the batch job.
+
+        Returns:
+            bool: True if cancellation request was successful
+        """
+        try:
+            self._client.batch.jobs.cancel(job_id=self.batch_id)
+            logger.info(f"Requested cancellation for batch {self.batch_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Error cancelling batch: {str(e)}")
+            return False
 
     @property
     def batch_id(self) -> str:
@@ -159,160 +237,3 @@ class OpenAIBatchJob(BaseBatchJob):
     def output_path(self) -> str:
         """Get the output file path."""
         return self._output_path
-
-
-# below are helper functions
-def _send_batch_file(
-    client: Mistral, jsonl_path: str, endpoint: str = "/v1/chat/completions"
-) -> str:
-    """
-    Send a JSONL file to OpenAI's batch API.
-
-    Args:
-        jsonl_path: Path to the JSONL file containing prompts
-        endpoint: OpenAI API endpoint to use
-
-    Returns:
-        The batch ID for tracking the request
-    """
-    # Upload the JSONL file
-    batch_input_file = client.files.create(file=open(jsonl_path, "rb"), purpose="batch")
-    batch_input_file_id = batch_input_file.id
-
-    batch_id = generate_batch_id(jsonl_path)
-
-    # Create the batch
-    batch = client.batches.create(
-        input_file_id=batch_input_file_id,
-        endpoint=endpoint,
-        completion_window="24h",
-        metadata={
-            "batch_id": batch_id,
-            "source_file": os.path.basename(jsonl_path),
-        },
-    )
-
-    logger.info(f"Created batch with ID: {batch.id}")
-    return batch.id
-
-# FIXME: continue updating it.
-def _check_batch_job_status(client: OpenAI, batch_id: str) -> str:
-    """
-    Get the current status of a batch job.
-
-    Args:
-        batch_id: The batch ID to check
-
-    Returns:
-        Current status of the batch job
-    """
-    batch = client.batches.retrieve(batch_id)
-    return batch.status
-
-
-def _simplify_openai_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Simplify OpenAI batch response format to keep only essential information.
-
-    Args:
-        response_data: Raw response data from OpenAI batch API
-
-    Returns:
-        Simplified response dictionary containing only essential fields
-    """
-    status_code = response_data.get("response", {}).get("status_code")
-    simplified = {
-        "custom_id": response_data.get("custom_id"),
-        "status_code": status_code,
-        "content": None,
-        "error": None,
-    }
-
-    # Extract content from choices if available
-    if status_code == 200:
-        choices = response_data.get("response", {}).get("body", {}).get("choices", [])
-        if choices and len(choices) > 0:
-            simplified["content"] = choices[0]["message"]["content"]
-    else:
-        error = response_data.get("error")
-        if error:
-            simplified["error"] = error
-        # sometimes there is no error message, we create one
-        else:
-            simplified["error"] = f"Error: status code {status_code}"
-
-    return simplified
-
-
-def _download_batch_job_output(
-    client: OpenAI, batch_id: str, output_path: str
-) -> Optional[str]:
-    """
-    Download and simplify results for a completed batch job, including both successful
-    responses and errors.
-
-    Args:
-        batch_id: The batch ID to download results for
-        output_path: Path to save results file
-
-    Returns:
-        Path to the downloaded results file if successful, None if batch not completed
-    """
-    # Get batch info
-    batch = client.batches.retrieve(batch_id)
-
-    if batch.status != "completed":
-        logger.error(f"Cannot download results - batch status is {batch.status}")
-        return None
-
-    # Create a temporary file for raw results
-    temp_output = f"{output_path}.temp"
-    temp_errors = f"{output_path}.errors.temp"
-
-    # Download raw results file
-    client.files.content(batch.output_file_id).write_to_file(temp_output)
-
-    # Download error file if it exists
-    if batch.error_file_id:
-        client.files.content(batch.error_file_id).write_to_file(temp_errors)
-    else:
-        logger.info("No error file found for this batch")
-
-    # Process and combine both files
-    with open(output_path, "w", encoding="utf-8") as out_file:
-        # Process successful responses
-        if os.path.exists(temp_output):
-            with open(temp_output, "r", encoding="utf-8") as raw_file:
-                for line in raw_file:
-                    try:
-                        response_data = json.loads(line)
-                        simplified = _simplify_openai_response(response_data)
-                        out_file.write(
-                            json.dumps(simplified, ensure_ascii=False) + "\n"
-                        )
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Error processing line: {e}")
-                        continue
-
-        # Process error responses
-        if batch.error_file_id and os.path.exists(temp_errors):
-            with open(temp_errors, "r", encoding="utf-8") as error_file:
-                for line in error_file:
-                    try:
-                        response_data = json.loads(line)
-                        simplified = _simplify_openai_response(response_data)
-                        out_file.write(
-                            json.dumps(simplified, ensure_ascii=False) + "\n"
-                        )
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Error processing error line: {e}")
-                        continue
-
-    # Clean up temporary files
-    if os.path.exists(temp_output):
-        os.remove(temp_output)
-    if os.path.exists(temp_errors):
-        os.remove(temp_errors)
-
-    logger.info(f"Saved combined batch results (including errors) to {output_path}")
-    return output_path
