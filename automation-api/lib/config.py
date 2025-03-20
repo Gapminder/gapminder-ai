@@ -58,6 +58,8 @@ def read_config() -> dict[str, str]:
         "VERTEX_SERVICE_ACCOUNT_CREDENTIALS",
         "XAI_API_KEY",
         "ANTHROPIC_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "MISTRAL_API_KEY",
         "REDIS_HOST",
         "REDIS_PORT",
     ]:
