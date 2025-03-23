@@ -273,7 +273,7 @@ def generate_eval_prompts(
     return prompt_id_mapping
 
 
-def main(base_path, response_file, send):
+def main(base_path, response_file, send, wait):
     # Construct input paths
     sheets_dir = os.path.join(base_path, "ai_eval_sheets")
     questions_path = os.path.join(sheets_dir, "questions.csv")
@@ -341,7 +341,8 @@ def main(base_path, response_file, send):
             process_batch(
                 jsonl_file=output_path,
                 method=method,
-                wait=False,  # don't wait, just send all evals
+                model_id=evaluator["evaluator_id"],
+                wait=wait,
             )
 
 
@@ -363,6 +364,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Send generated prompts immediately after creation",
     )
+    parser.add_argument(
+        "--wait",
+        action="store_true",
+        help="Wait for eval results",
+    )
     args = parser.parse_args()
 
-    main(args.base_path, args.response_file, args.send)
+    main(args.base_path, args.response_file, args.send, args.wait)
