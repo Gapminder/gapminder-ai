@@ -135,8 +135,12 @@ def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
 
         # Merge provider config with request body if provider exists
         request_body = data["body"].copy()
-        if provider and provider in _PROVIDER_CONFIGS:
-            request_body.update(_PROVIDER_CONFIGS[provider])
+        if provider:
+            if provider in _PROVIDER_CONFIGS:
+                request_body.update(_PROVIDER_CONFIGS[provider])
+            else:
+                logger.error("provider not found: %s", provider)
+                raise ValueError("provider not found")
 
         response = litellm.completion(**request_body)  # type: ignore
         content = response.choices[0].message.content
