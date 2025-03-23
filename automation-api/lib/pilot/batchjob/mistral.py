@@ -205,12 +205,9 @@ class MistralBatchJob(BaseBatchJob):
                     file_id=batch_job.output_file
                 )
 
-                with open(temp_output, "w", encoding="utf-8") as f:
-                    if hasattr(output_content, "stream"):
-                        for chunk in output_content.stream:
-                            f.write(chunk.decode("utf-8"))
-                    else:
-                        f.write(output_content)
+                with open(temp_output, "wb") as f:
+                    for chunk in output_content.iter_bytes():
+                        f.write(chunk)
 
                 # Download error file if it exists
                 if batch_job.error_file:
@@ -218,12 +215,9 @@ class MistralBatchJob(BaseBatchJob):
                         file_id=batch_job.error_file
                     )
 
-                    with open(error_temp_path, "w", encoding="utf-8") as f:
-                        if hasattr(error_content, "stream"):
-                            for chunk in error_content.stream:
-                                f.write(chunk.decode("utf-8"))
-                        else:
-                            f.write(error_content)
+                    with open(error_temp_path, "wb") as f:
+                        for chunk in error_content.iter_bytes():
+                            f.write(chunk)
 
                 # Process and simplify both files
                 with open(output_file_path, "w", encoding="utf-8") as out_file:
