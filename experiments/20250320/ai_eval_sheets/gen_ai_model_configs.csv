@@ -1,0 +1,2 @@
+model_config_id,model_id,name,model_parameters,repeat_times,memory,memory_size
+mc056,mistral/mistral-large-2411,Mistral Large 24.11,"{""temperature"": 0.01, ""max_tokens"": 3000}",1,False,0
