@@ -5,7 +5,6 @@
 # for more info
 # Note that most types are str since spreadsheet columns can be formulas
 
-from typing import Optional
 
 import pandas as pd
 import pandera as pa
@@ -86,6 +85,7 @@ class GenAiModel(BaseModel):
     model_id: str = Field("", title="Model ID")
     vendor: str = Field("", title="Vendor")
     model_name: str = Field("", title="Model name")
+    model_published_date: str = Field("", title="Model Publish Date")
 
 
 class GenAiModelsDf(pa.DataFrameModel):
@@ -100,6 +100,7 @@ class GenAiModelConfig(BaseModel):
     include_in_next_evaluation: bool = Field(False, title="Include in next evaluation")
     model_config_id: str = Field("", title="Model configuration ID")
     model_id: str = Field("", title="Model ID")
+    name: str = Field("", title="Name")
     model_parameters: str = Field("", title="Model Parameters")
     repeat_times: int = Field(-1, title="Repeat Times")
     memory: bool = Field(False, title="Memory")
@@ -126,44 +127,15 @@ class MetricsDf(pa.DataFrameModel):
         coerce = True
 
 
-class EvalResult(BaseModel):
-    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
-
-    question_id: str = Field("", title="Question ID")
-    language: str = Field("", title="Language")
-    prompt_variation_id: str = Field("", title="Prompt variation ID")
-    model_configuration_id: str = Field("", title="Model Configuration ID")
-    last_evaluation_datetime: str = Field("", title="Last Evaluation")
-    percent_correct: Optional[float] = Field("", title="Percent Correct")
-    percent_wrong: Optional[float] = Field("", title="Percent Wrong")
-    percent_very_wrong: Optional[float] = Field("", title="Percent Very Wrong")
-    percent_eval_failed: Optional[float] = Field("", title="Percent Eval Failed")
-    rounds: int = Field(-1, title="Rounds")
-    result: str = Field("", title="Result")
+class Evaluator(BaseModel):
+    evaluator_id: str = Field("", title="Evaluator ID")
+    provider: str = Field("", title="Provider")
+    jsonl_format: str = Field("", title="Jsonl Format")
+    parameters: str = Field("", title="Parameters")
+    metric_prefix: str = Field("", title="Metric Prefix")
 
 
-class EvalResultsDf(pa.DataFrameModel):
+class EvaluatorsDf(pa.DataFrameModel):
     class Config:
-        dtype = PydanticModel(EvalResult)
-        coerce = True
-
-
-class SessionResult(BaseModel):
-    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
-
-    session_id: str = Field("", title="Session ID")
-    session_time: str = Field("", title="Session Time")
-    prompt_variation_id: str = Field("", title="Prompt Variation ID")
-    model_configuration_id: str = Field("", title="Model Configuration ID")
-    survey_id: str = Field("", title="Survey ID")
-    question_id: str = Field("", title="Question ID")
-    language: str = Field("", title="Language")
-    question_number: int = Field(-1, title="Question No.")
-    output: str = Field("", title="Response Text")
-    grade: str = Field("", title="Grade")
-
-
-class SessionResultsDf(pa.DataFrameModel):
-    class Config:
-        dtype = PydanticModel(SessionResult)
+        dtype = PydanticModel(Evaluator)
         coerce = True

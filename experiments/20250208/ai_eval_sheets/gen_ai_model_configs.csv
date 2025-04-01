@@ -1,0 +1,9 @@
+model_config_id,model_id,model_parameters,repeat_times,memory,memory_size
+mc039,qwen-max-2024-09-19,"{""temperature"": 0.01}",1,False,0
+mc040,xai/grok-beta,"{""temperature"": 0.01}",1,False,0
+mc041,vertex_ai/gemini-1.5-pro-002,"{""temperature"": 0.01}",1,False,0
+mc043,anthropic/claude-3-5-sonnet-20241022,"{""temperature"": 0.01}",1,False,0
+mc044,fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct,"{""temperature"": 0.01}",1,False,0
+mc045,gpt-4o-2024-11-20,"{""temperature"": 0.01}",1,False,0
+mc046,openai/qwen-max-2025-01-25,"{""temperature"": 0.01}",1,False,0
+mc047,fireworks_ai/accounts/fireworks/models/deepseek-v3,"{""temperature"": 0.01}",1,False,0

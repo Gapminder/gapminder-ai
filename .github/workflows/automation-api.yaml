@@ -24,7 +24,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Load cached pre-commit environment
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -52,7 +52,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Load cached Poetry installation
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.local
           key: poetry-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('.github/workflows/automation-api.yaml') }}
@@ -66,7 +66,7 @@ jobs:
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: automation-api/.venv
           key: venv-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('automation-api/poetry.lock') }}

@@ -1,0 +1,57 @@
+model_id,vendor,model_name,model_published_date
+gpt-3.5-turbo-0613,OpenAI,GPT3.5 June 2023,nan
+gpt-4-0613,OpenAI,GPT4 June 2023,nan
+nan,OpenAI,"GPT4 (with vision, not publicly available yet)",nan
+nan,Microsoft,Bing,nan
+nan,Meta,LLaMA,nan
+spark,iFlyTek,Spark,nan
+tiiuae/falcon-7b-instruct,HuggingFace,Falcon 7B,nan
+google/flan-t5-large,HuggingFace,Flan T5 Large (780M),nan
+TheBloke/orca_mini_13B-GGML,HuggingFace,orca mini 13b (GGML ver.),nan
+bard,Google,Bard,nan
+palm/text-bison,Google,PaLM (Text Bison),nan
+palm/chat-bison,Google,PaLM (Chat Bison),nan
+fakellm,Dummy,Dummy model,nan
+claude,Anthropic,Claude,nan
+qwen-turbo,Alibaba,Qianwen,nan
+qwen-plus,Alibaba,Qianwen Plus,nan
+qwen-v1,Alibaba,Qianwen V1,nan
+nan,nan,Amazon Titan,nan
+nan,nan,OpenAssistant,nan
+nan,nan,TruthGPT,nan
+replicate/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3,Meta,llama2 (hosted on replicate),nan
+gemini/gemini-pro,Google,Gemini Pro,nan
+gemini/gemini-1.0-pro,Google,Gemini Pro (1.0),nan
+gemini/gemini-1.5-pro-latest,Google,Gemini Pro (1.5),nan
+qwen-max-1201,Alibaba,Qianwen Max 2023-12-01,2023-12-01
+gpt-3.5-turbo-1106,OpenAI,GPT3.5 Nov 2023',nan
+gpt-4-1106-preview,OpenAI,GPT4 Turbo Nov 2023,2023-11-06
+gpt-4-0125-preview,OpenAI,GPT4 Turbo Jan 2024,2024-01-25
+vertex_ai/gemini-1.5-pro-preview-0409,Google,Gemini Pro 1.5 on Vertex AI,2024-04-09
+qwen-max-0403,Alibaba,Qianwen Max 2024-04-03,2024-04-03
+vertex_ai/claude-3-sonnet@20240229,Anthropic,Claude 3 Sonnet on Vertex AI,2024-02-29
+vertex_ai/claude-3-opus@20240229,Anthropic,Claude 3 Opus on Vertex AI,2024-02-29
+gpt-4o-2024-05-13,OpenAI,GPT-4-o 2024-05-13,2024-05-13
+replicate/meta/meta-llama-3-70b-instruct,Meta,Llama3 70B instruction fine tuned,2024-04-18
+qwen-max-0428,Alibaba,Qianwen Max 2024-04-28,2024-04-28
+gpt-4o-2024-08-06,OpenAI,OpenAI gpt-4o-2024-08-06,2024-08-06
+vertex_ai/claude-3-5-sonnet@20240620,Anthropic,Claude 3.5 Sonnet on Vertex AI,2024-06-20
+replicate/meta/meta-llama-3.1-405b-instruct,Meta,Llama 3.1 450B,2024-07-23
+fireworks_ai/accounts/fireworks/models/llama-v3p1-405b-instruct,Meta,Llama 3.1 450B Instruct on fireworks,2024-07-23
+qwen-max-2024-09-19,Alibaba,Qianwen Max 2024-09-19,2024-09-19
+gpt-4o-2024-11-20,OpenAI,GPT-4-o 2024-11-20,2024-11-20
+vertex_ai/claude-3-5-sonnet-v2@20241022,Anthropic,Claude 3.5 Sonnet 20241022 on Vertex AI,2024-10-22
+xai/grok-beta,XAI,XAI grok beta,2024-08-13
+vertex_ai/gemini-1.5-pro-002,Google,Gemini Pro 1.5 002 on Vertex AI,2024-09-24
+o1-preview-2024-09-12,OpenAI,OpenAI o1 model,2024-09-12
+fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct,Meta,Llama 3.3 70B Instruct on Fireworks.ai,2024-12-07
+anthropic/claude-3-5-sonnet-20241022,Anthropic,Claude 3.5 Sonnect 20241022,2024-10-22
+openai/qwen-max-2025-01-25,Alibaba,Qwen Max 2025-01-25,2025-01-25
+fireworks_ai/accounts/fireworks/models/deepseek-v3,DeepSeek,DeepSeek V3 on fireworks.ai,2024-12-26
+xai/grok-2-1212,XAI,XAI grok 2 2024-12-12,2024-12-12
+o3-mini-2025-01-31,OpenAI,o3-mini 2025-01-31,2025-01-31
+anthropic/claude-3-7-sonnet-20250219,Anthropic,Claude 3.7 20250219,2025-02-19
+perplexity/sonar-reasoning-pro,Perplexity,Perplexity Sonar Reasoning,nan
+perplexity/sonar-pro,Perplexity,Sonar Pro,nan
+perplexity/sonar-reasoning,Perplexity,Perplexity Sonar Reasoning,nan
+perplexity/sonar,Perplexity,Sonar Pro,nan

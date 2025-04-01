@@ -4,8 +4,8 @@ from typing import Type
 from gspread import Spreadsheet
 
 from lib.ai_eval_spreadsheet.schemas import (
-    EvalResult,
-    EvalResultsDf,
+    Evaluator,
+    EvaluatorsDf,
     GenAiModel,
     GenAiModelConfig,
     GenAiModelConfigsDf,
@@ -37,7 +37,7 @@ class AiEvalData:
         Type[GenAiModelConfigsDf], Type[GenAiModelConfig]
     ]
     metrics: GsheetsWorksheetEditor[Type[MetricsDf], Type[Metric]]
-    evaluation_results: GsheetsWorksheetEditor[Type[EvalResult], Type[EvalResultsDf]]
+    evaluators: GsheetsWorksheetEditor[Type[EvaluatorsDf], Type[Evaluator]]
 
 
 sheet_names = {
@@ -47,7 +47,7 @@ sheet_names = {
     "gen_ai_models": "Models",
     "gen_ai_model_configs": "Model configurations",
     "metrics": "Metrics",
-    "evaluation_results": "Latest Results",
+    "evaluators": "Evaluators",
 }
 
 
@@ -115,11 +115,11 @@ def read_ai_eval_data(
         evaluate_formulas=False,
     )
 
-    evaluation_results = GsheetsWorksheetEditor(
+    evaluators = GsheetsWorksheetEditor(
         sh=ai_eval_spreadsheet,
-        df_schema=EvalResultsDf,
-        row_schema=EvalResult,
-        worksheet_name=sheet_names["evaluation_results"],
+        df_schema=EvaluatorsDf,
+        row_schema=Evaluator,
+        worksheet_name=sheet_names["evaluators"],
         header_row_number=0,
         evaluate_formulas=False,
     )
@@ -131,5 +131,5 @@ def read_ai_eval_data(
         gen_ai_models=gen_ai_models,
         gen_ai_model_configs=gen_ai_model_configs,
         metrics=metrics,
-        evaluation_results=evaluation_results,
+        evaluators=evaluators,
     )
