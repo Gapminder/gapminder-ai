@@ -56,7 +56,7 @@ def download_file(service, file_id, filename, mime_type):
         ]:
             # Determine export MIME type based on file type
             if mime_type == "application/vnd.google-apps.document":
-                export_mime_type = "application/pdf"  # Export as PDF
+                export_mime_type = "text/html"  # Export as HTML
             elif mime_type == "application/vnd.google-apps.spreadsheet":
                 # Export as Excel
                 export_mime_type = (
@@ -69,12 +69,14 @@ def download_file(service, file_id, filename, mime_type):
                 export_mime_type = "image/png"  # Export as PNG
 
             # Update filename extension based on export type
-            if export_mime_type == "application/pdf":
-                filename = os.path.splitext(filename)[0] + ".pdf"
+            if export_mime_type == "text/html":
+                filename = os.path.splitext(filename)[0] + ".html"
             elif export_mime_type == (
                 "application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"
             ):
                 filename = os.path.splitext(filename)[0] + ".xlsx"
+            elif export_mime_type == "application/pdf":
+                filename = os.path.splitext(filename)[0] + ".pdf"
             elif export_mime_type == "image/png":
                 filename = os.path.splitext(filename)[0] + ".png"
 
@@ -119,6 +121,12 @@ def main():
         for file in files:
             if file["mimeType"] != "application/vnd.google-apps.folder":  # Skip folders
                 filename = os.path.join("downloads", file["name"])
+
+                # Check if file already exists
+                if os.path.exists(filename):
+                    print(f"\nSkipping {file['name']} - already exists")
+                    continue
+
                 print(f"\nDownloading {file['name']}...")
                 download_file(service, file["id"], filename, file["mimeType"])
 

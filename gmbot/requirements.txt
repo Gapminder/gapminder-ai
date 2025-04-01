@@ -1,3 +1,9 @@
 google-api-python-client==2.108.0
 google-auth-httplib2==0.1.1
-google-auth-oauthlib==1.1.0 
+google-auth-oauthlib==1.1.0
+html2text==2020.1.16
+markdown==3.5.2
+beautifulsoup4==4.12.3
+pandas==2.2.1
+python-docx==1.1.0
+openpyxl==3.1.2 

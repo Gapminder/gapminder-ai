@@ -43,15 +43,25 @@ This script allows you to list and download files from a specific Google Drive f
    source .venv/bin/activate
    ```
 
-2. Run the script:
+2. Download files from Google Drive:
    ```bash
    python drive_downloader.py
    ```
-
-3. The script will:
+   This will:
    - List all files in the specified Google Drive folder
    - Create a `downloads` directory if it doesn't exist
    - Download all files from the folder to the `downloads` directory
+   - Skip any files that have already been downloaded
+
+3. Convert downloaded files to appropriate formats:
+   ```bash
+   python convert_files.py
+   ```
+   This will:
+   - Convert Google Docs (HTML) to Markdown (.md)
+   - Convert Excel files to CSV (one file per sheet)
+   - Skip other file types
+   - Create appropriate directories for converted files
 
 ## Notes
 
@@ -60,7 +70,8 @@ This script allows you to list and download files from a specific Google Drive f
 - The script skips Google Drive folders and only downloads files
 - Progress is shown for each download
 - Make sure to keep your `service-account.json` file secure and never commit it to version control
-- Google Workspace files (Docs, Sheets, Slides) are automatically exported to compatible formats:
-  - Documents and Presentations → PDF
-  - Spreadsheets → Excel (.xlsx)
+- Google Workspace files are automatically exported to compatible formats:
+  - Documents → HTML (then converted to Markdown)
+  - Spreadsheets → Excel (.xlsx, then converted to CSV)
+  - Presentations → PDF
   - Drawings → PNG 
