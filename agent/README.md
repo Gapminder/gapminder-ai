@@ -64,7 +64,22 @@ This script allows you to list and download files from a specific Google Drive f
    - Skip other file types
    - Keep original files in the `downloads` directory
 
-4. Analyze token counts:
+4. Generate sources status report:
+   ```bash
+   python sources_status.py
+   ```
+   This will:
+   - List all files from the original Google Drive folder
+   - Check which files have been successfully converted to text-based formats
+   - Update a Google Sheet with:
+     - File names and IDs
+     - MIME types
+     - Expected converted file names
+     - Conversion status (Converted/Not Converted)
+     - Whether conversion is supported for each file type
+   - The status spreadsheet is available at: [Sources Status](https://docs.google.com/spreadsheets/d/1WoKBzVhBvOrEQWwrQDcdG8Y3V92wF1upYgMdZu1K1ck/edit)
+
+5. Analyze token counts:
    ```bash
    python count_tokens.py
    ```

@@ -1,20 +1,23 @@
 import os
 from html2text import HTML2Text
 import pandas as pd
-import re
 import pdfplumber
 from docx import Document
+from common import (
+    DOWNLOADS_DIR,
+    UNSUPPORTED_EXTENSIONS,
+    ensure_directories,
+    clean_filename,
+    get_source_path,
+    clean_text_content,
+)
 
 
 def convert_html_to_markdown(html_file):
     """Convert HTML file to Markdown."""
-    # Check if markdown file already exists
-    sources_dir = "sources"
-    os.makedirs(sources_dir, exist_ok=True)
-    md_file = os.path.join(sources_dir, os.path.splitext(os.path.basename(html_file))[0] + ".md")
+    md_file = get_source_path(html_file, ".md")
 
     if os.path.exists(md_file):
-        # print(f"Skipping {html_file} - markdown file already exists: {md_file}")
         return md_file
 
     with open(html_file, "r", encoding="utf-8") as f:
@@ -28,10 +31,8 @@ def convert_html_to_markdown(html_file):
     h.body_width = 0  # Don't wrap lines
 
     markdown_content = h.handle(html_content)
-
-    # Clean up the markdown
-    markdown_content = re.sub(r"\n{3,}", "\n\n", markdown_content)  # Remove excessive newlines
-    markdown_content = re.sub(r"#+\s*$", "", markdown_content)  # Remove trailing headers
+    markdown_content = clean_text_content(markdown_content)
+    markdown_content = markdown_content.rstrip("#")  # Remove trailing headers
 
     with open(md_file, "w", encoding="utf-8") as f:
         f.write(markdown_content)
@@ -42,14 +43,10 @@ def convert_html_to_markdown(html_file):
 
 def convert_excel_to_csv(excel_file):
     """Convert Excel file to CSV."""
-    # Check if sheets directory already exists
-    sources_dir = "sources"
-    os.makedirs(sources_dir, exist_ok=True)
-    base_name = os.path.splitext(os.path.basename(excel_file))[0]
-    sheets_dir = os.path.join(sources_dir, base_name + "_sheets")
+    os.path.splitext(os.path.basename(excel_file))[0]
+    sheets_dir = get_source_path(excel_file, "_sheets")
 
     if os.path.exists(sheets_dir):
-        # print(f"Skipping {excel_file} - sheets directory already exists: {sheets_dir}")
         return sheets_dir
 
     # Read all sheets
@@ -58,8 +55,7 @@ def convert_excel_to_csv(excel_file):
 
     # Convert each sheet to CSV
     for sheet_name, df in excel_data.items():
-        # Clean sheet name for filename
-        safe_sheet_name = re.sub(r"[^\w\-_.]", "_", sheet_name)
+        safe_sheet_name = clean_filename(sheet_name)
         csv_file = os.path.join(sheets_dir, f"{safe_sheet_name}.csv")
 
         df.to_csv(csv_file, index=False)
@@ -70,12 +66,9 @@ def convert_excel_to_csv(excel_file):
 
 def convert_pdf_to_text(pdf_file):
     """Convert PDF file to text."""
-    sources_dir = "sources"
-    os.makedirs(sources_dir, exist_ok=True)
-    txt_file = os.path.join(sources_dir, os.path.splitext(os.path.basename(pdf_file))[0] + ".txt")
+    txt_file = get_source_path(pdf_file, ".txt")
 
     if os.path.exists(txt_file):
-        # print(f"Skipping {pdf_file} - text file already exists: {txt_file}")
         return txt_file
 
     try:
@@ -85,9 +78,7 @@ def convert_pdf_to_text(pdf_file):
                 text_content.append(page.extract_text() or "")
 
             text = "\n\n".join(text_content)
-
-            # Clean up the text
-            text = re.sub(r"\n{3,}", "\n\n", text)  # Remove excessive newlines
+            text = clean_text_content(text)
 
             with open(txt_file, "w", encoding="utf-8") as f:
                 f.write(text)
@@ -101,12 +92,9 @@ def convert_pdf_to_text(pdf_file):
 
 def convert_docx_to_text(docx_file):
     """Convert DOCX file to text."""
-    sources_dir = "sources"
-    os.makedirs(sources_dir, exist_ok=True)
-    txt_file = os.path.join(sources_dir, os.path.splitext(os.path.basename(docx_file))[0] + ".txt")
+    txt_file = get_source_path(docx_file, ".txt")
 
     if os.path.exists(txt_file):
-        # print(f"Skipping {docx_file} - text file already exists: {txt_file}")
         return txt_file
 
     try:
@@ -116,9 +104,7 @@ def convert_docx_to_text(docx_file):
             text_content.append(paragraph.text)
 
         text = "\n\n".join(text_content)
-
-        # Clean up the text
-        text = re.sub(r"\n{3,}", "\n\n", text)  # Remove excessive newlines
+        text = clean_text_content(text)
 
         with open(txt_file, "w", encoding="utf-8") as f:
             f.write(text)
@@ -130,27 +116,15 @@ def convert_docx_to_text(docx_file):
         return None
 
 
-def convert_image_to_text(image_file):
-    """Convert image file to text using OCR."""
-    # Note: This is a placeholder. You'll need to implement OCR using a library
-    # like pytesseract or cloud OCR services
-    print(f"Image to text conversion not implemented yet for {image_file}")
-    return None
-
-
 def main():
-    downloads_dir = "downloads"
-
-    if not os.path.exists(downloads_dir):
-        print(f"Downloads directory '{downloads_dir}' not found!")
+    if not os.path.exists(DOWNLOADS_DIR):
+        print(f"Downloads directory '{DOWNLOADS_DIR}' not found!")
         return
 
-    # Create sources directory
-    sources_dir = "sources"
-    os.makedirs(sources_dir, exist_ok=True)
+    ensure_directories()
 
-    for filename in os.listdir(downloads_dir):
-        file_path = os.path.join(downloads_dir, filename)
+    for filename in os.listdir(DOWNLOADS_DIR):
+        file_path = os.path.join(DOWNLOADS_DIR, filename)
 
         if not os.path.isfile(file_path):
             continue
@@ -166,11 +140,10 @@ def main():
                 convert_pdf_to_text(file_path)
             elif ext == ".docx":
                 convert_docx_to_text(file_path)
-            elif ext in [".jpg", ".jpeg", ".png", ".gif", ".bmp"]:
-                convert_image_to_text(file_path)
+            elif ext in UNSUPPORTED_EXTENSIONS:
+                print(f"Skipping {filename} - image conversion not yet supported")
             else:
-                print(f"Skipping {filename} with extension {ext} - " "no conversion implemented")
-                pass
+                print(f"Skipping {filename} with extension {ext} - no conversion implemented")
         except Exception as e:
             print(f"Error converting {filename}: {e}")
 

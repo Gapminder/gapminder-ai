@@ -3,6 +3,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import io
+from config import FOLDER_ID
+from common import GOOGLE_WORKSPACE_MIME_TYPES, get_export_mime_type, get_intermediate_filename
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
@@ -46,33 +48,9 @@ def download_file(service, file_id, filename, mime_type):
     """Download a file from Google Drive."""
     try:
         # Handle Google Workspace files
-        if mime_type in [
-            "application/vnd.google-apps.document",  # Google Docs
-            "application/vnd.google-apps.spreadsheet",  # Google Sheets
-            "application/vnd.google-apps.presentation",  # Google Slides
-            "application/vnd.google-apps.drawing",  # Google Drawings
-        ]:
-            # Determine export MIME type based on file type
-            if mime_type == "application/vnd.google-apps.document":
-                export_mime_type = "text/html"  # Export as HTML
-            elif mime_type == "application/vnd.google-apps.spreadsheet":
-                # Export as Excel
-                export_mime_type = "application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"
-            elif mime_type == "application/vnd.google-apps.presentation":
-                export_mime_type = "application/pdf"  # Export as PDF
-            else:  # drawing
-                export_mime_type = "image/png"  # Export as PNG
-
-            # Update filename extension based on export type
-            if export_mime_type == "text/html":
-                filename = os.path.splitext(filename)[0] + ".html"
-            elif export_mime_type == ("application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"):
-                filename = os.path.splitext(filename)[0] + ".xlsx"
-            elif export_mime_type == "application/pdf":
-                filename = os.path.splitext(filename)[0] + ".pdf"
-            elif export_mime_type == "image/png":
-                filename = os.path.splitext(filename)[0] + ".png"
-
+        if mime_type in GOOGLE_WORKSPACE_MIME_TYPES:
+            export_mime_type = get_export_mime_type(mime_type)
+            filename = get_intermediate_filename(filename, mime_type)
             request = service.files().export(fileId=file_id, mimeType=export_mime_type)
         else:
             # Handle regular files
@@ -94,15 +72,12 @@ def download_file(service, file_id, filename, mime_type):
 
 
 def main():
-    # The folder ID for step-2-questions
-    folder_id = "18LLCtq7eg-7SBYJKL_1CVmfbRCl0aexu"
-
     # Get the Google Drive service
     service = get_google_drive_service()
 
     # List all files in the folder
     print("Listing files in folder...")
-    files = list_files_in_folder(service, folder_id)
+    files = list_files_in_folder(service, FOLDER_ID)
 
     if files:
         # Create a downloads directory if it doesn't exist

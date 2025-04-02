@@ -1,3 +1,4 @@
-downloads*
-sources*
+__pycache__
+downloads*/
+sources/*
 service-account.json
