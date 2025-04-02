@@ -1,4 +1,5 @@
 __pycache__
 downloads*/
 sources/*
+metadata/*
 service-account.json

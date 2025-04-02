@@ -9,4 +9,10 @@
 ## Environment
 - Use Python version specified in .python-version
 - Always work within the virtual environment
-- Keep requirements.txt updated when adding new dependencies 
+- Keep requirements.txt updated when adding new dependencies
+
+## Code Quality
+1. We use pre-commit hooks for code quality checks
+   - Run `pre-commit install` to set up the hooks
+   - Hooks will run automatically on git commit
+   - You can also run manually with `pre-commit run --all-files`
