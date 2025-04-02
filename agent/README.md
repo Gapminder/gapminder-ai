@@ -6,8 +6,8 @@ This script allows you to list and download files from a specific Google Drive f
 
 1. Create and activate virtual environment using UV:
    ```bash
-   # Create virtual environment
-   uv venv
+   # Create virtual environment with Python 3.13
+   uv venv --python=3.13
    
    # Activate virtual environment
    source .venv/bin/activate
