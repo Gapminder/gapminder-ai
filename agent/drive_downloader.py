@@ -11,9 +11,7 @@ SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 def get_google_drive_service():
     """Get Google Drive API service using service account."""
     try:
-        credentials = service_account.Credentials.from_service_account_file(
-            "service-account.json", scopes=SCOPES
-        )
+        credentials = service_account.Credentials.from_service_account_file("service-account.json", scopes=SCOPES)
         return build("drive", "v3", credentials=credentials)
     except Exception as e:
         print(f"Error creating service account credentials: {e}")
@@ -59,10 +57,7 @@ def download_file(service, file_id, filename, mime_type):
                 export_mime_type = "text/html"  # Export as HTML
             elif mime_type == "application/vnd.google-apps.spreadsheet":
                 # Export as Excel
-                export_mime_type = (
-                    "application/vnd.openxmlformats-officedocument."
-                    "spreadsheetml.sheet"
-                )
+                export_mime_type = "application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"
             elif mime_type == "application/vnd.google-apps.presentation":
                 export_mime_type = "application/pdf"  # Export as PDF
             else:  # drawing
@@ -71,9 +66,7 @@ def download_file(service, file_id, filename, mime_type):
             # Update filename extension based on export type
             if export_mime_type == "text/html":
                 filename = os.path.splitext(filename)[0] + ".html"
-            elif export_mime_type == (
-                "application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"
-            ):
+            elif export_mime_type == ("application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"):
                 filename = os.path.splitext(filename)[0] + ".xlsx"
             elif export_mime_type == "application/pdf":
                 filename = os.path.splitext(filename)[0] + ".pdf"

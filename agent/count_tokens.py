@@ -62,9 +62,7 @@ def main():
     # Print summary by file type
     print("\nToken Count Summary by File Type:")
     print("=" * 80)
-    type_summary = (
-        df.groupby("file_type").agg({"tokens": ["count", "sum", "mean", "min", "max"]}).round(2)
-    )
+    type_summary = df.groupby("file_type").agg({"tokens": ["count", "sum", "mean", "min", "max"]}).round(2)
     type_summary.columns = [
         "Number of Files",
         "Total Tokens",
