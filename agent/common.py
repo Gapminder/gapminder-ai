@@ -48,6 +48,12 @@ def clean_filename(filename):
     return re.sub(r"[^\w\-_.]", "_", filename)
 
 
+def clean_filename_preserve_spaces(filename):
+    """Clean a filename to be safe for filesystem while preserving spaces and hyphens.
+    Only replaces slashes with underscores."""
+    return filename.replace("/", "_")
+
+
 def get_source_path(filename, extension=None):
     """Get the path in the sources directory for a file."""
     base_name = os.path.splitext(os.path.basename(filename))[0]

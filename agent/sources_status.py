@@ -1,13 +1,30 @@
 import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-import pandas as pd
 from config import FOLDER_ID, SPREADSHEET_ID
-from common import SOURCES_DIR, get_converted_filename, get_source_path
+from common import SOURCES_DIR, get_converted_filename, get_source_path, clean_filename_preserve_spaces
 from token_counting import get_token_encoder, count_tokens_in_file, count_tokens_in_directory
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly", "https://www.googleapis.com/auth/spreadsheets"]
+
+# Google Drive file URL format
+DRIVE_FILE_URL = "https://drive.google.com/file/d/{file_id}/view"
+
+# Column definitions
+COLUMNS = [
+    "File",
+    "MIME Type",
+    "Expected Converted File",
+    "Conversion Status",
+    "Successfully Converted",
+    "Conversion Supported",
+    "Token Count",
+    "Exclude",  # New column that will be preserved
+]
+
+# Columns that should be preserved when updating (0-based index)
+PRESERVED_COLUMNS = [7]  # Preserve the "Exclude" column
 
 
 def get_google_services():
@@ -37,6 +54,18 @@ def list_files_in_folder(service, folder_id):
     return results.get("files", [])
 
 
+def get_existing_sheet_data(sheets_service):
+    """Get existing data from the sheet to preserve certain columns."""
+    result = (
+        sheets_service.spreadsheets()
+        .values()
+        .get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A:H")  # Include all columns up to Exclude
+        .execute()
+    )
+
+    return result.get("values", [])
+
+
 def check_file_conversion(filename, mime_type, encoding=None):
     """Check if a file has been properly converted.
 
@@ -46,7 +75,9 @@ def check_file_conversion(filename, mime_type, encoding=None):
             - details: str with additional information about conversion status
             - token_count: int number of tokens in converted file(s)
     """
-    converted_filename = get_converted_filename(filename, mime_type)
+    # Clean the filename to be safe for filesystem while preserving spaces and hyphens
+    safe_filename = clean_filename_preserve_spaces(filename)
+    converted_filename = get_converted_filename(safe_filename, mime_type)
     if not converted_filename:
         return False, "Conversion not supported", 0
 
@@ -65,7 +96,7 @@ def check_file_conversion(filename, mime_type, encoding=None):
         return True, f"Converted to {len(csv_files)} CSV files", token_count
 
     # For regular files, use get_source_path to handle the extension
-    converted_path = get_source_path(filename, os.path.splitext(converted_filename)[1])
+    converted_path = get_source_path(safe_filename, os.path.splitext(converted_filename)[1])
 
     # Handle regular file conversions
     if not os.path.exists(converted_path):
@@ -88,6 +119,23 @@ def check_conversion_status():
     print("Listing files in folder...")
     files = list_files_in_folder(drive_service, FOLDER_ID)
 
+    # Get existing sheet data to preserve certain columns
+    existing_data = get_existing_sheet_data(sheets_service)
+    existing_exclude = {}
+    if len(existing_data) > 1:  # If we have data beyond headers
+        file_col_idx = 0  # "File" column is first
+        exclude_col_idx = PRESERVED_COLUMNS[0]
+        for row in existing_data[1:]:  # Skip header row
+            if len(row) > exclude_col_idx:
+                # Extract filename from HYPERLINK formula
+                file_name = (
+                    row[file_col_idx].split('"')[-2]
+                    if row[file_col_idx].startswith("=HYPERLINK")
+                    else row[file_col_idx]
+                )
+                exclude_val = row[exclude_col_idx] if len(row) > exclude_col_idx else ""
+                existing_exclude[file_name] = exclude_val
+
     # Initialize token encoder once to reuse
     encoding = get_token_encoder()
 
@@ -99,32 +147,35 @@ def check_conversion_status():
             continue
 
         is_converted, details, tokens = check_file_conversion(file["name"], file["mimeType"], encoding)
-        converted_filename = get_converted_filename(file["name"], file["mimeType"])
+        safe_filename = file["name"].replace("/", "_")
+        converted_filename = get_converted_filename(safe_filename, file["mimeType"])
 
         if is_converted:
             total_tokens += tokens
 
-        data.append(
-            {
-                "File Name": file["name"],
-                "File ID": file["id"],
-                "MIME Type": file["mimeType"],
-                "Expected Converted File": converted_filename or "N/A",
-                "Conversion Status": details,
-                "Successfully Converted": "Yes" if is_converted else "No",
-                "Conversion Supported": "Yes" if converted_filename else "No",
-                "Token Count": f"{tokens:,}" if tokens > 0 else "0",
-            }
-        )
+        # Create hyperlink formula for the file name
+        file_url = DRIVE_FILE_URL.format(file_id=file["id"])
+        # Escape any quotes in the filename
+        display_name = file["name"].replace('"', '""')
+        file_hyperlink = f'=HYPERLINK("{file_url}", "{display_name}")'
 
-    # Convert to DataFrame for easier handling
-    df = pd.DataFrame(data)
+        # Get existing exclude value or empty string if not found
+        exclude_val = existing_exclude.get(file["name"], "")
 
-    # Add summary row
-    summary_row = ["TOTAL", "", "", "", "", "", "", f"{total_tokens:,}"]
+        row_data = [
+            file_hyperlink,
+            file["mimeType"],
+            converted_filename or "N/A",
+            details,
+            "Yes" if is_converted else "No",
+            "Yes" if converted_filename else "No",
+            tokens,
+            exclude_val,  # Preserve existing value or empty string
+        ]
+        data.append(row_data)
 
     # Prepare the values for the sheet
-    values = [df.columns.tolist()] + df.values.tolist() + [summary_row]
+    values = [COLUMNS] + data
 
     # Update the spreadsheet
     body = {"values": values}
@@ -136,7 +187,7 @@ def check_conversion_status():
         .update(
             spreadsheetId=SPREADSHEET_ID,
             range="Sheet1!A1",  # Start from the first cell
-            valueInputOption="RAW",
+            valueInputOption="USER_ENTERED",
             body=body,
         )
         .execute()
