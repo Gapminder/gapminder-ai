@@ -3,11 +3,12 @@ repos:
     rev: 'v0.0.260'
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        args: [--fix, --exit-non-zero-on-fix, --line-length=100]
   - repo: https://github.com/ambv/black
     rev: 22.3.0
     hooks:
       - id: black
+        args: [--line-length=100]
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.25.0
     hooks:
