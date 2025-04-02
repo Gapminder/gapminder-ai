@@ -5,7 +5,12 @@ from googleapiclient.http import MediaIoBaseDownload
 import io
 import multiprocessing
 from config import FOLDER_ID
-from common import GOOGLE_WORKSPACE_MIME_TYPES, get_export_mime_type, get_intermediate_filename
+from common import (
+    GOOGLE_WORKSPACE_MIME_TYPES,
+    get_export_mime_type,
+    get_intermediate_filename,
+    clean_filename_preserve_spaces,
+)
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
@@ -89,7 +94,7 @@ def download_worker(file_info):
     try:
         service = get_google_drive_service()
         file_id = file_info["id"]
-        original_name = file_info["name"]
+        original_name = clean_filename_preserve_spaces(file_info["name"])
         mime_type = file_info["mimeType"]
         base_download_path = os.path.join("downloads", original_name)
 
@@ -118,14 +123,33 @@ def main():
         return
 
     print(f"Listing files in folder ID: {FOLDER_ID}...")
-    files_to_download = list_files_in_folder(service, FOLDER_ID)
+    all_files = list_files_in_folder(service, FOLDER_ID)
 
-    if not files_to_download:
+    if not all_files:
         print("No files eligible for download found.")
         return
 
+    # Filter out files that already exist
+    files_to_download = []
+    for file_info in all_files:
+        original_name = clean_filename_preserve_spaces(file_info["name"])
+        mime_type = file_info["mimeType"]
+        base_download_path = os.path.join("downloads", original_name)
+        final_filename = get_intermediate_filename(base_download_path, mime_type)
+
+        if os.path.exists(final_filename):
+            print(f"Skipping {final_filename} - already exists.")
+            continue
+
+        files_to_download.append(file_info)
+
+    if not files_to_download:
+        print("All files already downloaded.")
+        return
+
+    print(f"\nScheduling download of {len(files_to_download)} files out of {len(all_files)} total files...")
     num_processes = multiprocessing.cpu_count()
-    print(f"\nStarting parallel download using {num_processes} processes...")
+    print(f"Starting parallel download using {num_processes} processes...")
 
     with multiprocessing.Pool(processes=num_processes) as pool:
         pool.map(download_worker, files_to_download)
