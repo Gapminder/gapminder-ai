@@ -3,6 +3,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import io
+import multiprocessing
 from config import FOLDER_ID
 from common import GOOGLE_WORKSPACE_MIME_TYPES, get_export_mime_type, get_intermediate_filename
 
@@ -36,68 +37,102 @@ def list_files_in_folder(service, folder_id):
 
     if not items:
         print("No files found.")
-        return
+        return []
 
-    print("Files:")
+    print("\nFiles found in Google Drive:")
+    all_files = []
     for item in items:
-        print(f"{item['name']} ({item['id']})")
-    return items
+        if item["mimeType"] != "application/vnd.google-apps.folder":
+            print(f"- {item['name']} ({item['id']}, {item['mimeType']})")
+            all_files.append(item)
+        else:
+            print(f"- Skipping folder: {item['name']}")
+    return all_files
 
 
-def download_file(service, file_id, filename, mime_type):
-    """Download a file from Google Drive."""
+def _download_file_logic(service, file_id, final_filename, mime_type):
+    """Core logic to download/export a file from Google Drive."""
     try:
-        # Handle Google Workspace files
+        request = None
         if mime_type in GOOGLE_WORKSPACE_MIME_TYPES:
             export_mime_type = get_export_mime_type(mime_type)
-            filename = get_intermediate_filename(filename, mime_type)
             request = service.files().export(fileId=file_id, mimeType=export_mime_type)
+            print(f"Exporting '{final_filename}' as {export_mime_type}...")
         else:
-            # Handle regular files
             request = service.files().get_media(fileId=file_id)
+            print(f"Downloading '{final_filename}'...")
 
-        file = io.BytesIO()
-        downloader = MediaIoBaseDownload(file, request)
+        if request is None:
+            print(f"Skipping {final_filename} due to unknown type or error determining action.")
+            return
+
+        file_content = io.BytesIO()
+        downloader = MediaIoBaseDownload(file_content, request)
         done = False
         while done is False:
             status, done = downloader.next_chunk()
-            print(f"Download {int(status.progress() * 100)}%")
+            if status:
+                print(f"Process {os.getpid()}: Download {final_filename} {int(status.progress() * 100)}%")
+            else:
+                print(f"Process {os.getpid()}: Download {final_filename} status unknown, continuing...")
 
-        # Save the file
-        with open(filename, "wb") as f:
-            f.write(file.getvalue())
-        print(f"Downloaded: {filename}")
+        with open(final_filename, "wb") as f:
+            f.write(file_content.getvalue())
+        print(f"Process {os.getpid()}: Successfully downloaded {final_filename}")
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Process {os.getpid()}: An error occurred downloading {final_filename} (ID: {file_id}): {e}")
+
+
+def download_worker(file_info):
+    """Worker process function to handle downloading a single file."""
+    try:
+        service = get_google_drive_service()
+        file_id = file_info["id"]
+        original_name = file_info["name"]
+        mime_type = file_info["mimeType"]
+        base_download_path = os.path.join("downloads", original_name)
+
+        final_filename = get_intermediate_filename(base_download_path, mime_type)
+
+        if os.path.exists(final_filename):
+            print(f"Process {os.getpid()}: Skipping {final_filename} - already exists.")
+            return
+
+        _download_file_logic(service, file_id, final_filename, mime_type)
+
+    except Exception:
+        pass
 
 
 def main():
-    # Get the Google Drive service
-    service = get_google_drive_service()
+    if not os.path.exists("downloads"):
+        print("Creating downloads directory.")
+        os.makedirs("downloads")
 
-    # List all files in the folder
-    print("Listing files in folder...")
-    files = list_files_in_folder(service, FOLDER_ID)
+    print("Initializing Google Drive service...")
+    try:
+        service = get_google_drive_service()
+    except Exception:
+        print("Failed to initialize main Google Drive service. Exiting.")
+        return
 
-    if files:
-        # Create a downloads directory if it doesn't exist
-        if not os.path.exists("downloads"):
-            os.makedirs("downloads")
+    print(f"Listing files in folder ID: {FOLDER_ID}...")
+    files_to_download = list_files_in_folder(service, FOLDER_ID)
 
-        # Download each file
-        print("\nDownloading files...")
-        for file in files:
-            if file["mimeType"] != "application/vnd.google-apps.folder":  # Skip folders
-                filename = os.path.join("downloads", file["name"])
+    if not files_to_download:
+        print("No files eligible for download found.")
+        return
 
-                # Check if file already exists
-                if os.path.exists(filename):
-                    print(f"\nSkipping {file['name']} - already exists")
-                    continue
+    num_processes = multiprocessing.cpu_count()
+    print(f"\nStarting parallel download using {num_processes} processes...")
 
-                print(f"\nDownloading {file['name']}...")
-                download_file(service, file["id"], filename, file["mimeType"])
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        pool.map(download_worker, files_to_download)
+
+    print("\nAll download tasks completed.")
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     main()
