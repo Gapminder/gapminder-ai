@@ -56,9 +56,7 @@ prompts.columns
 
 # create a column for question_prompt_template, formatted by data in question_template
 prompts["final_prompt_template"] = prompts.apply(
-    lambda row: row["question_prompt_template"].format(
-        question=row["question_template"]
-    ),
+    lambda row: row["question_prompt_template"].format(question=row["question_template"]),
     axis=1,
 )
 
@@ -97,9 +95,7 @@ def calculate_final_score(row: pl.Series) -> int:
     max_count = max(score_counts.values())
     if max_count >= 2:
         # Return the score that appears at least twice
-        return next(
-            score for score, count in score_counts.items() if count == max_count
-        )
+        return next(score for score, count in score_counts.items() if count == max_count)
     else:
         # All scores different
         return 0

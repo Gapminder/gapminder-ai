@@ -25,17 +25,11 @@ from lib.gsheets.gsheets_worksheet_editor import GsheetsWorksheetEditor
 
 @dataclass
 class AiEvalData:
-    prompt_variations: GsheetsWorksheetEditor[
-        Type[PromptVariationsDf], Type[PromptVariation]
-    ]
+    prompt_variations: GsheetsWorksheetEditor[Type[PromptVariationsDf], Type[PromptVariation]]
     questions: GsheetsWorksheetEditor[Type[QuestionsDf], Type[Question]]
-    question_options: GsheetsWorksheetEditor[
-        Type[QuestionOptionsDf], Type[QuestionOption]
-    ]
+    question_options: GsheetsWorksheetEditor[Type[QuestionOptionsDf], Type[QuestionOption]]
     gen_ai_models: GsheetsWorksheetEditor[Type[GenAiModelsDf], Type[GenAiModel]]
-    gen_ai_model_configs: GsheetsWorksheetEditor[
-        Type[GenAiModelConfigsDf], Type[GenAiModelConfig]
-    ]
+    gen_ai_model_configs: GsheetsWorksheetEditor[Type[GenAiModelConfigsDf], Type[GenAiModelConfig]]
     metrics: GsheetsWorksheetEditor[Type[MetricsDf], Type[Metric]]
     evaluators: GsheetsWorksheetEditor[Type[EvaluatorsDf], Type[Evaluator]]
 
@@ -51,9 +45,7 @@ sheet_names = {
 }
 
 
-def get_ai_eval_spreadsheet(
-    authorized_clients: AuthorizedClients, ai_eval_spreadsheet_id: str
-) -> Spreadsheet:
+def get_ai_eval_spreadsheet(authorized_clients: AuthorizedClients, ai_eval_spreadsheet_id: str) -> Spreadsheet:
     ai_eval_spreadsheet = authorized_clients.gc.open_by_key(ai_eval_spreadsheet_id)
     return ai_eval_spreadsheet
 

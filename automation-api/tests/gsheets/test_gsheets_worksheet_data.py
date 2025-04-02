@@ -65,9 +65,7 @@ def test_gsheets_worksheet_data() -> None:
 # This oddity is reported upstream as https://github.com/unionai-oss/pandera/issues/1195
 def test_gsheets_worksheet_data_empty_df() -> None:
     class Foo(BaseModel):
-        include_in_next_evaluation: Optional[bool] = Field(
-            None, title="Include in next evaluation"
-        )
+        include_in_next_evaluation: Optional[bool] = Field(None, title="Include in next evaluation")
         model_id: Optional[int] = Field(None, title="Model ID")
         vendor: Optional[str] = Field(None, title="Vendor")
         model_name: Optional[str] = Field(None, title="Model name")

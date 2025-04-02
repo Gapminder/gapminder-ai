@@ -50,9 +50,7 @@ class VertexBatchJob(BaseBatchJob):
         # find custom id mapping file
         # because vertex AI doesn't support custom id in the
         # request file, so we create a local file for custom id.
-        mapping_path = self._output_path.replace(
-            "-response.jsonl", "-prompt-mapping.csv"
-        )
+        mapping_path = self._output_path.replace("-response.jsonl", "-prompt-mapping.csv")
         if not os.path.exists(mapping_path):
             raise ValueError(f"Prompt mapping CSV file not found: {mapping_path}")
         self._custom_id_mapping = {}
@@ -254,9 +252,7 @@ def _check_batch_job_status(batch_id: str) -> str:
     return batch_job.state.name
 
 
-def _simplify_vertex_response(
-    response_data: Dict[str, Any], custom_id: Optional[str] = None
-) -> Dict[str, Any]:
+def _simplify_vertex_response(response_data: Dict[str, Any], custom_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Simplify Vertex AI batch response format to keep only essential information.
 
@@ -286,9 +282,7 @@ def _simplify_vertex_response(
     return simplified
 
 
-def _process_and_simplify_results(
-    input_path: str, output_path: str, custom_id_mapping: Dict[str, str]
-) -> None:
+def _process_and_simplify_results(input_path: str, output_path: str, custom_id_mapping: Dict[str, str]) -> None:
     """
     Process and simplify batch results from raw JSONL to simplified format.
 
@@ -305,9 +299,7 @@ def _process_and_simplify_results(
             try:
                 response_data = json.loads(line)
                 # Get custom_id from mapping using request string
-                request_str = response_data["request"]["contents"][0]["parts"][0][
-                    "text"
-                ]
+                request_str = response_data["request"]["contents"][0]["parts"][0]["text"]
                 custom_id = custom_id_mapping.get(request_str)
                 if not custom_id:
                     logger.debug("would not find id for request:")
@@ -340,9 +332,7 @@ def _download_batch_job_output(
     batch_job = BatchPredictionJob(batch_id)
 
     if not batch_job.has_succeeded:
-        logger.error(
-            f"Cannot download results - batch status is {batch_job.state.name}"
-        )
+        logger.error(f"Cannot download results - batch status is {batch_job.state.name}")
         return None
 
     if not batch_job.output_location:

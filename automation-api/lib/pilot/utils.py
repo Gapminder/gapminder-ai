@@ -22,9 +22,7 @@ def read_ai_eval_spreadsheet() -> AiEvalData:
     authorized_clients = get_service_account_authorized_clients()
 
     ai_eval_spreadsheet_id = config["AI_EVAL_DEV_SPREADSHEET_ID"]
-    ai_eval_spreadsheet = get_ai_eval_spreadsheet(
-        authorized_clients, ai_eval_spreadsheet_id
-    )
+    ai_eval_spreadsheet = get_ai_eval_spreadsheet(authorized_clients, ai_eval_spreadsheet_id)
     try:
         return read_ai_eval_data(ai_eval_spreadsheet)
     except SchemaError as err:

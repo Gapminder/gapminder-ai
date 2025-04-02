@@ -159,18 +159,14 @@ class MistralBatchJob(BaseBatchJob):
             status = batch_job.status
 
             # Log additional statistics if available
-            if hasattr(batch_job, "total_requests") and hasattr(
-                batch_job, "succeeded_requests"
-            ):
+            if hasattr(batch_job, "total_requests") and hasattr(batch_job, "succeeded_requests"):
                 total = batch_job.total_requests or 0
                 succeeded = batch_job.succeeded_requests or 0
                 failed = batch_job.failed_requests or 0
 
                 if total > 0:
                     percent_done = round(((succeeded + failed) / total) * 100, 2)
-                    logger.info(
-                        f"Progress: {percent_done}% ({succeeded} succeeded, {failed} failed, {total} total)"
-                    )
+                    logger.info(f"Progress: {percent_done}% ({succeeded} succeeded, {failed} failed, {total} total)")
 
             return status
         except Exception as e:
@@ -189,9 +185,7 @@ class MistralBatchJob(BaseBatchJob):
             batch_job = self._client.batch.jobs.get(job_id=self.batch_id)
 
             if batch_job.status != "SUCCESS":
-                logger.error(
-                    f"Cannot download results - batch status is {batch_job.status}"
-                )
+                logger.error(f"Cannot download results - batch status is {batch_job.status}")
                 return None
 
             # Create output file path
@@ -201,9 +195,7 @@ class MistralBatchJob(BaseBatchJob):
 
             # Download output file
             if batch_job.output_file:
-                output_content = self._client.files.download(
-                    file_id=batch_job.output_file
-                )
+                output_content = self._client.files.download(file_id=batch_job.output_file)
 
                 with open(temp_output, "wb") as f:
                     for chunk in output_content.iter_bytes():
@@ -211,9 +203,7 @@ class MistralBatchJob(BaseBatchJob):
 
                 # Download error file if it exists
                 if batch_job.error_file:
-                    error_content = self._client.files.download(
-                        file_id=batch_job.error_file
-                    )
+                    error_content = self._client.files.download(file_id=batch_job.error_file)
 
                     with open(error_temp_path, "wb") as f:
                         for chunk in error_content.iter_bytes():
@@ -227,13 +217,8 @@ class MistralBatchJob(BaseBatchJob):
                             for line in raw_file:
                                 try:
                                     response_data = json.loads(line)
-                                    simplified = _simplify_mistral_response(
-                                        response_data
-                                    )
-                                    out_file.write(
-                                        json.dumps(simplified, ensure_ascii=False)
-                                        + "\n"
-                                    )
+                                    simplified = _simplify_mistral_response(response_data)
+                                    out_file.write(json.dumps(simplified, ensure_ascii=False) + "\n")
                                 except json.JSONDecodeError as e:
                                     logger.error(f"Error processing line: {e}")
                                     continue
@@ -244,13 +229,8 @@ class MistralBatchJob(BaseBatchJob):
                             for line in error_file:
                                 try:
                                     response_data = json.loads(line)
-                                    simplified = _simplify_mistral_response(
-                                        response_data
-                                    )
-                                    out_file.write(
-                                        json.dumps(simplified, ensure_ascii=False)
-                                        + "\n"
-                                    )
+                                    simplified = _simplify_mistral_response(response_data)
+                                    out_file.write(json.dumps(simplified, ensure_ascii=False) + "\n")
                                 except json.JSONDecodeError as e:
                                     logger.error(f"Error processing error line: {e}")
                                     continue

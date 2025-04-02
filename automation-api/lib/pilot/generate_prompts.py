@@ -31,24 +31,15 @@ def ensure_complete_options(question_options: pl.DataFrame) -> pl.DataFrame:
     """
     # First fill in missing letters for existing rows
     # Get the count of options per question/language
-    option_counts = question_options.group_by(["question_id", "language"]).agg(
-        pl.count().alias("count")
-    )
+    option_counts = question_options.group_by(["question_id", "language"]).agg(pl.count().alias("count"))
 
     # Join back to original data
-    question_options = question_options.join(
-        option_counts, on=["question_id", "language"], how="left"
-    )
+    question_options = question_options.join(option_counts, on=["question_id", "language"], how="left")
 
     # Fill missing letters based on row number within each group
     question_options = question_options.with_columns(
         pl.when(pl.col("letter").is_null())
-        .then(
-            pl.col("count")
-            .rank("ordinal")
-            .cast(pl.Utf8)
-            .replace({"1": "A", "2": "B", "3": "C"})
-        )
+        .then(pl.col("count").rank("ordinal").cast(pl.Utf8).replace({"1": "A", "2": "B", "3": "C"}))
         .otherwise(pl.col("letter"))
         .alias("letter")
     ).drop("count")
@@ -63,17 +54,13 @@ def ensure_complete_options(question_options: pl.DataFrame) -> pl.DataFrame:
     ).explode("letter")
 
     # Join with existing options, filling missing ones with null values
-    complete_options = required_options.join(
-        question_options, on=["question_id", "language", "letter"], how="left"
-    )
+    complete_options = required_options.join(question_options, on=["question_id", "language", "letter"], how="left")
 
     # Fill null values in question_option with empty string
     return complete_options.with_columns(pl.col("question_option").fill_null(""))
 
 
-def combine_questions_with_options(
-    questions: pl.DataFrame, question_options: pl.DataFrame
-) -> pl.DataFrame:
+def combine_questions_with_options(questions: pl.DataFrame, question_options: pl.DataFrame) -> pl.DataFrame:
     """
     Combine questions with their options to create a dataframe with:
     question_id, published_version_of_question, option_a, option_b, option_c
@@ -98,9 +85,7 @@ def combine_questions_with_options(
     )
 
     # Join with questions dataframe
-    combined = questions.join(
-        options_pivot, on=["question_id", "language"], how="inner"
-    )
+    combined = questions.join(options_pivot, on=["question_id", "language"], how="inner")
 
     # Rename columns to option_a, option_b, option_c
     combined = combined.rename(
@@ -113,14 +98,10 @@ def combine_questions_with_options(
     )
 
     # Select and order final columns
-    return combined.select(
-        ["question_id", "question_text", "option_a", "option_b", "option_c"]
-    )
+    return combined.select(["question_id", "question_text", "option_a", "option_b", "option_c"])
 
 
-def generate_question_prompt_combinations(
-    questions: pl.DataFrame, prompt_variations: pl.DataFrame
-) -> pl.DataFrame:
+def generate_question_prompt_combinations(questions: pl.DataFrame, prompt_variations: pl.DataFrame) -> pl.DataFrame:
     """
     Generate all combinations of questions and prompt variations.
 
@@ -149,9 +130,7 @@ def generate_question_prompt_combinations(
         )
 
         # Second format step: format question_prompt_template with formatted_question
-        question_prompt_text = combo["question_prompt_template"].format(
-            question=formatted_question
-        )
+        question_prompt_text = combo["question_prompt_template"].format(question=formatted_question)
 
         # Create the prompt ID and text
         question_prompt_id = f"{combo['question_id']}-{combo['variation_id']}"
@@ -241,9 +220,7 @@ def convert_to_jsonl_mistral(
             f.write(f"{json_line}\n")
 
 
-def convert_to_jsonl_vertex(
-    df: pl.DataFrame, output_path: str, model_parameters: dict
-) -> None:
+def convert_to_jsonl_vertex(df: pl.DataFrame, output_path: str, model_parameters: dict) -> None:
     """
     Convert a DataFrame of prompts to Vertex AI JSONL format for batch processing.
 
@@ -313,14 +290,10 @@ def main(base_path, model_config_id, jsonl_format):
     combined_questions = combine_questions_with_options(questions, question_options)
 
     # Generate question-prompt combinations
-    question_prompts = generate_question_prompt_combinations(
-        combined_questions, prompt_template_variations
-    )
+    question_prompts = generate_question_prompt_combinations(combined_questions, prompt_template_variations)
 
     # Find and validate model configuration
-    model_config = model_configurations.filter(
-        pl.col("model_config_id") == model_config_id
-    )
+    model_config = model_configurations.filter(pl.col("model_config_id") == model_config_id)
 
     if model_config.height == 0:
         raise ValueError(f"Model config ID {model_config_id} not found")
@@ -341,9 +314,7 @@ def main(base_path, model_config_id, jsonl_format):
             params = {}
 
     # Save as JSONL file in selected format with model config prefix
-    jsonl_output_path = os.path.join(
-        base_path, f"{model_config_id}-question_prompts.jsonl"
-    )
+    jsonl_output_path = os.path.join(base_path, f"{model_config_id}-question_prompts.jsonl")
 
     # Only save prompt mapping CSV for Vertex format
     if JsonlFormat(jsonl_format) == JsonlFormat.VERTEX:

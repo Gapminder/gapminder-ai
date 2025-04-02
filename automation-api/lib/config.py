@@ -16,9 +16,7 @@ def make_tmp_file_google_application_credentials(base64encoded_credentials):
 
     This function will create a temp file with the oridinary contents of the credentials
     """
-    service_account_credentials = base64.b64decode(base64encoded_credentials).decode(
-        "utf-8"
-    )
+    service_account_credentials = base64.b64decode(base64encoded_credentials).decode("utf-8")
     json_acct_info = json.loads(service_account_credentials)
 
     with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
@@ -67,9 +65,7 @@ def read_config() -> dict[str, str]:
 
     # create a tempfile for GOOGLE_APPLICATION_CREDENTIALS
     if config["VERTEX_SERVICE_ACCOUNT_CREDENTIALS"]:
-        tmp_file = make_tmp_file_google_application_credentials(
-            config["VERTEX_SERVICE_ACCOUNT_CREDENTIALS"]
-        )
+        tmp_file = make_tmp_file_google_application_credentials(config["VERTEX_SERVICE_ACCOUNT_CREDENTIALS"])
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp_file
         config["GOOGLE_APPLICATION_CREDENTIALS"] = tmp_file
 
