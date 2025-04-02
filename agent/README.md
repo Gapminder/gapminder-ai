@@ -71,12 +71,17 @@ This script allows you to list and download files from a specific Google Drive f
    This will:
    - List all files from the original Google Drive folder
    - Check which files have been successfully converted to text-based formats
+   - Verify the quality of conversions (e.g., non-empty files, CSV creation)
+   - Count tokens in all converted files using OpenAI's tiktoken library
    - Update a Google Sheet with:
      - File names and IDs
      - MIME types
      - Expected converted file names
-     - Conversion status (Converted/Not Converted)
+     - Detailed conversion status (e.g., "Converted to 5 CSV files", "File is empty")
+     - Whether conversion was successful
      - Whether conversion is supported for each file type
+     - Token count for each converted file
+     - Total token count across all files
    - The status spreadsheet is available at: [Sources Status](https://docs.google.com/spreadsheets/d/1WoKBzVhBvOrEQWwrQDcdG8Y3V92wF1upYgMdZu1K1ck/edit)
 
 5. Analyze token counts:

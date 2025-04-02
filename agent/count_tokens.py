@@ -1,19 +1,7 @@
-import tiktoken
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
-
-
-def count_tokens_in_file(file_path, encoding):
-    """Count tokens in a single file."""
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        tokens = encoding.encode(content)
-        return len(tokens)
-    except Exception as e:
-        print(f"Error processing {file_path}: {e}")
-        return 0
+from token_counting import get_token_encoder, count_tokens_in_file
 
 
 def get_file_type(file_path):
@@ -22,8 +10,8 @@ def get_file_type(file_path):
 
 
 def main():
-    # Initialize tiktoken encoder
-    encoding = tiktoken.get_encoding("cl100k_base")
+    # Initialize tiktoken encoder once to reuse
+    encoding = get_token_encoder()
 
     # Get all files from sources directory
     sources_dir = Path("sources")
