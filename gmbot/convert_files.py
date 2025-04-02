@@ -2,6 +2,8 @@ import os
 from html2text import HTML2Text
 import pandas as pd
 import re
+import pdfplumber
+from docx import Document
 
 
 def convert_html_to_markdown(html_file):
@@ -68,9 +70,71 @@ def convert_excel_to_csv(excel_file):
 
 def convert_pdf_to_text(pdf_file):
     """Convert PDF file to text."""
-    # Note: This is a placeholder. You'll need to implement PDF to text conversion
-    # using a library like PyPDF2 or pdfplumber
-    print(f"PDF to text conversion not implemented yet for {pdf_file}")
+    sources_dir = "sources"
+    os.makedirs(sources_dir, exist_ok=True)
+    txt_file = os.path.join(sources_dir, os.path.splitext(os.path.basename(pdf_file))[0] + ".txt")
+
+    if os.path.exists(txt_file):
+        # print(f"Skipping {pdf_file} - text file already exists: {txt_file}")
+        return txt_file
+
+    try:
+        with pdfplumber.open(pdf_file) as pdf:
+            text_content = []
+            for page in pdf.pages:
+                text_content.append(page.extract_text() or "")
+
+            text = "\n\n".join(text_content)
+
+            # Clean up the text
+            text = re.sub(r"\n{3,}", "\n\n", text)  # Remove excessive newlines
+
+            with open(txt_file, "w", encoding="utf-8") as f:
+                f.write(text)
+
+            print(f"Converted {pdf_file} to {txt_file}")
+            return txt_file
+    except Exception as e:
+        print(f"Error converting PDF {pdf_file}: {e}")
+        return None
+
+
+def convert_docx_to_text(docx_file):
+    """Convert DOCX file to text."""
+    sources_dir = "sources"
+    os.makedirs(sources_dir, exist_ok=True)
+    txt_file = os.path.join(sources_dir, os.path.splitext(os.path.basename(docx_file))[0] + ".txt")
+
+    if os.path.exists(txt_file):
+        # print(f"Skipping {docx_file} - text file already exists: {txt_file}")
+        return txt_file
+
+    try:
+        doc = Document(docx_file)
+        text_content = []
+        for paragraph in doc.paragraphs:
+            text_content.append(paragraph.text)
+
+        text = "\n\n".join(text_content)
+
+        # Clean up the text
+        text = re.sub(r"\n{3,}", "\n\n", text)  # Remove excessive newlines
+
+        with open(txt_file, "w", encoding="utf-8") as f:
+            f.write(text)
+
+        print(f"Converted {docx_file} to {txt_file}")
+        return txt_file
+    except Exception as e:
+        print(f"Error converting DOCX {docx_file}: {e}")
+        return None
+
+
+def convert_image_to_text(image_file):
+    """Convert image file to text using OCR."""
+    # Note: This is a placeholder. You'll need to implement OCR using a library
+    # like pytesseract or cloud OCR services
+    print(f"Image to text conversion not implemented yet for {image_file}")
     return None
 
 
@@ -100,6 +164,10 @@ def main():
                 convert_excel_to_csv(file_path)
             elif ext == ".pdf":
                 convert_pdf_to_text(file_path)
+            elif ext == ".docx":
+                convert_docx_to_text(file_path)
+            elif ext in [".jpg", ".jpeg", ".png", ".gif", ".bmp"]:
+                convert_image_to_text(file_path)
             else:
                 print(f"Skipping {filename} with extension {ext} - " "no conversion implemented")
                 pass
