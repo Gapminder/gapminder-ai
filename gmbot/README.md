@@ -58,20 +58,22 @@ This script allows you to list and download files from a specific Google Drive f
    python convert_files.py
    ```
    This will:
-   - Convert Google Docs (HTML) to Markdown (.md)
-   - Convert Excel files to CSV (one file per sheet)
+   - Create a `sources` directory if it doesn't exist
+   - Convert Google Docs (HTML) to Markdown (.md) in the `sources` directory
+   - Convert Excel files to CSV (one file per sheet) in `sources/<filename>_sheets/`
    - Skip other file types
-   - Create appropriate directories for converted files
+   - Keep original files in the `downloads` directory
 
 ## Notes
 
 - The script uses read-only access to Google Drive
 - Downloaded files are saved in a `downloads` directory
+- Converted files are saved in a `sources` directory
 - The script skips Google Drive folders and only downloads files
 - Progress is shown for each download
 - Make sure to keep your `service-account.json` file secure and never commit it to version control
 - Google Workspace files are automatically exported to compatible formats:
-  - Documents → HTML (then converted to Markdown)
-  - Spreadsheets → Excel (.xlsx, then converted to CSV)
+  - Documents → HTML (then converted to Markdown in `sources/`)
+  - Spreadsheets → Excel (.xlsx, then converted to CSV in `sources/<filename>_sheets/`)
   - Presentations → PDF
   - Drawings → PNG 

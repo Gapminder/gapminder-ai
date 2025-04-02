@@ -6,6 +6,15 @@ import re
 
 def convert_html_to_markdown(html_file):
     """Convert HTML file to Markdown."""
+    # Check if markdown file already exists
+    sources_dir = "sources"
+    os.makedirs(sources_dir, exist_ok=True)
+    md_file = os.path.join(sources_dir, os.path.splitext(os.path.basename(html_file))[0] + ".md")
+
+    if os.path.exists(md_file):
+        # print(f"Skipping {html_file} - markdown file already exists: {md_file}")
+        return md_file
+
     with open(html_file, "r", encoding="utf-8") as f:
         html_content = f.read()
 
@@ -19,15 +28,9 @@ def convert_html_to_markdown(html_file):
     markdown_content = h.handle(html_content)
 
     # Clean up the markdown
-    markdown_content = re.sub(
-        r"\n{3,}", "\n\n", markdown_content
-    )  # Remove excessive newlines
-    markdown_content = re.sub(
-        r"#+\s*$", "", markdown_content
-    )  # Remove trailing headers
+    markdown_content = re.sub(r"\n{3,}", "\n\n", markdown_content)  # Remove excessive newlines
+    markdown_content = re.sub(r"#+\s*$", "", markdown_content)  # Remove trailing headers
 
-    # Save as markdown
-    md_file = os.path.splitext(html_file)[0] + ".md"
     with open(md_file, "w", encoding="utf-8") as f:
         f.write(markdown_content)
 
@@ -37,12 +40,18 @@ def convert_html_to_markdown(html_file):
 
 def convert_excel_to_csv(excel_file):
     """Convert Excel file to CSV."""
+    # Check if sheets directory already exists
+    sources_dir = "sources"
+    os.makedirs(sources_dir, exist_ok=True)
+    base_name = os.path.splitext(os.path.basename(excel_file))[0]
+    sheets_dir = os.path.join(sources_dir, base_name + "_sheets")
+
+    if os.path.exists(sheets_dir):
+        # print(f"Skipping {excel_file} - sheets directory already exists: {sheets_dir}")
+        return sheets_dir
+
     # Read all sheets
     excel_data = pd.read_excel(excel_file, sheet_name=None)
-
-    # Create a directory for the sheets
-    base_name = os.path.splitext(excel_file)[0]
-    sheets_dir = base_name + "_sheets"
     os.makedirs(sheets_dir, exist_ok=True)
 
     # Convert each sheet to CSV
@@ -72,6 +81,10 @@ def main():
         print(f"Downloads directory '{downloads_dir}' not found!")
         return
 
+    # Create sources directory
+    sources_dir = "sources"
+    os.makedirs(sources_dir, exist_ok=True)
+
     for filename in os.listdir(downloads_dir):
         file_path = os.path.join(downloads_dir, filename)
 
@@ -88,7 +101,8 @@ def main():
             elif ext == ".pdf":
                 convert_pdf_to_text(file_path)
             else:
-                print(f"Skipping {filename} - no conversion needed")
+                print(f"Skipping {filename} with extension {ext} - " "no conversion implemented")
+                pass
         except Exception as e:
             print(f"Error converting {filename}: {e}")
 
