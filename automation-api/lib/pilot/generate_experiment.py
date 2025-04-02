@@ -36,9 +36,7 @@ def read_ai_eval_spreadsheet() -> AiEvalData:
     config = read_config()
     authorized_clients = get_service_account_authorized_clients()
     ai_eval_spreadsheet_id = config["AI_EVAL_DEV_SPREADSHEET_ID"]
-    ai_eval_spreadsheet = get_ai_eval_spreadsheet(
-        authorized_clients, ai_eval_spreadsheet_id
-    )
+    ai_eval_spreadsheet = get_ai_eval_spreadsheet(authorized_clients, ai_eval_spreadsheet_id)
     try:
         return read_ai_eval_data(ai_eval_spreadsheet)
     except SchemaError as err:
@@ -78,13 +76,9 @@ def save_sheets_as_csv(base_dir: Optional[str] = None) -> Dict[str, str]:
         "evaluators": filter_included_rows(ai_eval_data.evaluators.data.df),
         "questions": filter_included_rows(ai_eval_data.questions.data.df),
         "question_options": filter_included_rows(ai_eval_data.question_options.data.df),
-        "prompt_variations": filter_included_rows(
-            ai_eval_data.prompt_variations.data.df
-        ),
+        "prompt_variations": filter_included_rows(ai_eval_data.prompt_variations.data.df),
         "gen_ai_models": filter_included_rows(ai_eval_data.gen_ai_models.data.df),
-        "gen_ai_model_configs": filter_included_rows(
-            ai_eval_data.gen_ai_model_configs.data.df
-        ),
+        "gen_ai_model_configs": filter_included_rows(ai_eval_data.gen_ai_model_configs.data.df),
         "metrics": filter_included_rows(ai_eval_data.metrics.data.df),
     }
 
@@ -94,9 +88,7 @@ def save_sheets_as_csv(base_dir: Optional[str] = None) -> Dict[str, str]:
     for sheet_key, df in editor_map.items():
         output_path = os.path.join(base_dir, f"{sheet_key}.csv")
         df.to_csv(output_path, index=False)
-        if (
-            sheet_key in sheet_names
-        ):  # Only use sheet_names mapping for sheets in the schema
+        if sheet_key in sheet_names:  # Only use sheet_names mapping for sheets in the schema
             saved_files[sheet_names[sheet_key]] = output_path
         else:
             saved_files[sheet_key] = output_path
@@ -105,9 +97,7 @@ def save_sheets_as_csv(base_dir: Optional[str] = None) -> Dict[str, str]:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate experiment configuration files"
-    )
+    parser = argparse.ArgumentParser(description="Generate experiment configuration files")
     parser.add_argument(
         "--output-dir",
         type=str,

@@ -27,9 +27,7 @@ PROVIDER_CLASSES: Dict[str, Type] = {
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Send JSONL prompts to LLM batch APIs")
-    parser.add_argument(
-        "jsonl_file", type=str, help="Path to the JSONL file containing prompts"
-    )
+    parser.add_argument("jsonl_file", type=str, help="Path to the JSONL file containing prompts")
     parser.add_argument(
         "--method",
         type=str,
@@ -95,15 +93,11 @@ def process_batch(
                 raise ValueError("Please provide model id (--model-id) for vertex AI")
             batch_job = VertexBatchJob(jsonl_file, model_id)
         elif method == "mistral":
-            batch_job = MistralBatchJob(
-                jsonl_file, model_id=model_id, timeout_hours=timeout_hours
-            )
+            batch_job = MistralBatchJob(jsonl_file, model_id=model_id, timeout_hours=timeout_hours)
         else:
             if provider:
                 provider = provider.lower()
-                batch_job = LiteLLMBatchJob(
-                    jsonl_file, provider=provider, num_processes=processes
-                )
+                batch_job = LiteLLMBatchJob(jsonl_file, provider=provider, num_processes=processes)
             else:
                 batch_job = LiteLLMBatchJob(jsonl_file, num_processes=processes)
 

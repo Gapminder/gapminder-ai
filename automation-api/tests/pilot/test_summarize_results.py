@@ -85,9 +85,7 @@ def test_calculate_final_score():
     assert calculate_final_score([-1, -1, -1]) == -1, "All -1 scores should return -1"
 
     # If there's a clear majority winner, return that winner
-    assert (
-        calculate_final_score([0, 0, 0]) == 0
-    ), "All identical scores should return that score"
+    assert calculate_final_score([0, 0, 0]) == 0, "All identical scores should return that score"
     assert calculate_final_score([1, 1, 2]) == 1, "Clear majority should win"
     assert calculate_final_score([1, 1, 2, -1, -1]) == 1, "Should filter out -1 scores"
 
@@ -96,16 +94,8 @@ def test_calculate_final_score():
     assert calculate_final_score([1, 1, 2, 2]) == 0, "Tied scores should return 0"
 
     # Edge cases
-    assert (
-        calculate_final_score([-1, -1, -1, -1]) == -1
-    ), "All error scores should return -1"
+    assert calculate_final_score([-1, -1, -1, -1]) == -1, "All error scores should return -1"
     assert calculate_final_score([-1]) == -1, "Single error score should return -1"
-    assert (
-        calculate_final_score([0]) == 0
-    ), "Single valid score should return that score"
-    assert (
-        calculate_final_score([1, 2, 3, 2, 2, 1, 3, 3, 3, 3]) == 3
-    ), "Should handle longer lists"
-    assert (
-        calculate_final_score([-1, -1, 1]) == 1
-    ), "Single valid score with errors should return that score"
+    assert calculate_final_score([0]) == 0, "Single valid score should return that score"
+    assert calculate_final_score([1, 2, 3, 2, 2, 1, 3, 3, 3, 3]) == 3, "Should handle longer lists"
+    assert calculate_final_score([-1, -1, 1]) == 1, "Single valid score with errors should return that score"

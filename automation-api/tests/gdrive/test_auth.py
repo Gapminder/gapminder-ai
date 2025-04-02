@@ -13,9 +13,7 @@ def test_auth() -> None:
 
     assert len(b64_encoded_service_account_credentials) > 1
 
-    credentials = authorized_service_account_credentials(
-        b64_encoded_service_account_credentials
-    )
+    credentials = authorized_service_account_credentials(b64_encoded_service_account_credentials)
 
     authorize(credentials)
 

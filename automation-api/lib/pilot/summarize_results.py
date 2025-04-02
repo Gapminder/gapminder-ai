@@ -33,8 +33,7 @@ def get_evaluator_prefix(evaluator_id: str) -> str:
 def find_file_groups(folder: Path) -> Dict[str, Tuple[Path, List[Path]]]:
     """Group response files with their corresponding eval files."""
     file_pattern = re.compile(
-        r"(?P<model_id>.+?)-question_prompts-response"
-        r"(-eval-prompts-(?P<evaluator_id>.+?)-response)?\.jsonl$"
+        r"(?P<model_id>.+?)-question_prompts-response" r"(-eval-prompts-(?P<evaluator_id>.+?)-response)?\.jsonl$"
     )
 
     groups: Dict[str, Tuple[Path, List[Path]]] = {}
@@ -65,9 +64,7 @@ def load_jsonl(file_path: Path) -> List[Dict]:
         return [json.loads(line) for line in f]
 
 
-def extract_custom_id_info(
-    custom_id: str, expected_model_config_id: str
-) -> Dict[str, str]:
+def extract_custom_id_info(custom_id: str, expected_model_config_id: str) -> Dict[str, str]:
     """Extract info from custom_id and validate model_config_id matches expected"""
     parts = custom_id.split("-")
     excludes = ["question", "q", "eval"]
@@ -82,9 +79,7 @@ def extract_custom_id_info(
         )
 
     if len(parts) == 3:  # question responses
-        return dict(
-            zip(["model_config_id", "question_id", "prompt_variation_id"], parts)
-        )
+        return dict(zip(["model_config_id", "question_id", "prompt_variation_id"], parts))
     else:
         return dict(
             zip(
@@ -131,9 +126,7 @@ def process_responses(responses: List[Dict], model_id: str) -> List[Dict]:
     return processed
 
 
-def process_evals(
-    evals: List[Dict], evaluator_prefix: str, model_id: str
-) -> List[Dict]:
+def process_evals(evals: List[Dict], evaluator_prefix: str, model_id: str) -> List[Dict]:
     """Process evaluation records into structured scores."""
     processed = []
     for eval_rec in evals:
@@ -201,16 +194,12 @@ def calculate_final_score(scores: List[int]) -> int:
             most_common_score = score
 
     # Check if this is a clear winner (no other score has the same count)
-    is_clear_winner = (
-        sum(1 for count in score_counts.values() if count == max_count) == 1
-    )
+    is_clear_winner = sum(1 for count in score_counts.values() if count == max_count) == 1
 
     return most_common_score if is_clear_winner else 0
 
 
-def process_group(
-    response_path: Path, eval_paths: List[Path], output_dir: Path
-) -> None:
+def process_group(response_path: Path, eval_paths: List[Path], output_dir: Path) -> None:
     """Process a group of response + eval files into final output."""
     model_id = response_path.name.split("-")[0]
 
@@ -225,9 +214,7 @@ def process_group(
             r".+?-question_prompts-response-eval-prompts-(?P<evaluator_id>.+?)-response\.jsonl$",
             eval_path.name,
         )
-        evaluator_id = (
-            eval_file_match.group("evaluator_id") if eval_file_match else "unknown"
-        )
+        evaluator_id = eval_file_match.group("evaluator_id") if eval_file_match else "unknown"
         prefix = get_evaluator_prefix(evaluator_id)
         evals = load_jsonl(eval_path)
         eval_df = pl.DataFrame(process_evals(evals, prefix, model_id))
@@ -236,9 +223,7 @@ def process_group(
     # Combine all data
     combined_df = response_df
     for df in eval_dfs:
-        combined_df = combined_df.join(
-            df, on=["model_config_id", "question_id", "prompt_variation_id"], how="left"
-        )
+        combined_df = combined_df.join(df, on=["model_config_id", "question_id", "prompt_variation_id"], how="left")
 
     # Fill null evaluation scores with -1
     # And fille null response with n/a
@@ -252,17 +237,15 @@ def process_group(
     ]
     eval_columns = [col for col in combined_df.columns if col not in joining_columns]
 
-    combined_df = combined_df.with_columns(
-        [pl.col(col).fill_null(-1) for col in eval_columns]
-    ).with_columns(pl.col("response").fill_null("NOT_ANSWERED"))
+    combined_df = combined_df.with_columns([pl.col(col).fill_null(-1) for col in eval_columns]).with_columns(
+        pl.col("response").fill_null("NOT_ANSWERED")
+    )
 
     # Add final correctness score
     score_cols = [c for c in combined_df.columns if c.endswith("_correctness")]
     combined_df = combined_df.with_columns(
         pl.struct(score_cols)
-        .map_elements(
-            lambda x: calculate_final_score(x.values()), return_dtype=pl.Int32
-        )
+        .map_elements(lambda x: calculate_final_score(x.values()), return_dtype=pl.Int32)
         .alias("final_correctness")
     )
 
@@ -343,12 +326,8 @@ def main(input_dir: Path, output_dir: Optional[Path] = None) -> None:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser(
-        description="Generate consolidated Parquet files from experiment JSONL results"
-    )
-    parser.add_argument(
-        "input_dir", type=Path, help="Directory containing response/eval JSONL files"
-    )
+    parser = argparse.ArgumentParser(description="Generate consolidated Parquet files from experiment JSONL results")
+    parser.add_argument("input_dir", type=Path, help="Directory containing response/eval JSONL files")
     parser.add_argument(
         "-o",
         "--output-dir",

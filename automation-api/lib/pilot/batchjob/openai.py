@@ -78,9 +78,7 @@ class OpenAIBatchJob(BaseBatchJob):
 
             # Send batch to OpenAI
             client = self._client
-            self._batch_id = _send_batch_file(
-                client, self.jsonl_path, endpoint="/v1/chat/completions"
-            )
+            self._batch_id = _send_batch_file(client, self.jsonl_path, endpoint="/v1/chat/completions")
 
             # Create processing file with batch info
             with open(self._processing_file, "w") as f:
@@ -108,9 +106,7 @@ class OpenAIBatchJob(BaseBatchJob):
         Returns:
             str: Path to the downloaded results, or None if download failed
         """
-        return _download_batch_job_output(
-            self._client, self.batch_id, self._output_path
-        )
+        return _download_batch_job_output(self._client, self.batch_id, self._output_path)
 
     def wait_for_completion(self, poll_interval: int = 30) -> Optional[str]:
         """
@@ -164,9 +160,7 @@ class OpenAIBatchJob(BaseBatchJob):
 
 
 # below are helper functions
-def _send_batch_file(
-    client: OpenAI, jsonl_path: str, endpoint: str = "/v1/chat/completions"
-) -> str:
+def _send_batch_file(client: OpenAI, jsonl_path: str, endpoint: str = "/v1/chat/completions") -> str:
     """
     Send a JSONL file to OpenAI's batch API.
 
@@ -246,9 +240,7 @@ def _simplify_openai_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
     return simplified
 
 
-def _download_batch_job_output(
-    client: OpenAI, batch_id: str, output_path: str
-) -> Optional[str]:
+def _download_batch_job_output(client: OpenAI, batch_id: str, output_path: str) -> Optional[str]:
     """
     Download and simplify results for a completed batch job, including both successful
     responses and errors.
@@ -289,9 +281,7 @@ def _download_batch_job_output(
                     try:
                         response_data = json.loads(line)
                         simplified = _simplify_openai_response(response_data)
-                        out_file.write(
-                            json.dumps(simplified, ensure_ascii=False) + "\n"
-                        )
+                        out_file.write(json.dumps(simplified, ensure_ascii=False) + "\n")
                     except json.JSONDecodeError as e:
                         logger.error(f"Error processing line: {e}")
                         continue
@@ -303,9 +293,7 @@ def _download_batch_job_output(
                     try:
                         response_data = json.loads(line)
                         simplified = _simplify_openai_response(response_data)
-                        out_file.write(
-                            json.dumps(simplified, ensure_ascii=False) + "\n"
-                        )
+                        out_file.write(json.dumps(simplified, ensure_ascii=False) + "\n")
                     except json.JSONDecodeError as e:
                         logger.error(f"Error processing error line: {e}")
                         continue

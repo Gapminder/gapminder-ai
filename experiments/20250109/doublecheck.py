@@ -34,9 +34,7 @@ def save_jsonl(data: list[dict], file_path: str) -> None:
             f.write(json.dumps(item) + "\n")
 
 
-def merge_successful_responses(
-    response_files: list[str], output_file_path: str
-) -> None:
+def merge_successful_responses(response_files: list[str], output_file_path: str) -> None:
     """Merge multiple response files, keeping only successful responses.
 
     Args:
@@ -49,22 +47,15 @@ def merge_successful_responses(
         responses = load_jsonl(file_path)
         # Filter successful responses
         successful_responses.extend(
-            resp
-            for resp in responses
-            if resp.get("status") == "succeeded"
-            or resp.get("result_type") == "succeeded"
+            resp for resp in responses if resp.get("status") == "succeeded" or resp.get("result_type") == "succeeded"
         )
 
     # Save merged successful responses
     save_jsonl(successful_responses, output_file_path)
-    print(
-        f"Saved {len(successful_responses)} successful responses to {output_file_path}"
-    )
+    print(f"Saved {len(successful_responses)} successful responses to {output_file_path}")
 
 
-def filter_and_save_error_requests(
-    request_file_path: str, response_file_path: str, output_file_path: str
-) -> None:
+def filter_and_save_error_requests(request_file_path: str, response_file_path: str, output_file_path: str) -> None:
     """Filter requests with error responses and save to output file.
 
     Args:
@@ -79,11 +70,7 @@ def filter_and_save_error_requests(
     response_dict = {resp["custom_id"]: resp for resp in responses}
 
     # Filter requests where corresponding response has error
-    error_requests = [
-        req
-        for req in requests
-        if response_dict.get(req["custom_id"], {}).get("status") != "succeeded"
-    ]
+    error_requests = [req for req in requests if response_dict.get(req["custom_id"], {}).get("status") != "succeeded"]
 
     print(f"Found {len(error_requests)} requests with errors")
 

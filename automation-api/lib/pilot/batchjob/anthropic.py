@@ -91,9 +91,7 @@ class AnthropicBatchJob(BaseBatchJob):
         Returns:
             str: Path to the downloaded results, or None if download failed
         """
-        return _download_batch_job_output(
-            self._client, self.batch_id, self._output_path
-        )
+        return _download_batch_job_output(self._client, self.batch_id, self._output_path)
 
     def wait_for_completion(self, poll_interval: int = 60) -> Optional[str]:
         """
@@ -229,9 +227,7 @@ def _simplify_anthropic_response(response_data: Any) -> Dict[str, Any]:
     return simplified
 
 
-def _download_batch_job_output(
-    client: anthropic.Anthropic, batch_id: str, output_path: str
-) -> Optional[str]:
+def _download_batch_job_output(client: anthropic.Anthropic, batch_id: str, output_path: str) -> Optional[str]:
     """
     Download and process batch results.
 

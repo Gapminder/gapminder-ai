@@ -29,9 +29,7 @@ _PROVIDER_CONFIGS: Dict[str, Dict[str, Any]] = {
 class LiteLLMBatchJob(BaseBatchJob):
     """Class for managing LiteLLM batch jobs."""
 
-    def __init__(
-        self, jsonl_path: str, provider: Optional[str] = None, num_processes: int = 1
-    ):
+    def __init__(self, jsonl_path: str, provider: Optional[str] = None, num_processes: int = 1):
         """
         Initialize a batch job.
 
@@ -68,9 +66,7 @@ class LiteLLMBatchJob(BaseBatchJob):
                 return self._output_path
 
             # Process all prompts
-            result = _process_batch_prompts(
-                self.jsonl_path, self._output_path, self._num_processes, self._provider
-            )
+            result = _process_batch_prompts(self.jsonl_path, self._output_path, self._num_processes, self._provider)
 
             if result:
                 self._is_completed = True
@@ -145,9 +141,7 @@ def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
         response = litellm.completion(**request_body)  # type: ignore
         content = response.choices[0].message.content
         try:  # when citations available, add them to the content.
-            citation_str = "\n".join(
-                f"[{n+1}]: {link}" for n, link in enumerate(response.citations)
-            )
+            citation_str = "\n".join(f"[{n+1}]: {link}" for n, link in enumerate(response.citations))
             content = f"{content}\nCitations:\n{citation_str}"
         except AttributeError:
             pass
@@ -192,9 +186,7 @@ def _process_batch_prompts(
                     [(prompt, provider) for prompt in all_prompts],
                 )
         else:
-            results = [
-                _process_single_prompt(prompt, provider) for prompt in all_prompts
-            ]
+            results = [_process_single_prompt(prompt, provider) for prompt in all_prompts]
 
         # Write all results to output file
         with open(output_path, "w") as f:

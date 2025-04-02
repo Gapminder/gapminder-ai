@@ -36,24 +36,15 @@ def ensure_complete_options_with_correctness(
     """
     # First fill in missing letters for existing rows
     # Get the count of options per question/language
-    option_counts = question_options.group_by(["question_id", "language"]).agg(
-        pl.len().alias("count")
-    )
+    option_counts = question_options.group_by(["question_id", "language"]).agg(pl.len().alias("count"))
 
     # Join back to original data
-    question_options = question_options.join(
-        option_counts, on=["question_id", "language"], how="left"
-    )
+    question_options = question_options.join(option_counts, on=["question_id", "language"], how="left")
 
     # Fill missing letters based on row number within each group
     question_options = question_options.with_columns(
         pl.when(pl.col("letter").is_null())
-        .then(
-            pl.col("count")
-            .rank("ordinal")
-            .cast(pl.Utf8)
-            .replace({"1": "A", "2": "B", "3": "C"})
-        )
+        .then(pl.col("count").rank("ordinal").cast(pl.Utf8).replace({"1": "A", "2": "B", "3": "C"}))
         .otherwise(pl.col("letter"))
         .alias("letter")
     ).drop("count")
@@ -68,9 +59,7 @@ def ensure_complete_options_with_correctness(
     ).explode("letter")
 
     # Join with existing options, filling missing ones with null values
-    complete_options = required_options.join(
-        question_options, on=["question_id", "language", "letter"], how="left"
-    )
+    complete_options = required_options.join(question_options, on=["question_id", "language", "letter"], how="left")
 
     # Map correctness values and fill nulls
     correctness_mapping = {"1": "Correct", "2": "Wrong", "3": "Very Wrong"}
@@ -112,14 +101,12 @@ def combine_questions_with_options_and_correctness(
     column_mapping = {}
     for letter in ["A", "B", "C"]:
         column_mapping[f"question_option_{letter}"] = f"option_{letter.lower()}"
-        column_mapping[
-            f"correctness_of_answer_option_{letter}"
-        ] = f"option_{letter.lower()}_correctness"
+        column_mapping[f"correctness_of_answer_option_{letter}"] = f"option_{letter.lower()}_correctness"
 
     # Join with questions dataframe and rename columns
-    combined = questions.join(
-        options_pivot, on=["question_id", "language"], how="inner"
-    ).rename({"published_version_of_question": "question_text", **column_mapping})
+    combined = questions.join(options_pivot, on=["question_id", "language"], how="inner").rename(
+        {"published_version_of_question": "question_text", **column_mapping}
+    )
 
     # Select and order final columns
     return combined.select(
@@ -194,9 +181,7 @@ def generate_eval_prompts(
 
                 # Get all responses for this question
                 question_responses = {
-                    prompt_id: text
-                    for prompt_id, text in responses.items()
-                    if f"-{question_id}-" in prompt_id
+                    prompt_id: text for prompt_id, text in responses.items() if f"-{question_id}-" in prompt_id
                 }
 
                 for prompt_id, response_text in question_responses.items():
@@ -288,9 +273,7 @@ def main(base_path, response_file, send, wait):
     evaluators = pl.read_csv(evaluators_path)
 
     # Combine questions with options and correctness
-    combined_questions = combine_questions_with_options_and_correctness(
-        questions, question_options
-    )
+    combined_questions = combine_questions_with_options_and_correctness(questions, question_options)
 
     # Read responses
     responses = read_responses(response_file)
@@ -300,9 +283,7 @@ def main(base_path, response_file, send, wait):
         # Generate output path based on response file and evaluator
         response_basename = os.path.splitext(os.path.basename(response_file))[0]
         evaluator_id = evaluator["evaluator_id"].split("/")[-1].replace(".", "-")
-        output_path = os.path.join(
-            base_path, f"{response_basename}-eval-prompts-{evaluator_id}.jsonl"
-        )
+        output_path = os.path.join(base_path, f"{response_basename}-eval-prompts-{evaluator_id}.jsonl")
         model_parameters = json.loads(evaluator["parameters"])
 
         # Generate evaluation prompts
@@ -316,9 +297,7 @@ def main(base_path, response_file, send, wait):
             format=JsonlFormat(evaluator["jsonl_format"]),
         )
 
-        print(
-            f"Generated evaluation prompts for {evaluator['evaluator_id']} in {output_path}"
-        )
+        print(f"Generated evaluation prompts for {evaluator['evaluator_id']} in {output_path}")
 
         # Save prompt ID mapping if using Vertex format
         if evaluator["jsonl_format"] == JsonlFormat.VERTEX.value:

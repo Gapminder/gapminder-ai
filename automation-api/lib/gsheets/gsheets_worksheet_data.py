@@ -37,9 +37,7 @@ class GsheetsWorksheetData(Generic[DfSchemaModel, RowSchemaModel]):
         self.row_schema = row_schema
         self.header_row_number = header_row_number
 
-        self.attributes_to_columns_map = get_pydantic_model_field_titles(
-            self.row_schema
-        )
+        self.attributes_to_columns_map = get_pydantic_model_field_titles(self.row_schema)
         df = df.rename(columns=inv_dict(self.attributes_to_columns_map))
         df = self.replace_current_row_numbers_in_formulas(df)
         # import ipdb; ipdb.set_trace()
@@ -64,9 +62,7 @@ class GsheetsWorksheetData(Generic[DfSchemaModel, RowSchemaModel]):
                     )
             return row
 
-        replaced_df = df.apply(
-            replace_current_row_numbers, axis=1, result_type="broadcast"
-        )
+        replaced_df = df.apply(replace_current_row_numbers, axis=1, result_type="broadcast")
         return replaced_df.drop(columns=["__row_number"])
 
     def restore_current_row_numbers_in_formulas(
@@ -87,12 +83,8 @@ class GsheetsWorksheetData(Generic[DfSchemaModel, RowSchemaModel]):
                     )
             return row
 
-        replaced_df = df.apply(
-            restore_current_row_numbers, axis=1, result_type="broadcast"
-        )
+        replaced_df = df.apply(restore_current_row_numbers, axis=1, result_type="broadcast")
         return replaced_df.drop(columns=["__row_number"])
 
     def export(self) -> pa.typing.DataFrame[DfSchemaModel]:
-        return self.restore_current_row_numbers_in_formulas(self.df).rename(
-            columns=self.attributes_to_columns_map
-        )
+        return self.restore_current_row_numbers_in_formulas(self.df).rename(columns=self.attributes_to_columns_map)

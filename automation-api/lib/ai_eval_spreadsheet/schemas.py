@@ -15,14 +15,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class Question(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True)
 
-    include_in_next_evaluation: bool = Field(
-        False, title="Include in next evaluation", validate_default=True
-    )
+    include_in_next_evaluation: bool = Field(False, title="Include in next evaluation", validate_default=True)
     question_id: str = Field("", title="Question ID")
     language: str = Field("", title="Language")
-    published_version_of_question: str = Field(
-        "", title="Published version of question"
-    )
+    published_version_of_question: str = Field("", title="Published version of question")
 
     @field_validator("include_in_next_evaluation", mode="before")
     @classmethod
@@ -65,9 +61,7 @@ class PromptVariation(BaseModel):
     question_prefix: str = Field("", title="Question prefix")
     ai_prefix: str = Field("", title="AI prefix")
     question_prompt_template: str = Field("", title="Question prompt template")
-    question_prompt_template_example: str = Field(
-        "", title="Question prompt template example"
-    )
+    question_prompt_template_example: str = Field("", title="Question prompt template example")
     follow_up_answer_correctness_evaluation_prompt_template: str = Field(
         "", title="Follow-up answer correctness evaluation prompt template"
     )
