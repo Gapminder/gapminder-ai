@@ -64,6 +64,17 @@ This script allows you to list and download files from a specific Google Drive f
    - Skip other file types
    - Keep original files in the `downloads` directory
 
+4. Analyze token counts:
+   ```bash
+   python count_tokens.py
+   ```
+   This will:
+   - Count tokens in all files in the `sources` directory using OpenAI's tiktoken library
+   - Generate a summary table showing token counts per file
+   - Provide statistics by file type
+   - Create visualizations of token distribution
+   - Save histograms as 'token_distribution.png'
+
 ## Notes
 
 - The script uses read-only access to Google Drive
