@@ -1,0 +1,4 @@
+evaluator_id,provider,jsonl_format,parameters,metric_prefix
+gpt-4o,openai,openai,"{""temperature"": 0, ""max_completion_tokens"": 3000}",gpt4_
+claude-3-7-sonnet-20250219,anthropic,openai,"{""temperature"": 0, ""max_tokens"": 6000}",claude_
+publishers/google/models/gemini-1.5-pro-002,vertex,vertex,"{""temperature"": 0, ""max_output_tokens"": 3000}",gemini_
