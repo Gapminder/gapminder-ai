@@ -1,6 +1,5 @@
 import argparse
 import os
-from datetime import datetime
 from typing import Dict, Optional
 
 import pandas as pd
@@ -55,17 +54,16 @@ def save_sheets_as_csv(base_dir: Optional[str] = None) -> Dict[str, str]:
     Fetches all sheets from the AI Eval Spreadsheet and saves them as CSV files.
 
     Args:
-        base_dir: Directory to save CSV files to. If None, uses default experiments/YYYYMMDD
+        base_dir: Directory to save CSV files to. If None, uses current directory.
 
     Returns:
         Dict mapping sheet names to their saved file paths
     """
     # Create output directory structure
-    date_str = datetime.now().strftime("%Y%m%d")
     if base_dir is None:
-        base_dir = os.path.join("experiments", date_str, "ai_eval_sheets")
+        base_dir = "ai_eval_sheets"
     else:
-        base_dir = os.path.join(base_dir, date_str, "ai_eval_sheets")
+        base_dir = os.path.join(base_dir, "ai_eval_sheets")
     os.makedirs(base_dir, exist_ok=True)
 
     # Read all data using existing wrapper

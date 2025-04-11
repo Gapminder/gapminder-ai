@@ -11,6 +11,9 @@ classifiers = [
 ]
 packages = [{ include = "lib" }]
 
+[tool.poetry.scripts]
+gm-eval = "lib.pilot.gm_eval.cli:main"
+
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
 pandas = "^2.0.3"
