@@ -38,20 +38,96 @@ refer to run_evaluation.py[3] for a demo.
 
 [3]: https://github.com/Gapminder/gapminder-ai/blob/253c2b79aef96a5445bd82171e4d11fce488a8c1/automation-api/notebooks/run_evaluation.py
 
-### running experiment in CLI
+### Running Experiments with the gm-eval CLI Tool
 
-Below instruction is a demo for running evaluation for a model with ID `mc049` using all questions and metrics.
+The `gm-eval` command-line tool simplifies running experiments by providing a unified interface for all steps in the experiment workflow. After setting up your environment, you can use this tool to run experiments with a single command or execute individual steps as needed.
 
-- run `python -m lib.pilot.generate_experiment --output-dir .` to download all configurations from AI Eval spreadsheet into a subfolder named using timestamp in current dir
-- cd to the subfolder just created
-- run `python -m lib.pilot.generate_prompts --model-config-id mc049` to generate prompts for mc049 (mc049-question_prompts.jsonl)
-- run `python -m lib.pilot.send_batch_prompt mc049-question_prompts.jsonl --method openai` to send the batch to openai, or use `--method vertex` for Vertex, `--method anthropic` for Anthropic. Add `--wait` to wait until the response is ready. (filename will be mc049-question_prompts-response.jsonl)
-- run `python -m lib.pilot.generate_eval_prompts mc049-question_prompts-response.jsonl` to generate eval prompts, this will create multiple files based on the parameters listed in the Evaluator sheet in AI Eval spreadsheet.
-  - There is `--send` parameter to send them right away.
-  - If you didn't use `--send`, then you need to run send_batch_prompt for each generated eval prompts. note that for vertex endpoints we need to provide the `--model-id` parameter to set the target model. Because vertex jsonl format doesn't include model id.
-- and finally, run `python -m lib.pilot.summarize_results` to create summarized output. (you can find some example data in the [test folder](https://github.com/Gapminder/gapminder-ai/tree/batch_processing/automation-api/tests/pilot/data/example_batch))
+#### Installation
 
-you can use `-h` to view cli options for the modules.
+The tool is automatically installed when you set up the poetry environment:
+
+```bash
+poetry install
+```
+
+#### Basic Usage
+
+To see all available commands and options:
+
+```bash
+gm-eval --help
+```
+
+#### Running a Complete Experiment
+
+To run a complete experiment for a model configuration in one command:
+
+```bash
+gm-eval run --model-config-id mc049 --method openai --wait
+```
+
+This will:
+1. Download configurations from the AI Eval spreadsheet into current_dir/experiments/YYYYMMDD/
+2. Generate prompts for the specified model
+3. Send the prompts to the specified provider
+4. Generate and send evaluation prompts and wait for evaluation results
+5. Summarize the results (only if --wait flag is specified)
+
+#### Running Individual Steps
+
+You can also run each step individually:
+
+1. **Download configurations**:
+   ```bash
+   gm-eval download --output-dir experiments/
+   ```
+
+2. **Generate prompts**:
+
+for example the above step created an 20250411/ dir, then:
+
+   ```bash
+   gm-eval generate --model-config-id mc049 --base-path experiments/20250411
+   ```
+
+3. **Send prompts**:
+   ```bash
+   gm-eval send experiments/20250411/mc049-question_prompts.jsonl --method openai --wait
+   ```
+
+4. **Generate and send evaluation prompts**:
+   ```bash
+   gm-eval evaluate experiments/20250411/mc049-question_prompts-response.jsonl --send --wait
+   ```
+
+   You will want to run this twice. First without the `--wait` to send all evaluator prompts,
+   and then use `--wait` to download the results.
+
+   **Note about batch mode**: When using methods other than "litellm" (such as "openai", "anthropic", etc.),
+   you are using batch mode. In the `gm-eval run` command, the `--wait` flag only affects the evaluation step.
+   The send step will always wait for results to ensure the response file is available for the evaluate step.
+
+   When using batch mode, you can stop the command with Ctrl+C while it's waiting for results and rerun it
+   later with the same parameters to check if results are ready. This is useful for long-running batch jobs.
+
+5. **Summarize results**:
+   ```bash
+   gm-eval summarize --input-dir experiments/20250411
+   ```
+
+   NOTE: Please be sure not to use `.` for input-dir, otherwise the filename of output file will not
+   contain the date in it.
+
+#### Advanced Options
+
+Each command has additional options that can be viewed with the `--help` flag:
+
+```bash
+gm-eval run --help
+gm-eval download --help
+gm-eval generate --help
+# etc.
+```
 
 Currently I only keep the final outputs and the configurations from AI Eval spreadsheet in the [experiment folder.](https://github.com/Gapminder/gapminder-ai/tree/batch_processing/experiments). The master output csv files are also available in [ai worldview benchmark dataset](https://github.com/open-numbers/ddf--gapminder--ai_worldview_benchmark/tree/master/etl/source/results).
 
@@ -67,6 +143,6 @@ Currently I only keep the final outputs and the configurations from AI Eval spre
 See [./DEV.md]().
 
 ## TODOs
-- create an all-in-one cli tool so that we don't need to type long commands
+- when using --wait for `gm-eval evaluate`, the prompts are sent sequentially. So it must wait for first evaluator finish the batch before the second one can start. But we should send all batch at once.
+- improve the file naming in summarize step. (see the note above)
 - create a module for handling errors in batch responses. (it has been written in the run_evaluation notebook)
-
