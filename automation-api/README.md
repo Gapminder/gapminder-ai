@@ -73,6 +73,11 @@ This will:
 4. Generate and send evaluation prompts and wait for evaluation results
 5. Summarize the results (only if --wait flag is specified)
 
+**available methods**
+
+- openai/anthropic/vertex/mistral: using this method will send the batch via Batch API for these providers.
+- litellm: using this method will send the batch via litellm in realtime.
+
 #### Running Individual Steps
 
 You can also run each step individually:
@@ -87,8 +92,16 @@ You can also run each step individually:
 for example the above step created an 20250411/ dir, then:
 
    ```bash
-   gm-eval generate --model-config-id mc049 --base-path experiments/20250411
+   gm-eval generate --model-config-id mc049 --base-path experiments/20250411 --jsonl-format openai
    ```
+
+Please make sure to use the correct format for each provider.
+
+**available formats**
+
+- openai: use this for litellm, anthropic, openai models
+- mistral
+- vertex
 
 3. **Send prompts**:
    ```bash
@@ -131,12 +144,6 @@ gm-eval generate --help
 
 Currently I only keep the final outputs and the configurations from AI Eval spreadsheet in the [experiment folder.](https://github.com/Gapminder/gapminder-ai/tree/batch_processing/experiments). The master output csv files are also available in [ai worldview benchmark dataset](https://github.com/open-numbers/ddf--gapminder--ai_worldview_benchmark/tree/master/etl/source/results).
 
-## schema changes in AI Eval Spreadsheet
-
-- added "Evaluators": [link](https://docs.google.com/spreadsheets/d/1Tsa4FDAP-QhaXNhfclqq2_Wspp32efGeZyGHxSrtRvA/edit?gid=168651435#gid=168651435), which contains the configurations for evaluator models
-- removed "Latest Results", because we move the files to another dataset
-- in "Model Configurations", added `Name` column. Because we will be testing the same LLM with different parameters. So we should put a Name for Model configuration
-- in "Models": added `Model Publish Date`.
 
 ## Development
 
