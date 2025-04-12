@@ -31,6 +31,7 @@ Please refer to the current configuration spreadsheet[2] for the expected column
 1. clone this repo
 2. enable the automation-api environment by issuing `poetry shell`
 3. add an .env file `cp .env.example .env`, and edit `.env` properly.
+4. If using redis for litellm cache, please make sure redis is installed and edit the REDIS_HOST/REDIS_PORT in .env
 
 ### running experiment in Notebook
 
