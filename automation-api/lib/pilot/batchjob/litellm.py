@@ -147,21 +147,30 @@ def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
             pass
 
         # Format response like OpenAI batch API
-        # TODO: add citation data if available.
-        return {
+        result = {
             "custom_id": data.get("custom_id"),
             "status_code": 200,
             "content": content,
             "error": None,
         }
+
+        # Log that the prompt has been processed
+        logger.info(f"Prompt with custom_id '{data.get('custom_id')}' has been processed")
+
+        return result
     except Exception as e:
         # Handle errors like OpenAI batch API
-        return {
+        result = {
             "custom_id": data.get("custom_id"),
             "status_code": 500,
             "content": None,
             "error": str(e),
         }
+
+        # Log that the prompt processing failed
+        logger.error(f"Failed to process prompt with custom_id '{data.get('custom_id')}': {str(e)}")
+
+        return result
 
 
 def _process_batch_prompts(
@@ -178,14 +187,19 @@ def _process_batch_prompts(
         with open(input_jsonl_path) as f:
             all_prompts = [json.loads(line) for line in f]
 
+        total_prompts = len(all_prompts)
+        logger.info(f"Starting to process {total_prompts} prompts with {num_processes} processes")
+
         # Process prompts using multiprocessing if enabled
         if num_processes > 1:
+            logger.info(f"Using multiprocessing with {num_processes} processes")
             with mp.Pool(processes=num_processes) as pool:
                 results = pool.starmap(
                     _process_single_prompt,
                     [(prompt, provider) for prompt in all_prompts],
                 )
         else:
+            logger.info("Processing prompts sequentially")
             results = [_process_single_prompt(prompt, provider) for prompt in all_prompts]
 
         # Write all results to output file
@@ -193,6 +207,7 @@ def _process_batch_prompts(
             for result in results:
                 f.write(json.dumps(result) + "\n")
 
+        logger.info(f"Completed processing all {total_prompts} prompts")
         return output_path
 
     except Exception as e:
