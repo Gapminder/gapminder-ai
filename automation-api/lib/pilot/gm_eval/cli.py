@@ -12,10 +12,15 @@ from lib.pilot.gm_eval import __version__
 from lib.pilot.gm_eval.commands import download, evaluate, generate, run, send, summarize
 
 
-def setup_logging() -> None:
-    """Set up logging for the CLI."""
+def setup_logging(debug: bool = False) -> None:
+    """
+    Set up logging for the CLI.
+
+    Args:
+        debug: If True, set log level to DEBUG instead of INFO
+    """
     logger = AppSingleton().get_logger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
     # Add a console handler if not already present
     if not logger.handlers:
@@ -33,6 +38,7 @@ def create_parser() -> argparse.ArgumentParser:
         epilog="For more information, see the README.md file.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
     # Create subparsers for each command
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
@@ -74,12 +80,12 @@ def main(args: Optional[List[str]] = None) -> int:
     Returns:
         Exit code (0 for success, non-zero for failure)
     """
-    # Set up logging
-    setup_logging()
-
     # Parse arguments
     parser = create_parser()
     parsed_args = parser.parse_args(args)
+
+    # Set up logging with debug flag
+    setup_logging(debug=parsed_args.debug if hasattr(parsed_args, "debug") else False)
 
     # If no command is specified, show help and exit
     if not parsed_args.command:
