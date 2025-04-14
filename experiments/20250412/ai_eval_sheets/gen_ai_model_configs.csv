@@ -1,0 +1,2 @@
+model_config_id,model_id,name,model_parameters,repeat_times,memory,memory_size
+mc060,vertex_ai/gemini-2.5-pro-exp-03-25,Gemini Pro 2.5 Experimental,"{""temperature"": 0.01, ""max_output_tokens"": 5000}",1,False,0
