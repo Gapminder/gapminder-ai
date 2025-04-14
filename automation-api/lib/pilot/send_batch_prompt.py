@@ -54,7 +54,7 @@ def parse_args():
     parser.add_argument(
         "--model-id",
         type=str,
-        help="Model ID to use (required for vertex AI and recommended for mistral)",
+        help="Model ID to use (required for vertex AI and mistral)",
     )
     parser.add_argument(
         "--timeout-hours",
@@ -93,6 +93,8 @@ def process_batch(
                 raise ValueError("Please provide model id (--model-id) for vertex AI")
             batch_job = VertexBatchJob(jsonl_file, model_id)
         elif method == "mistral":
+            if not model_id:
+                raise ValueError("Please provide model id (--model-id) for mistral")
             batch_job = MistralBatchJob(jsonl_file, model_id=model_id, timeout_hours=timeout_hours)
         else:
             if provider:
@@ -105,6 +107,15 @@ def process_batch(
         batch_id = batch_job.send()
         if method != "litellm":
             print(f"Batch ID: {batch_id}")
+
+            # Add logging here - AFTER the batch is submitted
+            if wait:
+                logger.info("Waiting for batch completion...")
+                logger.info("If you're using batch mode, you can stop this command with Ctrl+C")
+                logger.info("and rerun it later with the same parameters to check if results are ready.")
+            else:
+                logger.info("Batch job submitted successfully. Results will be available later.")
+                logger.info("You can rerun this command with the same parameters and --wait to check for results.")
 
         # Wait for completion if requested
         if wait and method != "litellm":
