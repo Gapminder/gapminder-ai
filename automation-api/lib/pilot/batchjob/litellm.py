@@ -142,7 +142,7 @@ def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
         content = response.choices[0].message.content
         try:  # when citations available, add them to the content.
             citation_str = "\n".join(f"[{n+1}]: {link}" for n, link in enumerate(response.citations))
-            content = f"{content}\nCitations:\n{citation_str}"
+            content = f"{content}\n\nCitations:\n\n{citation_str}"
         except AttributeError:
             pass
 
