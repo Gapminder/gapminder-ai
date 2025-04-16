@@ -115,3 +115,9 @@ def is_conversion_supported(mime_type, filename):
 def clean_text_content(text):
     """Clean up text content by removing excessive newlines."""
     return re.sub(r"\n{3,}", "\n\n", text)  # Remove excessive newlines
+
+
+def remove_markdown_header_ids(text):
+    """Remove Pandoc-generated header IDs from Markdown content.
+    Example: Converts '# Header {#h.abcdefg}' to '# Header'"""
+    return re.sub(r"^(#+ .*?) \{#[^}]+\}$", r"\1", text, flags=re.MULTILINE)

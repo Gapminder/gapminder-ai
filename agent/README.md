@@ -8,7 +8,7 @@ This script allows you to list and download files from a specific Google Drive f
    ```bash
    # Create virtual environment with Python 3.13
    uv venv --python=3.13
-   
+
    # Activate virtual environment
    source .venv/bin/activate
    ```
@@ -18,7 +18,12 @@ This script allows you to list and download files from a specific Google Drive f
    uv pip install -r requirements.txt
    ```
 
-3. Get service account key:
+3. Install Pandoc:
+   - The conversion process now uses `pypandoc`, which requires the `pandoc` executable to be installed on your system.
+   - Please follow the installation instructions for your operating system available on the [official Pandoc website](https://pandoc.org/installing.html).
+   - Verify the installation by running `pandoc --version` in your terminal.
+
+4. Get service account key:
    - Go to the [Google Cloud Console](https://console.cloud.google.com/)
    - Navigate to "IAM & Admin" > "Service Accounts"
    - Find the service account: `gapminderbot@gapminder-ai.iam.gserviceaccount.com`
@@ -29,7 +34,7 @@ This script allows you to list and download files from a specific Google Drive f
    - Click "Create"
    - Save the downloaded JSON file as `service-account.json` in the same directory as this script
 
-4. Share the Google Drive folder:
+5. Share the Google Drive folder:
    - Open the Google Drive folder you want to access
    - Click "Share"
    - Add the service account email: `gapminderbot@gapminder-ai.iam.gserviceaccount.com`
@@ -107,4 +112,4 @@ This script allows you to list and download files from a specific Google Drive f
   - Documents → HTML (then converted to Markdown in `sources/`)
   - Spreadsheets → Excel (.xlsx, then converted to CSV in `sources/<filename>_sheets/`)
   - Presentations → PDF
-  - Drawings → PNG 
+  - Drawings → PNG
