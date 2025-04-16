@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from lib.app_singleton import AppSingleton
 from lib.pilot.gm_eval import __version__
-from lib.pilot.gm_eval.commands import download, evaluate, generate, run, send, summarize
+from lib.pilot.gm_eval.commands import download, evaluate, generate, merge, run, send, split, summarize
 
 
 def setup_logging(debug: bool = False) -> None:
@@ -67,6 +67,16 @@ def create_parser() -> argparse.ArgumentParser:
     run_parser = subparsers.add_parser("run", help="Run the entire workflow in sequence")
     run.add_arguments(run_parser)
 
+    # Split command
+    split_parser = subparsers.add_parser("split", help="Split failed requests from responses")
+    split.add_arguments(split_parser)
+
+    # Merge command
+    merge_parser = subparsers.add_parser(
+        "merge", help="Merge multiple response files (later files override earlier ones)"
+    )
+    merge.add_arguments(merge_parser)
+
     return parser
 
 
@@ -105,6 +115,10 @@ def main(args: Optional[List[str]] = None) -> int:
         return summarize.handle(parsed_args)
     elif parsed_args.command == "run":
         return run.handle(parsed_args)
+    elif parsed_args.command == "split":
+        return split.handle(parsed_args)
+    elif parsed_args.command == "merge":
+        return merge.handle(parsed_args)
     else:
         parser.print_help()
         return 1

@@ -146,6 +146,26 @@ gm-eval generate --help
 Currently I only keep the final outputs and the configurations from AI Eval spreadsheet in the [experiment folder.](https://github.com/Gapminder/gapminder-ai/tree/batch_processing/experiments). The master output csv files are also available in [ai worldview benchmark dataset](https://github.com/open-numbers/ddf--gapminder--ai_worldview_benchmark/tree/master/etl/source/results).
 
 
+### Additional Commands
+
+#### Handling Failed Requests
+
+The CLI provides two commands for managing failed API requests:
+
+1. **Split failed requests**:
+   ```bash
+   gm-eval split --requests requests.jsonl --output failed-requests.jsonl
+   ```
+   - Extracts requests that resulted in errors from the responses file
+   - Default response path is requests filename with '-response' suffix
+
+2. **Merge responses**:
+   ```bash
+   gm-eval merge original.jsonl retry1.jsonl retry2.jsonl --output merged.jsonl
+   ```
+   - Combines multiple response files
+   - Later files override earlier ones for duplicate custom_ids
+
 ## Development
 
 See [./DEV.md]().
@@ -153,4 +173,3 @@ See [./DEV.md]().
 ## TODOs
 - when using --wait for `gm-eval evaluate`, the prompts are sent sequentially. So it must wait for first evaluator finish the batch before the second one can start. But we should send all batch at once.
 - improve the file naming in summarize step. (see the note above)
-- create a module for handling errors in batch responses. (it has been written in the run_evaluation notebook)
