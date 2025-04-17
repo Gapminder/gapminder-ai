@@ -280,7 +280,7 @@ def create_master_output(input_dir: str, language: str = "en-US") -> pl.DataFram
     # Add metadata columns and map correctness
     res = res.with_columns(
         pl.lit(language).alias("language"),
-        pl.lit(input_dir.split("/")[-1]).alias("last_evaluation_datetime"),
+        pl.lit(input_dir.split("/")[-1].split("_")[0]).alias("last_evaluation_datetime"),
         pl.col("final_correctness").replace_strict(result_map).alias("result"),
     )
 

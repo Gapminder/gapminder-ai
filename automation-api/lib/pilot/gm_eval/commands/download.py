@@ -50,8 +50,8 @@ def handle(args: argparse.Namespace) -> int:
     try:
         # Create output directory if not specified, using the same pattern as run.py
         if args.output_dir is None:
-            date_str = datetime.now().strftime("%Y%m%d")
-            args.output_dir = os.path.join("experiments", date_str)
+            date_str = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            args.output_dir = os.path.join("./", date_str)
             print(f"Using output directory: {args.output_dir}")
 
         # Read filter files if provided
