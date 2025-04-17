@@ -79,7 +79,6 @@ def save_sheets_as_csv(
         "questions": filter_included_rows(ai_eval_data.questions.data.df),
         "question_options": filter_included_rows(ai_eval_data.question_options.data.df),
         "prompt_variations": filter_included_rows(ai_eval_data.prompt_variations.data.df),
-        "gen_ai_models": filter_included_rows(ai_eval_data.gen_ai_models.data.df),
         "gen_ai_model_configs": filter_included_rows(ai_eval_data.gen_ai_model_configs.data.df),
         "metrics": filter_included_rows(ai_eval_data.metrics.data.df),
     }
