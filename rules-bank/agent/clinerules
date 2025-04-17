@@ -1,0 +1,18 @@
+# Cline Rules for the Gapminder AI Project
+
+## Before Starting a Task
+1. Always read the README.md file first to understand the project structure and setup requirements
+2. We use `uv` for Python package management instead of pip
+   - Install packages with: `uv pip install <package>`
+   - Install from requirements.txt: `uv pip install -r requirements.txt`
+
+## Environment
+- Use Python version specified in .python-version
+- Always work within the virtual environment
+- Keep requirements.txt updated when adding new dependencies
+
+## Code Quality
+1. We use pre-commit hooks for code quality checks
+   - Run `pre-commit install` to set up the hooks
+   - Hooks will run automatically on git commit
+   - You can also run manually with `pre-commit run --all-files`
