@@ -3,7 +3,7 @@ import json
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from config import FOLDER_ID, SPREADSHEET_ID
-from common import SOURCES_DIR, get_converted_filename, get_source_path, clean_filename_preserve_spaces
+from common import SOURCES_DIR, get_converted_filename, clean_filename_preserve_spaces
 from token_counting import get_token_encoder, count_tokens_in_file, count_tokens_in_directory
 
 # If modifying these scopes, delete the file token.pickle.
@@ -99,10 +99,17 @@ def check_file_conversion(filename, mime_type, encoding=None):
     if not converted_filename:
         return False, "Conversion not supported", 0
 
+    # Debug print original and expected names
+    # print(f"\nOriginal filename: {filename}")
+    # print(f"Safe filename: {safe_filename}")
+    # print(f"Expected converted name: {converted_filename}")
+
     # Handle Excel/Sheets conversion to CSVs
     if converted_filename.endswith("_sheets"):
         # For sheets, we need the exact directory name
         converted_path = os.path.join(SOURCES_DIR, converted_filename)
+        # print(f"Checking for sheets directory at: {converted_path}")
+
         if not os.path.exists(converted_path):
             return False, "Sheets directory not found", 0
         csv_files = [f for f in os.listdir(converted_path) if f.endswith(".csv")]
@@ -113,8 +120,9 @@ def check_file_conversion(filename, mime_type, encoding=None):
         token_count = count_tokens_in_directory(converted_path, encoding)
         return True, f"Converted to {len(csv_files)} CSV files", token_count
 
-    # For regular files, use get_source_path to handle the extension
-    converted_path = get_source_path(safe_filename, os.path.splitext(converted_filename)[1])
+    # For regular files, construct path directly using converted_filename
+    converted_path = os.path.join(SOURCES_DIR, converted_filename)
+    # print(f"Checking for converted file at: {converted_path}")
 
     # Handle regular file conversions
     if not os.path.exists(converted_path):
@@ -180,8 +188,7 @@ def check_conversion_status():
         file_hyperlink = f'=HYPERLINK("{file_url}", "{display_name}")'
 
         # Get base filename without extension for mapping lookup
-        base_filename = os.path.splitext(file["name"])[0]
-        contentful_ids = filename_to_id.get(base_filename, ["Not Published"])
+        contentful_ids = filename_to_id.get(file["name"], ["Not Published"])
 
         # Join multiple IDs with commas if present
         contentful_id = ", ".join(sorted(contentful_ids)) if isinstance(contentful_ids, list) else contentful_ids
