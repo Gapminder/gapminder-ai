@@ -93,8 +93,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install uv
-        run: pip install uv
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python }}
 
       - name: Load cached uv venv
         id: cached-uv-dependencies
@@ -104,8 +106,8 @@ jobs:
           key: uv-venv-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('agent/requirements.txt') }}
 
       - name: Install dependencies
-        run: uv pip sync agent/requirements.txt --python $(which python) --virtualenv agent/.venv
+        run: uv pip install -r agent/requirements.txt --python $(which python)
         if: steps.cached-uv-dependencies.outputs.cache-hit != 'true'
 
       - name: Run tests
-        run: uv run --python $(which python) --virtualenv agent/.venv python -m pytest agent
+        run: uv run --python $(which python) python -m pytest agent
