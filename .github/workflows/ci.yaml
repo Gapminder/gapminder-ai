@@ -1,18 +1,16 @@
-name: Automation API
+name: Python CI
 on: push
 env:
   OPENAI_API_KEY: invalid-openai-api-key-for-ci
   OPENAI_ORG_ID: invalid-openai-org-id-for-ci
-defaults:
-  run:
-    working-directory: automation-api
+
 jobs:
-  lint:
-    name: "(automation-api) Lint"
+  lint-all:
+    name: "Lint All"
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [ 3.11 ]
+        python: [3.11]
 
     steps:
       - name: Checkout code
@@ -35,12 +33,12 @@ jobs:
       - name: Lint
         run: pre-commit run --all-files
 
-  test:
+  test-automation-api:
     name: "(automation-api) Test"
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [ 3.11 ]
+        python: [3.11]
 
     steps:
       - name: Checkout code
@@ -55,7 +53,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local
-          key: poetry-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('.github/workflows/automation-api.yaml') }}
+          key: poetry-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('.github/workflows/ci.yaml') }}
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -77,3 +75,37 @@ jobs:
 
       - name: Run tests
         run: poetry run poe pytest
+        working-directory: automation-api
+
+  test-agent:
+    name: "(agent) Test"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.13]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Load cached uv venv
+        id: cached-uv-dependencies
+        uses: actions/cache@v4
+        with:
+          path: agent/.venv
+          key: uv-venv-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('agent/requirements.txt') }}
+
+      - name: Install dependencies
+        run: uv pip sync agent/requirements.txt --python $(which python) --virtualenv agent/.venv
+        if: steps.cached-uv-dependencies.outputs.cache-hit != 'true'
+
+      - name: Run tests
+        run: uv run --python $(which python) --virtualenv agent/.venv python -m pytest agent
