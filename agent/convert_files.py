@@ -1,8 +1,9 @@
 import os
-from html2text import HTML2Text
 import pandas as pd
+import pypandoc
 import pdfplumber
 from docx import Document
+from bs4 import BeautifulSoup
 from common import (
     DOWNLOADS_DIR,
     UNSUPPORTED_EXTENSIONS,
@@ -10,6 +11,7 @@ from common import (
     clean_filename,
     get_source_path,
     clean_text_content,
+    remove_markdown_header_ids,
 )
 
 
@@ -23,15 +25,31 @@ def convert_html_to_markdown(html_file):
     with open(html_file, "r", encoding="utf-8") as f:
         html_content = f.read()
 
-    # Use html2text for conversion
-    h = HTML2Text()
-    h.ignore_links = False
-    h.ignore_images = False
-    h.ignore_emphasis = False
-    h.body_width = 0  # Don't wrap lines
+    # Preprocess HTML to remove all styles
+    soup = BeautifulSoup(html_content, "html.parser")
 
-    markdown_content = h.handle(html_content)
+    # Remove all <style> tags
+    for style in soup.find_all("style"):
+        style.decompose()
+
+    # Remove all style attributes from tags
+    for tag in soup.find_all(True):
+        if "style" in tag.attrs:
+            del tag["style"]
+
+    html_content = str(soup)
+
+    # Use pandoc for conversion
+    try:
+        markdown_content = pypandoc.convert_text(
+            html_content, "markdown+pipe_tables", format="html-native_spans-native_divs", extra_args=["--wrap=none"]
+        )
+    except OSError as e:
+        print(f"Error converting {html_file} with pandoc: {e}")
+        print("Ensure pandoc is installed and accessible in your system's PATH.")
+        return None
     markdown_content = clean_text_content(markdown_content)
+    markdown_content = remove_markdown_header_ids(markdown_content)
     markdown_content = markdown_content.rstrip("#")  # Remove trailing headers
 
     with open(md_file, "w", encoding="utf-8") as f:

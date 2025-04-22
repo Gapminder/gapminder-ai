@@ -1,8 +1,9 @@
 import os
+import json
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from config import FOLDER_ID, SPREADSHEET_ID
-from common import SOURCES_DIR, get_converted_filename, get_source_path, clean_filename_preserve_spaces
+from common import SOURCES_DIR, get_converted_filename, clean_filename_preserve_spaces
 from token_counting import get_token_encoder, count_tokens_in_file, count_tokens_in_directory
 
 # If modifying these scopes, delete the file token.pickle.
@@ -14,6 +15,7 @@ DRIVE_FILE_URL = "https://drive.google.com/file/d/{file_id}/view"
 # Column definitions
 COLUMNS = [
     "File",
+    "Contentful ID",
     "MIME Type",
     "Expected Converted File",
     "Conversion Status",
@@ -24,7 +26,7 @@ COLUMNS = [
 ]
 
 # Columns that should be preserved when updating (0-based index)
-PRESERVED_COLUMNS = [7]  # Preserve the "Exclude" column
+PRESERVED_COLUMNS = [8]  # Preserve the "Exclude" column
 
 
 def get_google_services():
@@ -54,12 +56,28 @@ def list_files_in_folder(service, folder_id):
     return results.get("files", [])
 
 
+def load_mappings():
+    """Load both original and reverse mappings from mapping.json."""
+    from collections import defaultdict
+
+    mapping_path = os.path.join(os.path.dirname(__file__), "igno_index", "mapping.json")
+    with open(mapping_path, "r") as f:
+        mapping = json.load(f)
+
+    # Create reverse mapping: filename_description -> list_of_ids
+    reverse_mapping = defaultdict(list)
+    for contentful_id, filename_description in mapping.items():
+        reverse_mapping[filename_description].append(contentful_id)
+
+    return mapping, reverse_mapping
+
+
 def get_existing_sheet_data(sheets_service):
     """Get existing data from the sheet to preserve certain columns."""
     result = (
         sheets_service.spreadsheets()
         .values()
-        .get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A:H")  # Include all columns up to Exclude
+        .get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A:I")  # Include all columns up to Exclude
         .execute()
     )
 
@@ -81,10 +99,17 @@ def check_file_conversion(filename, mime_type, encoding=None):
     if not converted_filename:
         return False, "Conversion not supported", 0
 
+    # Debug print original and expected names
+    # print(f"\nOriginal filename: {filename}")
+    # print(f"Safe filename: {safe_filename}")
+    # print(f"Expected converted name: {converted_filename}")
+
     # Handle Excel/Sheets conversion to CSVs
     if converted_filename.endswith("_sheets"):
         # For sheets, we need the exact directory name
         converted_path = os.path.join(SOURCES_DIR, converted_filename)
+        # print(f"Checking for sheets directory at: {converted_path}")
+
         if not os.path.exists(converted_path):
             return False, "Sheets directory not found", 0
         csv_files = [f for f in os.listdir(converted_path) if f.endswith(".csv")]
@@ -95,8 +120,9 @@ def check_file_conversion(filename, mime_type, encoding=None):
         token_count = count_tokens_in_directory(converted_path, encoding)
         return True, f"Converted to {len(csv_files)} CSV files", token_count
 
-    # For regular files, use get_source_path to handle the extension
-    converted_path = get_source_path(safe_filename, os.path.splitext(converted_filename)[1])
+    # For regular files, construct path directly using converted_filename
+    converted_path = os.path.join(SOURCES_DIR, converted_filename)
+    # print(f"Checking for converted file at: {converted_path}")
 
     # Handle regular file conversions
     if not os.path.exists(converted_path):
@@ -114,6 +140,8 @@ def check_file_conversion(filename, mime_type, encoding=None):
 def check_conversion_status():
     """Check the conversion status of all files in the drive folder."""
     drive_service, sheets_service = get_google_services()
+    id_to_filename, filename_to_id = load_mappings()
+    found_ids = set()
 
     # Get list of files from drive
     print("Listing files in folder...")
@@ -159,11 +187,22 @@ def check_conversion_status():
         display_name = file["name"].replace('"', '""')
         file_hyperlink = f'=HYPERLINK("{file_url}", "{display_name}")'
 
+        # Get base filename without extension for mapping lookup
+        contentful_ids = filename_to_id.get(file["name"], ["Not Published"])
+
+        # Join multiple IDs with commas if present
+        contentful_id = ", ".join(sorted(contentful_ids)) if isinstance(contentful_ids, list) else contentful_ids
+
+        # Track found IDs
+        if contentful_ids != ["Not Published"]:
+            found_ids.update(contentful_ids)
+
         # Get existing exclude value or empty string if not found
         exclude_val = existing_exclude.get(file["name"], "")
 
         row_data = [
             file_hyperlink,
+            contentful_id,
             file["mimeType"],
             converted_filename or "N/A",
             details,
@@ -195,6 +234,16 @@ def check_conversion_status():
 
     print(f"Updated {result.get('updatedCells')} cells in the spreadsheet")
     print(f"Total tokens in converted files: {total_tokens:,}")
+
+    # Report missing mapping entries
+    all_ids = set(id_to_filename.keys())
+    missing_ids = all_ids - found_ids
+    if missing_ids:
+        print("\nMissing files in Google Drive (from mapping.json):")
+        for contentful_id in sorted(missing_ids, key=int):
+            print(f"ID: {contentful_id} - File: {id_to_filename[contentful_id]}")
+    else:
+        print("\nAll mapping entries were found in Google Drive")
 
 
 if __name__ == "__main__":

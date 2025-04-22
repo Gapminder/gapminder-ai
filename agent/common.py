@@ -69,7 +69,8 @@ def get_export_mime_type(mime_type):
 
 def get_intermediate_filename(original_filename, mime_type):
     """Get the filename for the intermediate format (before conversion)."""
-    base_name = os.path.splitext(original_filename)[0]
+    # Remove any existing extension but preserve dots in the base name
+    base_name = re.sub(r"\.[a-zA-Z0-9]+$", "", original_filename)
 
     if mime_type == GOOGLE_DOC_MIME_TYPE:
         return f"{base_name}.html"
@@ -86,7 +87,11 @@ def get_intermediate_filename(original_filename, mime_type):
 
 def get_converted_filename(original_filename, mime_type):
     """Get the expected final converted filename based on the original file and mime type."""
-    base_name = os.path.splitext(original_filename)[0]
+    # Use clean_filename_preserve_spaces to handle slashes but preserve other characters
+    base_name = clean_filename_preserve_spaces(original_filename)
+
+    # Remove any existing extension (like .docx, .pdf) but preserve dots in the base name
+    base_name = re.sub(r"\.[a-zA-Z0-9]+$", "", base_name)
 
     if mime_type == GOOGLE_DOC_MIME_TYPE:
         return f"{base_name}.md"  # HTML files are converted to markdown
@@ -115,3 +120,9 @@ def is_conversion_supported(mime_type, filename):
 def clean_text_content(text):
     """Clean up text content by removing excessive newlines."""
     return re.sub(r"\n{3,}", "\n\n", text)  # Remove excessive newlines
+
+
+def remove_markdown_header_ids(text):
+    """Remove Pandoc-generated header IDs from Markdown content.
+    Example: Converts '# Header {#h.abcdefg}' to '# Header'"""
+    return re.sub(r"^(#+ .*?) \{#[^}]+\}$", r"\1", text, flags=re.MULTILINE)
