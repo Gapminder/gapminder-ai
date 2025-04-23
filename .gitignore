@@ -2,5 +2,3 @@
 .aider*
 .env
 litellm/*.log
-.clinerules
-.cursorrules
