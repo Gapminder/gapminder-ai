@@ -5,6 +5,7 @@ from googleapiclient.discovery import build
 from config import FOLDER_ID, SPREADSHEET_ID
 from common import SOURCES_DIR, get_converted_filename, clean_filename_preserve_spaces
 from token_counting import get_token_encoder, count_tokens_in_file, count_tokens_in_directory
+from lib.fileops import ensure_directories, move_to_excluded, remove_empty_dirs
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly", "https://www.googleapis.com/auth/spreadsheets"]
@@ -99,6 +100,10 @@ def check_file_conversion(filename, mime_type, encoding=None):
     if not converted_filename:
         return False, "Conversion not supported", 0
 
+    # Get paths for both regular sources and excluded sources
+    converted_path = os.path.join(SOURCES_DIR, converted_filename)
+    excluded_path = os.path.join(SOURCES_DIR, "excluded", converted_filename)
+
     # Debug print original and expected names
     # print(f"\nOriginal filename: {filename}")
     # print(f"Safe filename: {safe_filename}")
@@ -107,34 +112,31 @@ def check_file_conversion(filename, mime_type, encoding=None):
     # Handle Excel/Sheets conversion to CSVs
     if converted_filename.endswith("_sheets"):
         # For sheets, we need the exact directory name
-        converted_path = os.path.join(SOURCES_DIR, converted_filename)
-        # print(f"Checking for sheets directory at: {converted_path}")
+        # Check both regular and excluded paths
+        if os.path.exists(converted_path):
+            csv_files = [f for f in os.listdir(converted_path) if f.endswith(".csv")]
+            if csv_files:
+                token_count = count_tokens_in_directory(converted_path, encoding)
+                return True, f"Converted to {len(csv_files)} CSV files", token_count
+        elif os.path.exists(excluded_path):
+            csv_files = [f for f in os.listdir(excluded_path) if f.endswith(".csv")]
+            if csv_files:
+                token_count = count_tokens_in_directory(excluded_path, encoding)
+                return True, f"Converted to {len(csv_files)} CSV files (excluded)", token_count
 
-        if not os.path.exists(converted_path):
-            return False, "Sheets directory not found", 0
-        csv_files = [f for f in os.listdir(converted_path) if f.endswith(".csv")]
-        if not csv_files:
-            return False, "No CSV files found in sheets directory", 0
+        return False, "No CSV files found in sheets directory", 0
 
-        # Count tokens in all CSV files
-        token_count = count_tokens_in_directory(converted_path, encoding)
-        return True, f"Converted to {len(csv_files)} CSV files", token_count
+    # Check for file in regular sources
+    if os.path.exists(converted_path) and os.path.getsize(converted_path) > 0:
+        token_count = count_tokens_in_file(converted_path, encoding)
+        return True, "Successfully converted", token_count
 
-    # For regular files, construct path directly using converted_filename
-    converted_path = os.path.join(SOURCES_DIR, converted_filename)
-    # print(f"Checking for converted file at: {converted_path}")
+    # Check for file in excluded sources
+    if os.path.exists(excluded_path) and os.path.getsize(excluded_path) > 0:
+        token_count = count_tokens_in_file(excluded_path, encoding)
+        return True, "Successfully converted (excluded)", token_count
 
-    # Handle regular file conversions
-    if not os.path.exists(converted_path):
-        return False, "Converted file not found", 0
-
-    # Check if file is empty
-    if os.path.getsize(converted_path) == 0:
-        return False, "Converted file is empty", 0
-
-    # Count tokens in the converted file
-    token_count = count_tokens_in_file(converted_path, encoding)
-    return True, "Successfully converted", token_count
+    return False, "Converted file not found or empty", 0
 
 
 def check_conversion_status():
@@ -198,52 +200,113 @@ def check_conversion_status():
             found_ids.update(contentful_ids)
 
         # Get existing exclude value or empty string if not found
-        exclude_val = existing_exclude.get(file["name"], "")
+        exclude_value = existing_exclude.get(file["name"], "")
+
+        # If file was found in excluded directory, mark it as excluded
+        if "(excluded)" in details and not exclude_value:
+            exclude_value = "TRUE"
 
         row_data = [
-            file_hyperlink,
-            contentful_id,
-            file["mimeType"],
-            converted_filename or "N/A",
-            details,
-            "Yes" if is_converted else "No",
-            "Yes" if converted_filename else "No",
-            tokens,
-            exclude_val,  # Preserve existing value or empty string
+            file_hyperlink,  # File with hyperlink
+            contentful_id,  # Contentful ID
+            file["mimeType"],  # MIME Type
+            converted_filename or "N/A",  # Expected converted filename
+            details,  # Conversion details
+            "YES" if is_converted else "NO",  # Conversion successful
+            "YES" if converted_filename else "NO",  # Conversion supported
+            str(tokens) if is_converted else "0",  # Token count
+            exclude_value,  # Preserve existing exclude value
         ]
+
         data.append(row_data)
 
-    # Prepare the values for the sheet
-    values = [COLUMNS] + data
+    # Sort by filename
+    data.sort(key=lambda row: row[0].lower())  # Sort by filename (first column)
+
+    # Insert header
+    data.insert(0, COLUMNS)
 
     # Update the spreadsheet
-    body = {"values": values}
-
     print("Updating spreadsheet...")
-    result = (
-        sheets_service.spreadsheets()
-        .values()
-        .update(
-            spreadsheetId=SPREADSHEET_ID,
-            range="Sheet1!A1",  # Start from the first cell
-            valueInputOption="USER_ENTERED",
-            body=body,
-        )
-        .execute()
+    sheets_service.spreadsheets().values().clear(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A:Z").execute()
+
+    sheets_service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        range="Sheet1!A1",
+        valueInputOption="USER_ENTERED",
+        body={"values": data},
+    ).execute()
+
+    # Process files that are in the excluded directory
+    process_excluded_files()
+
+    print(f"Updated conversion status for {len(data) - 1} files.")
+    print(f"Total tokens counted: {total_tokens:,}")
+
+
+def process_excluded_files():
+    """Make sure all files in the excluded spreadsheet column are actually in the excluded directory."""
+    # Ensure directories exist
+    ensure_directories()
+
+    # Get sheets service
+    credentials = service_account.Credentials.from_service_account_file(
+        "service-account.json", scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
     )
+    sheets_service = build("sheets", "v4", credentials=credentials)
 
-    print(f"Updated {result.get('updatedCells')} cells in the spreadsheet")
-    print(f"Total tokens in converted files: {total_tokens:,}")
+    # Get existing sheet data
+    result = sheets_service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A:I").execute()
 
-    # Report missing mapping entries
-    all_ids = set(id_to_filename.keys())
-    missing_ids = all_ids - found_ids
-    if missing_ids:
-        print("\nMissing files in Google Drive (from mapping.json):")
-        for contentful_id in sorted(missing_ids, key=int):
-            print(f"ID: {contentful_id} - File: {id_to_filename[contentful_id]}")
-    else:
-        print("\nAll mapping entries were found in Google Drive")
+    values = result.get("values", [])
+    if not values:
+        return
+
+    # Find indices
+    headers = values[0]
+    file_col_idx = headers.index("File") if "File" in headers else 0
+    expected_file_col_idx = headers.index("Expected Converted File") if "Expected Converted File" in headers else -1
+    exclude_col_idx = headers.index("Exclude") if "Exclude" in headers else -1
+
+    if exclude_col_idx == -1:
+        return
+
+    files_to_exclude = []
+    for row in values[1:]:  # Skip header
+        if len(row) > exclude_col_idx and row[exclude_col_idx].upper() == "TRUE":
+            # Get file name
+            file_name = (
+                row[file_col_idx].split('"')[-2] if row[file_col_idx].startswith("=HYPERLINK") else row[file_col_idx]
+            )
+            files_to_exclude.append(file_name)
+
+            # Also add expected converted file if available
+            if expected_file_col_idx != -1 and len(row) > expected_file_col_idx and row[expected_file_col_idx]:
+                files_to_exclude.append(row[expected_file_col_idx])
+
+    # Process sources directory
+    excluded_count = 0
+    sources_path = os.path.join(os.path.dirname(__file__), SOURCES_DIR)
+    for root, _, files in os.walk(sources_path):
+        # Skip the excluded directory
+        if "excluded" in root.split(os.path.sep):
+            continue
+
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+            rel_path = os.path.relpath(file_path, sources_path)
+
+            # Check if this file should be excluded
+            if any(exclude_name in rel_path or exclude_name == file_name for exclude_name in files_to_exclude):
+                if move_to_excluded(file_path, preserve_structure=True):
+                    excluded_count += 1
+
+    if excluded_count > 0:
+        print(f"Moved {excluded_count} additional files to excluded directory")
+        # Clean up empty directories
+        removed_dirs = remove_empty_dirs()
+        if removed_dirs > 0:
+            print(f"Removed {removed_dirs} empty directories")
 
 
 if __name__ == "__main__":
