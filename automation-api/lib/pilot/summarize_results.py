@@ -354,7 +354,7 @@ def create_master_output(input_dir: str, language: str = "en-US") -> pl.DataFram
     res_list = [pl.read_parquet(x) for x in glob(f"{input_dir}/*parquet")]
 
     # make sure the columns are in same order
-    cols = res_list[0].columns
+    cols = ["model_config_id", "question_id", "prompt_variation_id", "response", "final_correctness"]
     res_list = [r.select(cols) for r in res_list]
 
     res = pl.concat(res_list)
