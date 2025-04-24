@@ -1,0 +1,5 @@
+model_config_id,model_id,vendor,model_published_date,first_experiment_date,latest,name,model_parameters,repeat_times,memory,memory_size
+mc062,qwq-plus,Alibaba,2025-03-05,2025-04-17,False,QwQ Plus,"{""temperature"": 0, ""max_tokens"": 5000}",1,False,0
+mc063,deepseek/deepseek-chat,Deepseek,2025-03-24,2025-04-17,False,V3,"{""temperature"": 0, ""max_tokens"": 3000}",1,False,0
+mc064,o3,openAI,2025-04-16,2025-04-17,False,o3 (Medium),"{""temperature"": 1, ""reasoning_effort"": ""medium"", ""max_completion_tokens"": 5000}",1,False,0
+mc065,gpt-4.1-2025-04-14,openAI,2025-04-14,2025-04-17,False,GPT 4.1,"{""temperature"": 0, ""max_completion_tokens"": 5000}",1,False,0
