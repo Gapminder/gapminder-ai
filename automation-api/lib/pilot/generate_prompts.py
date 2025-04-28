@@ -77,7 +77,7 @@ def combine_questions_with_options(questions: pl.DataFrame, question_options: pl
     question_options = ensure_complete_options(question_options)
 
     # Pivot question options to have one row per question with A, B, C options
-    options_pivot = question_options.pivot(
+    options_pivot = question_options.pivot(  # type: ignore
         values="question_option",
         index=["question_id", "language"],
         columns="letter",

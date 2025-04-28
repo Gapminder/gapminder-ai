@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from token_counting import get_token_encoder, count_tokens_in_file
+from lib.spreadsheet import get_excluded_files
+from lib.fileops import ensure_directories, move_to_excluded, remove_empty_dirs
 
 
 def get_file_type(file_path):
@@ -19,27 +21,90 @@ def main():
         print("Sources directory not found!")
         return
 
+    # Create the necessary directories if they don't exist
+    ensure_directories()
+
+    # Get list of files to exclude from the spreadsheet
+    files_to_exclude = get_excluded_files()
+
     # Collect token counts for each file
     token_counts = []
+    excluded_count = 0
+    moved_count = 0
+
     for file_path in sources_dir.rglob("*"):
+        # Skip the excluded directory
+        excluded_dir = sources_dir / "excluded"
+        if str(file_path).startswith(str(excluded_dir)):
+            continue
+
         if file_path.is_file():
+            rel_path = str(file_path.relative_to(sources_dir))
+            file_name = file_path.name
+
+            # Check if the file should be excluded
+            # Check both the full path and just the filename
+            should_exclude = any(
+                exclude_name in rel_path or exclude_name == file_name for exclude_name in files_to_exclude
+            )
+
+            if should_exclude:
+                excluded_count += 1
+                # Move the file to the excluded directory
+                if move_to_excluded(file_path, preserve_structure=True):
+                    moved_count += 1
+                continue
+
+            # Count tokens and add to our collection
             tokens = count_tokens_in_file(file_path, encoding)
             token_counts.append(
                 {
-                    "file": str(file_path.relative_to(sources_dir)),
+                    "file": rel_path,
                     "file_type": get_file_type(file_path),
                     "tokens": tokens,
                 }
             )
 
+    # Remove empty directories after moving files
+    removed_dirs = remove_empty_dirs(sources_dir)
+
     # Create DataFrame
     df = pd.DataFrame(token_counts)
+
+    # Print exclusion and categorization info
+    if excluded_count > 0:
+        print(f"Excluded {excluded_count} files based on spreadsheet data.")
+        print(f"Moved {moved_count} files to the excluded directory")
+
+    print(f"Removed {removed_dirs} empty directories from {sources_dir}")
 
     # Sort by token count
     df = df.sort_values("tokens", ascending=False)
 
     # Calculate total tokens
     total_tokens = df["tokens"].sum()
+
+    # Show the top N largest sources by token count
+    top_n = 20  # Show top 20 files
+    print("\nTop Largest Sources by Token Count:")
+    print("=" * 100)
+    top_files = df.head(top_n)[["file", "tokens", "file_type"]]
+
+    # Calculate percentage of total tokens
+    top_files["percent"] = (top_files["tokens"] / total_tokens * 100).round(2)
+
+    # Format the output
+    formatted_top = top_files.copy()
+    formatted_top["tokens"] = formatted_top["tokens"].apply(lambda x: f"{x:,}")
+    formatted_top["percent"] = formatted_top["percent"].apply(lambda x: f"{x}%")
+    print(formatted_top.to_string(index=False))
+
+    # Show cumulative stats for top files
+    top_tokens = top_files["tokens"].sum()
+    top_percent = (top_tokens / total_tokens * 100).round(2)
+    print("-" * 100)
+    print(f"Top {top_n} files: {top_tokens:,} tokens ({top_percent}% of total)")
+    print("=" * 100)
 
     # Print summary table by file
     print("\nToken Count Summary by File:")

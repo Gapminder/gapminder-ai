@@ -81,15 +81,15 @@ res.columns
 def calculate_final_score(row: pl.Series) -> int:
     """Calculate final correctness score based on majority agreement"""
     scores = [
-        row["gpt4_evaluator_gpt4_correctness"],
-        row["vertex_ai_evaluator_claude_correctness"],
-        row["vertex_ai_evaluator_gemini_correctness"],
+        row["gpt4_evaluator_gpt4_correctness"],  # type: ignore
+        row["vertex_ai_evaluator_claude_correctness"],  # type: ignore
+        row["vertex_ai_evaluator_gemini_correctness"],  # type: ignore
     ]
 
     # Count occurrences of each score
     score_counts: Dict[int, int] = {}
     for score in scores:
-        score_counts[score] = score_counts.get(score, 0) + 1
+        score_counts[score] = score_counts.get(score, 0) + 1  # type: ignore
 
     # Find the score with highest count
     max_count = max(score_counts.values())
@@ -108,7 +108,9 @@ res_ = res.with_columns(
             "vertex_ai_evaluator_claude_correctness",
             "vertex_ai_evaluator_gemini_correctness",
         ]
-    ).map_elements(calculate_final_score, return_dtype=pl.Int32)
+    ).map_elements(
+        calculate_final_score, return_dtype=pl.Int32
+    )  # type: ignore
 )
 
 res_ = res_.select(

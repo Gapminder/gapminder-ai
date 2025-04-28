@@ -17,6 +17,8 @@ repos:
     rev: v1.9.0
     hooks:
       - id: mypy
+        name: mypy-agent
+        files: ^agent/
         exclude: .+/snapshots/.+
         additional_dependencies:
           - mypy-extensions
@@ -26,6 +28,22 @@ repos:
           - types-simplejson
           - types-redis
           - types-requests
+          - pandas-stubs
+          - types-beautifulsoup4
+      - id: mypy
+        name: mypy-automation-api
+        files: ^automation-api/
+        exclude: .+/snapshots/.+
+        additional_dependencies:
+          - mypy-extensions
+          - freezegun
+          - types-python-dateutil
+          - types-PyYAML
+          - types-simplejson
+          - types-redis
+          - types-requests
+          - pandas-stubs
+          - types-beautifulsoup4
 exclude: |
   (?x)(
     .*\/notebooks\/.*\.py|
