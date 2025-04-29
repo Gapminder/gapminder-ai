@@ -359,10 +359,21 @@ def create_master_output(input_dir: str, language: str = "en-US") -> pl.DataFram
 
     res = pl.concat(res_list)
 
+    # Get the directory name correctly even with relative paths like "./"
+    input_path = Path(input_dir).resolve()
+    dir_name = input_path.name
+
+    # Extract date part only (first 8 digits) for last_evaluation_datetime
+    # If format is YYYYMMDD_HHMMSS, take just YYYYMMDD
+    date_part = dir_name.split("_")[0]
+    # Ensure we only get the date part (first 8 digits) if it's a full datetime
+    if len(date_part) >= 8:
+        date_part = date_part[:8]
+
     # Add metadata columns and map correctness
     res = res.with_columns(
         pl.lit(language).alias("language"),
-        pl.lit(input_dir.split("/")[-1].split("_")[0]).alias("last_evaluation_datetime"),
+        pl.lit(date_part).alias("last_evaluation_datetime"),
         pl.col("final_correctness").replace_strict(result_map).alias("result"),
     )
 
@@ -397,11 +408,12 @@ def main(input_dir: Path, output_dir: Optional[Path] = None) -> None:
     # computing the evaluation date.
     master_output = create_master_output(str(input_dir.resolve()))
 
-    # Extract the basename from output_dir for the filename suffix
-    basename = output_dir.name
+    # Get the proper directory name even for relative paths like "./"
+    resolved_output_dir = output_dir.resolve()
+    dir_name = resolved_output_dir.name
 
-    # Create the output CSV filename with the basename as suffix
-    csv_output_path = output_dir / f"master_output_{basename}.csv"
+    # Create the output CSV filename with the directory name as suffix
+    csv_output_path = output_dir / f"master_output_{dir_name}.csv"
 
     # Write to CSV with the correct filename
     master_output.write_csv(csv_output_path)
