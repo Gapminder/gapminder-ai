@@ -316,15 +316,6 @@ def main(base_path, model_config_id, jsonl_format):
     # Save as JSONL file in selected format with model config prefix
     jsonl_output_path = os.path.join(base_path, f"{model_config_id}-question_prompts.jsonl")
 
-    # Only save prompt mapping CSV for Vertex format
-    if JsonlFormat(jsonl_format) == JsonlFormat.VERTEX:
-        csv_output_path = os.path.join(
-            base_path,
-            f"{model_config_id}-question_prompts-prompt-mapping.csv",
-        )
-        question_prompts.write_csv(csv_output_path)
-        print(f"Saved prompt mapping to {csv_output_path}")
-
     # Convert to appropriate JSONL format
     if JsonlFormat(jsonl_format) == JsonlFormat.OPENAI:
         convert_to_jsonl_openai(
@@ -347,6 +338,16 @@ def main(base_path, model_config_id, jsonl_format):
             jsonl_output_path,
             model_parameters=params,
         )
+        csv_output_path = os.path.join(
+            base_path,
+            f"{model_config_id}-question_prompts-prompt-mapping.csv",
+        )
+        # Add the ID prefix to the custom_id in the csv
+        question_prompts = question_prompts.with_columns(
+            pl.col("prompt_id").map_elements(lambda x: f"{model_config_id}-{x}").alias("prompt_id")
+        )
+        question_prompts.write_csv(csv_output_path)
+        print(f"Saved prompt mapping to {csv_output_path}")
 
     print(f"Saved {len(question_prompts)} prompts to {jsonl_output_path}")
 
