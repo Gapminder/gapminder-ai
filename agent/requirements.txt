@@ -14,3 +14,4 @@ matplotlib>=3.7.0
 pytest
 litellm>=1.55.0
 google-cloud-aiplatform
+dotenv
