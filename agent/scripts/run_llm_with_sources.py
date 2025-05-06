@@ -6,14 +6,11 @@ Includes native Vertex AI caching support.
 
 import os
 import glob
-import json
-import base64
-import tempfile
 import vertexai
 import datetime
+from google.oauth2 import service_account
 from vertexai.preview.caching import CachedContent  # type: ignore
 from vertexai.generative_models import GenerativeModel, Part
-from dotenv import load_dotenv
 
 
 # Hardcoded question to ask the LLM
@@ -30,24 +27,6 @@ MODEL_ID = "gemini-2.0-flash-001"
 CACHE_NAME = "gapminder_llm_cache_v1"
 PROJECT_ID = "gapminder-ai"
 LOCATION = "us-central1"  # Default location for Gemini models
-
-
-def make_tmp_file_google_application_credentials(base64encoded_credentials):
-    """set up GOOGLE_APPLICATION_CREDENTIALS enviornment variable
-
-    GOOGLE_APPLICATION_CREDENTIALS is expected to be a file path, but we stored the
-    file contents as a base64 encoded string.
-
-    This function will create a temp file with the oridinary contents of the credentials
-    """
-    service_account_credentials = base64.b64decode(base64encoded_credentials).decode("utf-8")
-    json_acct_info = json.loads(service_account_credentials)
-
-    with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
-        # TODO: this doesn't delete the temp file. is this safe to do in production?
-        json.dump(json_acct_info, temp_file, indent=2)
-
-    return os.path.abspath(temp_file.name)
 
 
 def load_system_prompt(directory, max_files=3):
@@ -101,15 +80,11 @@ Do not use any prior knowledge beyond what is contained in these documents.
 
 
 if __name__ == "__main__":
-    # setup vertex AI env
-    load_dotenv()
-    if os.environ["SERVICE_ACCOUNT_CREDENTIALS"]:
-        tmp_file = make_tmp_file_google_application_credentials(os.environ["SERVICE_ACCOUNT_CREDENTIALS"])
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp_file
-        vertexai.init(project=PROJECT_ID, location=LOCATION)
-    else:
-        print("please set SERVICE_ACCOUNT_CREDENTIALS in .env and re-run the script.")
-        raise ValueError("SERVICE_ACCOUNT_CREDENTIALS env not found")
+    # setup vertex AI env with service account credentials
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    credentials_path = os.path.abspath(os.path.join(script_dir, "..", "service-account.json"))
+    credentials = service_account.Credentials.from_service_account_file(credentials_path)
+    vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
 
     # Get the absolute path to the script directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
