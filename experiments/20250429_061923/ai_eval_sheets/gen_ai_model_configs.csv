@@ -1,0 +1,2 @@
+model_config_id,model_id,vendor,model_published_date,first_experiment_date,latest,name,model_parameters,repeat_times,memory,memory_size
+mc041,vertex_ai/gemini-1.5-pro-002,Google,2024-09-24,2024-12-06,False,Gemini Pro 1.5 002 on Vertex AI,"{""temperature"": 0.01}",1,False,0
