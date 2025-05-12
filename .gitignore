@@ -2,6 +2,4 @@
 .aider*
 .env
 litellm/*.log
-.clinerules
-.cursorrules
 __pycache__
