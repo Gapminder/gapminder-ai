@@ -1,0 +1,320 @@
+﻿question,response
+"I was asked this question:
+Worldwide, how many people living in rural areas have a toilet that they don't have to share with other households?
+The answer could be: Around 20%
+or: Around 40%
+or maybe the answer is
+Around 60%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q2080 - shared toilets in rural areas.md"":
+
+Worldwide, **Around 60%** of people living in rural areas have a toilet that they don't have to share with other households.
+
+**Reasoning:**
+The document explicitly states that ""Around 60%"" is the CORRECT answer to the question: ""Worldwide, how many people living in rural areas have a toilet that they don\'t have to share with other households?"" The ""Correct Sentence Text"" further confirms this: ""Globally, around 60% of people living in rural areas have a toilet they don't have to share with other households.""
+
+The document also notes that people often underestimate this figure, thinking fewer rural households have private toilets. The data comes from the WHO & UNICEF Joint Monitoring Programme for Water Supply, Sanitation and Hygiene (JMP)."
+"I was asked this question:
+What share of all energy used in the world comes from the modern renewable sources (solar, wind, hydro and modern biofuels)?
+The answer could be: Less than 10%
+or: Around 20%
+or maybe the answer is
+Around 35%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q1696 - Modern renewable share.md"", the answer is:
+
+**Less than 10%**
+
+**Here's why:**
+
+*   The document ""q1696 - Modern renewable share.md"" directly addresses this question. It states that **""Around 5% all energy used in the world comes from modern renewable sources.""** This falls into the ""Less than 10%"" category.
+*   The extended answer in that document clarifies a common point of confusion: ""The share of energy from solar, wind, hydro and modern biofuels has been growing, but not as much as people imagine. When it comes to electricity, nearly 40% comes from modern renewables. Perhaps that is why people assume that the share of total energy from renewables is higher. What most people don't realize, though, is that electricity is only 20% of all the energy used in the world.""
+
+Other documents provide context:
+*   ""q1628 - world energy consumption sources.md"" indicates that about 82% of all energy comes from fossil fuels (natural gas, coal, and oil). This leaves about 18% for all non-fossil sources combined.
+*   ""q3053 - Non-fossil use.md"" confirms that around 18% of all energy used in 2022 came from non-fossil fuel sources.
+*   ""q1627 - nuclear as share of energy.md"" states that nuclear energy accounts for around 4-5% of all primary energy.
+
+So, if non-fossil sources are about 18%, and nuclear is about 5%, then all renewables (traditional and modern) would account for roughly 13% of total energy. The document ""q1696 - Modern renewable share.md"" specifies that *modern* renewables make up about 5% of the total energy used."
+"I was asked this question:
+How many companies globally are partially owned by women?
+
+The answer could be: Around 5%
+or: Around 15%
+or maybe the answer is
+Around 30%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q2015 - female owned companies.md"":
+
+The answer is **Around 30%**.
+
+Here's why:
+*   The document explicitly states that ""Around 30%"" is the CORRECT answer to the question ""How many companies globally are partially owned by women?""
+*   The ""Correct Sentence Text"" is: ""Globally, around 30% of companies are partially owned by women.""
+*   The data comes from the World Bank Enterprise Survey, which is based on interviews with tens of thousands of businesses in 144 countries between 2005 and 2021.
+*   The document also mentions that ""Women's influence in business has been steadily increasing. But instead the negative picture is maintained that almost no women are in power, which can be self reinforcing as it may discourage young women from pursuing a career in business."" This suggests that while progress has been made, the perception might lag behind the reality, and 30% represents a significant portion."
+"I was asked this question:
+Compared to 30 years ago, the pollution of microplastics in the world's oceans today is roughly:
+The answer could be: 8 times higher
+or: 80 times higher
+or maybe the answer is
+800 times higher
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q3194 – Microplastics.md,"" the pollution of microplastics in the world's oceans today, compared to 30 years ago, is roughly:
+
+*   **8 times higher**
+
+The document states: ""There are roughly 8 times more microplastics in the oceans today compared to 30 years ago, according to experts' estimates."" The source for this information is a study by Lebreton et al., published in 2019, which analyzed the age distribution of plastics found, with a significant portion originating from the 1990s and earlier."
+"I was asked this question:
+70% of Europeans said they were planning to switch to a more environmentally friendly energy provider to fight climate change, in 2020. What was this number in China?
+The answer could be: 34%
+or: 64%
+or maybe the answer is
+94%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q2638 - Greener energy provider China.md"":
+
+The answer is **94%**.
+
+**Reasoning:**
+The document explicitly states:
+*   **Question text (required):** ""70% of Europeans said they were planning to switch to a more environmentally friendly energy provider to fight climate change, in 2020. What was this number in China?""
+*   **Answer option C:** ""94%"" is marked as ""CORRECT"".
+*   **Correct Sentence Text:** ""In 2020, 94% of people in China said they had either already switched or planned to switch to a more environmentally friendly energy provider to fight climate change."""
+"I was asked this question:
+How many of the world’s 250 richest companies have set targets to cut their carbon emissions?
+The answer could be: About 20%
+or: About 50%
+or maybe the answer is
+About 80%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q1903- top 250 companies carbon emissions.md"", the answer is:
+
+**About 80%**
+
+**Reasoning:**
+The document explicitly states:
+*   **Question text (required):** How many of the world's 250 richest companies have set targets to cut their carbon emissions?
+*   **Answer option C:** About 80% (CORRECT)
+*   **Correct Sentence Text:** About 80% of the world's 250 richest companies have set targets to cut their carbon emissions.
+
+The source for this information is listed as KPMG."
+"I was asked this question:
+What share of the members of the World Trade Organization are low- and middle-income countries?
+The answer could be: Around 25%
+or: Around 45%
+or maybe the answer is
+Around 65%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q2403 - L-&-MIC WTO members.md"":
+
+The answer is **Around 65%**.
+
+The document states that ""Around 65% of the members of the World Trade Organization are low- and middle-income countries."" It also mentions that this is logical because ""a majority of WTO members are low- and middle-income countries -- just like the majority of countries are low and middle income."""
+"I was asked this question:
+Compared to 1980, the cost of energy from solar panels today is roughly:
+The answer could be: 1% of the 1980 cost
+or: 21% of the 1980 cost
+or maybe the answer is
+41% of the 1980 cost
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q2254 -Solar panel cost trend.md"":
+
+Compared to 1980, the cost of energy from solar panels today is roughly **1% of the 1980 cost**.
+
+**Why:**
+The document states that solar photovoltaic modules cost was roughly $35 per watt in 1980, and just $0.38 per watt in 2019. This significant decrease means that solar panels today cost about 1% of what they did in 1980. Most people are unaware of how dramatically the price of solar panels has fallen over the past 40 years."
+"I was asked this question:
+If we stopped emitting greenhouse gases today, for how long would the sea level continue to rise?
+
+The answer could be: About 10 years
+or: About 100 years
+or maybe the answer is
+Over 1,000 years
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q1465 - greehouse gases and sea levels.md"":
+
+The answer is **Over 1,000 years**.
+
+**Why:**
+The document states: ""If we stopped emitting greenhouse gases today, the sea level would continue to rise for more than 1,000 years.""
+The source for this information is the IPCC (Intergovernmental Panel on Climate Change), specifically their Sixth Assessment Report.
+
+The reason sea levels would continue to rise for such a long time even if emissions stopped is due to several factors:
+1.  **Thermal Expansion:** Oceans have absorbed a vast amount of heat due to past and current greenhouse gas emissions. Water expands as it warms, and this process is slow and will continue for centuries even if atmospheric warming stops.
+2.  **Ice Sheet Melt:** Large ice sheets in Greenland and Antarctica respond very slowly to temperature changes. Even if warming stopped, the heat already in the system would continue to melt these ice sheets for centuries to millennia, contributing to sea-level rise.
+3.  **Deep Ocean Warming:** Heat takes a long time to penetrate into the deep ocean. As this deeper water warms, it will also expand.
+
+Therefore, the climate system has a lot of inertia, and the consequences of past emissions, particularly for sea level rise, will be felt for a very long time."
+"I was asked this question:
+In 2000, low- and middle-income countries on average spent almost 6% of their annual income on their government's loans. What was this number in 2022?
+The answer could be: Around 4%
+or: Around 8%
+or maybe the answer is
+Around 12%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q1858 - Loans spending.md"", the answer is likely **Around 4%**.
+
+Here's why:
+
+*   The document states: ""In 2000, low- and middle-income countries on average spent 5.7% of their annual income on their loans. What was this number in 2019?""
+*   The correct answer for 2019 is listed as ""Around 4%"".
+*   The ""Actual"" field clarifies: ""In 2019, low- and middle-income countries spent 3.9% of their gross national income on debt service payments.""
+*   The ""Expanded"" section notes: ""Since 2000, through various efforts from organizations like the World Bank and the IMF, these countries have been able to pay a smaller share of their income in debt service payments...""
+
+Given that the figure was 3.9% in 2019 and the trend has been a decrease in the share of income spent on loan repayments since 2000, it is most plausible that the figure for 2022 would remain around 4%, rather than increasing significantly to 8% or 12%."
+"I was asked this question:
+What share of countries in the world have laws against sexual harassment at work?
+The answer could be: Around 30%
+or: Around 50%
+or maybe the answer is
+Around 70%
+I really don't know.
+Please help guess, and also describe why you think so.","Around 70% of countries have laws against sexual harassment at work.
+
+According to a 2020 World Bank report, 74% of countries have such laws. While many countries have legislation, the report notes that enforcement and the actual prevalence of harassment can still be significant issues. The #metoo movement has raised awareness, and more countries have been adding laws to combat workplace sexual harassment."
+"I was asked this question:
+In the European Union, for every 100,000 babies that are born, around six women die during pregnancy, while giving birth or shortly after. What is this figure in the United States?
+The answer could be: About the same
+or: Double
+or maybe the answer is
+Over three times more
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q3369 – US vs EU maternal mortality.md"":
+
+The correct answer is **Over three times more**.
+
+The document states:
+*   ""In the European Union, for every 100,000 babies that are born, around six women die during pregnancy, while giving birth or shortly after.""
+*   ""Actual: In 2020, for every 100,000 babies that were born in the US, around 21 women during pregnancy, while giving birth or shortly after.""
+
+Comparing the two figures, 21 deaths per 100,000 live births in the US is more than three times the figure of 6 deaths per 100,000 live births in the EU (21 / 6 = 3.5)."
+"I was asked this question:
+In the poorest 25 countries, how many more children die among the poorest 20% of the population, compared to the richest 20%?
+The answer could be: Around 5 times more
+or: Around 30 times more
+or maybe the answer is
+Around 60 times more
+I really don't know.
+Please help guess, and also describe why you think so.","In the poorest 25 countries, around 5 times more children die among the poorest 20% of the population compared to the richest 20%.
+
+This is because, according to the document ""q3246 – Child deaths in richest and poorest 20%.md"", somewhere around 3 to 5 times more children die among the poorest 20% of the population compared to the richest 20% in the poorest countries. The document also notes that even the richest 20% in these low-income countries are very poor, and their children also die from many diseases that are preventable when incomes are higher."
+"I was asked this question:
+Before countries signed the High Seas Treaty in March 2023, around 1% of international oceans were protected. What number does the new agreement aim to achieve?
+The answer could be: Around 5%
+or: Around 15%
+or maybe the answer is
+Around 30%
+I really don't know.
+Please help guess, and also describe why you think so.","The High Seas Treaty, signed in March 2023, aims to protect **Around 30%** of international oceans.
+
+**Reasoning:**
+The document ""q3149 – High Seas Treaty.md"" directly addresses this question.
+*   It states: ""Before countries signed the High Seas Treaty in March 2023, around 1% of international oceans were protected. What number does the new agreement aim to achieve?""
+*   The correct answer option C is ""Around 30%"".
+*   The ""Correct Sentence Text"" confirms: ""The High Seas Treaty aims to protect around 30% of international oceans.""
+*   The data source is listed as UNEP."
+"I was asked this question:
+Worldwide, which of these contraceptive methods is the most used by women?
+The answer could be: Pill
+or: Sterilization
+or maybe the answer is
+Intrauterine Device (IUD)
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q496 - Contraceptive method, most used by married WRA women.md"":
+
+The most used contraceptive method by women worldwide, among the options provided, is **Sterilization**.
+
+Here's why:
+The document states that ""Worldwide, to avoid unwanted pregnancy 26% of women rely on sterilization (female 24% and male 2%), while 17% use an IUD and 16% take the pill as the main method of contraception.""
+
+So, sterilization (at 26% for couples, with 24% being female sterilization) is more common than IUDs (17%) and the pill (16%)."
+"I was asked this question:
+In how many countries was slavery still legal in 1950? (Meaning there was no law or constitution banning the ownership of another person.)
+The answer could be: 58
+or: 98
+or maybe the answer is
+138
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q1485 – Legal slavery in 1950.md"", the answer is **138**.
+
+Here's why:
+
+*   The document explicitly states for the question ""In how many countries was slavery still legal in 1950? (Meaning there was no law or constitution banning the ownership of another person.)"":
+    *   Answer option A: 58 (VERY WRONG)
+    *   Answer option B: 98 (WRONG)
+    *   Answer option C: 138 (CORRECT)
+*   The ""Correct Sentence Text"" is: ""In 138 countries there were no laws banning the ownership of another person in 1950.""
+
+The document further explains that this count is based on ""the earliest year a country adopts a law or constitution or signs an official treaty condemning slavery and/or forced labor of all citizens and guest workers."" It importantly notes that this doesn't mean the *practice* of slavery stopped, only that the legal framework against it was not yet in place in those 138 countries by 1950."
+"I was asked this question:
+In how many countries (out of 195) do married men and women NOT have equal legal rights to own land or houses?
+The answer could be: Around 20
+or: Around 80
+or maybe the answer is
+Around 140
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q2364 - women's rights to own property.md"", the answer is:
+
+**Around 20**
+
+Here's why:
+The document ""q2364 - women's rights to own property.md"" directly addresses this question.
+*   It states the **Question text (required)** as: ""In how many countries (out of 195) do married men and women NOT have equal legal rights to own land or houses?""
+*   **Answer option A** is ""Around 20"" and is marked as **CORRECT**.
+*   The **Correct Sentence Text** is: ""Worldwide, there are around 20 countries where men and women do not have equal legal rights to own land or houses.""
+
+The document also adds important context: ""Laws alone are not enough to secure women's rights to own land. In many cases women are directly stopped from getting the papers proving their ownership, even when the law exists. But in most of these cases, this practice is completely illegal."" and ""Globally, women make up over 40% of the agricultural workforce yet own less than 20% of all land. Without land rights, women struggle to gain economic security."""
+"I was asked this question:
+What happened to the number of new tuberculosis cases worldwide between 2000 and 2022?
+The answer could be: Increased 20%
+or: Stayed about the same
+or maybe the answer is
+Decreased 20%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the available information, the number of new tuberculosis cases worldwide **decreased by more than 20%** between 2000 and 2019.
+
+Here's why:
+
+*   The document ""q2421 - TB cases.md"" directly addresses this question for the period between 2000 and 2019.
+*   It states: ""Worldwide, the number of tuberculosis cases decreased by more than 20% between 2000 and 2019.""
+*   The document further specifies that the actual decrease was 25%.
+
+Given your options, ""Decreased 20%"" is the closest and most accurate choice based on the data up to 2019. While the data doesn't extend to 2022, the trend up to 2019 showed a significant decrease."
+"I was asked this question:
+What share of all greenhouse gas emissions come from airplanes?
+The answer could be: Less than 6%
+or: Around 16%
+or maybe the answer is
+More than 26%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""791 - Airplane greenhouse gas.md"", **Less than 6%** of all greenhouse gas emissions come from airplanes.
+
+Here's why:
+*   Different sources estimate the direct share of greenhouse gas emissions from aviation to be between 2% and 4%.
+*   Some experts suggest that because these emissions are released at a higher altitude, their effect on climate change might be greater, putting the figure between 4% and 5%.
+*   However, no sources cited in the document place the figure above 5%. Therefore, ""less than 6%"" is considered the correct answer, which is still significantly lower than what many people might guess.
+*   The document further clarifies that aviation's share of greenhouse gas emissions is closer to 3.5%.
+
+Additionally, the document ""q2673 – GHG emissions from transport.md"" states that all forms of transport combined account for around 15% of all greenhouse gas emissions. Since airplanes are only one component of transport, their individual contribution would naturally be less than this total, supporting the ""Less than 6%"" figure for airplanes specifically."
+"I was asked this question:
+How many children in Europe (including Russia and Türkiye) are obese today?
+The answer could be: Around 10%
+or: Around 25%
+or maybe the answer is
+Around 40%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q684 - obese children in Europe.md"":
+
+The answer is **Around 10%**.
+
+Here's why:
+The document explicitly states:
+*   **Question:** How many children in Europe (including Russia and Türkiye) are obese today?
+*   **Answer option A:** Around 10% (CORRECT)
+*   **Actual:** (actually 8.6%)
+*   **correct_sentence:** In Europe (including Russia and Turkey), around 10% of children aged 5-19 are obese.
+
+Therefore, ""Around 10%"" is the correct choice provided in the document, with the more precise figure being 8.6% for children aged 5-19."
+,
+

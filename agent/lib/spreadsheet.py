@@ -16,8 +16,20 @@ def get_spreadsheet_service():
         raise
 
 
-def get_excluded_files():
-    """Fetch the list of files to exclude from the Google Sheets spreadsheet."""
+def get_list_files(subset="excluded"):
+    """Fetch list of files from spreadsheet based on subset criteria.
+
+    Args:
+        subset: One of "excluded", "included", or "all" to filter files
+
+    Returns:
+        Set of filenames matching the subset criteria
+
+    Raises:
+        ValueError: If subset is not one of the allowed values
+    """
+    if subset not in ("excluded", "included", "all"):
+        raise ValueError("subset must be one of: 'excluded', 'included', 'all'")
     try:
         sheets_service = get_spreadsheet_service()
 
@@ -44,25 +56,35 @@ def get_excluded_files():
             print("Warning: 'Exclude' column not found in the spreadsheet.")
             return set()
 
-        # Extract filenames where Exclude is TRUE
-        excluded_files = set()
+        # Extract filenames based on subset criteria
+        files = set()
         for row in values[1:]:  # Skip header row
-            if len(row) > exclude_col_idx and row[exclude_col_idx].upper() == "TRUE":
-                # Extract filename from HYPERLINK formula
-                file_name = (
-                    row[file_col_idx].split('"')[-2]
-                    if row[file_col_idx].startswith("=HYPERLINK")
-                    else row[file_col_idx]
-                )
-                excluded_files.add(file_name)
+            # Skip rows that don't have a filename
+            if len(row) <= file_col_idx or not row[file_col_idx]:
+                continue
 
+            # Extract filename from HYPERLINK formula if present
+            file_name = (
+                row[file_col_idx].split('"')[-2] if row[file_col_idx].startswith("=HYPERLINK") else row[file_col_idx]
+            )
+
+            # Check if we should include this file based on subset
+            include_file = False
+            if subset == "all":
+                include_file = True
+            elif len(row) > exclude_col_idx:
+                is_excluded = row[exclude_col_idx].upper() == "TRUE"
+                include_file = (subset == "excluded" and is_excluded) or (subset == "included" and not is_excluded)
+
+            if include_file:
+                files.add(file_name)
                 # Also add the expected converted filename if it exists
                 if expected_file_col_idx != -1 and len(row) > expected_file_col_idx and row[expected_file_col_idx]:
-                    excluded_files.add(row[expected_file_col_idx])
+                    files.add(row[expected_file_col_idx])
 
-        print(f"Found {len(excluded_files)} files to exclude from processing.")
-        return excluded_files
+        print(f"Found {len(files)} files in subset '{subset}'.")
+        return files
 
     except Exception as e:
-        print(f"Warning: Could not fetch exclusion data from spreadsheet: {e}")
+        print(f"Warning: Could not fetch file data from spreadsheet: {e}")
         return set()

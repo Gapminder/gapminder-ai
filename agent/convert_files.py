@@ -13,32 +13,32 @@ from common import (
     clean_text_content,
     remove_markdown_header_ids,
 )
-from lib.spreadsheet import get_excluded_files
+from lib.spreadsheet import get_list_files
 from lib.fileops import ensure_directories as ensure_excluded_dir, move_to_excluded, remove_empty_dirs, EXCLUDED_DIR
 
-# Get excluded files once at module level
-EXCLUDED_FILES = set()
+# Get included files once at module level
+INCLUDED_FILES = set()
 
 
-def update_excluded_files():
-    """Update the global EXCLUDED_FILES set."""
-    global EXCLUDED_FILES
-    EXCLUDED_FILES = get_excluded_files()
-    return EXCLUDED_FILES
+def update_included_files():
+    """Update the global INCLUDED_FILES set."""
+    global INCLUDED_FILES
+    INCLUDED_FILES = get_list_files(subset="included")
+    return INCLUDED_FILES
 
 
-def should_exclude_file(file_path):
-    """Check if a file should be excluded based on the exclusion list.
+def should_process_file(file_path):
+    """Check if a file should be processed based on the inclusion list.
 
     Args:
         file_path (str): The file path to check
 
     Returns:
-        bool: True if the file should be excluded, False otherwise
+        bool: True if the file should be processed, False otherwise
     """
     file_name = os.path.basename(file_path)
-    # Check if this file should be excluded
-    return any(exclude_name in file_name for exclude_name in EXCLUDED_FILES)
+    # Check if this file should be processed
+    return any(include_name in file_name for include_name in INCLUDED_FILES)
 
 
 def get_destination_path(file_path, extension):
@@ -53,10 +53,10 @@ def get_destination_path(file_path, extension):
     """
     os.path.basename(file_path)
 
-    # Check if this file should be excluded
-    is_excluded = should_exclude_file(file_path)
+    # Check if this file should be processed
+    should_process = should_process_file(file_path)
 
-    if is_excluded:
+    if not should_process:
         # Save to sources/excluded directory
         base_name = os.path.splitext(os.path.basename(file_path))[0]
         if extension.startswith("_"):  # For directories like "_sheets"
@@ -212,9 +212,9 @@ def check_and_exclude_files():
         for file in files:
             file_path = os.path.join(root, file)
 
-            # Check if this file should be excluded
+            # Check if this file should be processed (not in included list)
             rel_path = os.path.relpath(file_path, sources_dir)
-            if any(exclude_name in rel_path or exclude_name == file for exclude_name in EXCLUDED_FILES):
+            if not any(include_name in rel_path or include_name == file for include_name in INCLUDED_FILES):
                 if move_to_excluded(file_path):
                     excluded_count += 1
 
@@ -235,8 +235,8 @@ def main():
     ensure_directories()
     ensure_excluded_dir()
 
-    # Update excluded files list
-    update_excluded_files()
+    # Update included files list
+    update_included_files()
 
     skipped_count = 0
     excluded_count = 0
@@ -249,8 +249,8 @@ def main():
 
         ext = os.path.splitext(filename)[1].lower()
 
-        # Check if file is in the excluded list
-        if should_exclude_file(file_path):
+        # Check if file is in the included list
+        if not should_process_file(file_path):
             excluded_count += 1
             # Get converted path for the excluded file
             if ext == ".html":

@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from token_counting import get_token_encoder, count_tokens_in_file
-from lib.spreadsheet import get_excluded_files
+from lib.spreadsheet import get_list_files
 from lib.fileops import ensure_directories, move_to_excluded, remove_empty_dirs
 
 
@@ -25,7 +25,7 @@ def main():
     ensure_directories()
 
     # Get list of files to exclude from the spreadsheet
-    files_to_exclude = get_excluded_files()
+    files_to_exclude = get_list_files(subset="excluded")
 
     # Collect token counts for each file
     token_counts = []
