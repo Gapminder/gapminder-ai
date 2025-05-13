@@ -49,12 +49,16 @@ def read_ai_eval_spreadsheet() -> AiEvalData:
         raise Exception("Data validation. Please fix and retry")
 
 
-def save_sheets_as_csv(base_dir: Optional[str] = None) -> Dict[str, str]:
+def save_sheets_as_csv(
+    base_dir: Optional[str] = None, question_ids: Optional[set] = None, prompt_variation_ids: Optional[set] = None
+) -> Dict[str, str]:
     """
     Fetches all sheets from the AI Eval Spreadsheet and saves them as CSV files.
 
     Args:
         base_dir: Directory to save CSV files to. If None, uses current directory.
+        question_ids: Set of question IDs to filter by (None for no filtering)
+        prompt_variation_ids: Set of prompt variation IDs to filter by (None for no filtering)
 
     Returns:
         Dict mapping sheet names to their saved file paths
@@ -75,10 +79,22 @@ def save_sheets_as_csv(base_dir: Optional[str] = None) -> Dict[str, str]:
         "questions": filter_included_rows(ai_eval_data.questions.data.df),
         "question_options": filter_included_rows(ai_eval_data.question_options.data.df),
         "prompt_variations": filter_included_rows(ai_eval_data.prompt_variations.data.df),
-        "gen_ai_models": filter_included_rows(ai_eval_data.gen_ai_models.data.df),
         "gen_ai_model_configs": filter_included_rows(ai_eval_data.gen_ai_model_configs.data.df),
         "metrics": filter_included_rows(ai_eval_data.metrics.data.df),
     }
+
+    # Apply question ID filtering if specified
+    if question_ids is not None:
+        editor_map["questions"] = editor_map["questions"][editor_map["questions"]["question_id"].isin(question_ids)]
+        editor_map["question_options"] = editor_map["question_options"][
+            editor_map["question_options"]["question_id"].isin(question_ids)
+        ]
+
+    # Apply prompt variation ID filtering if specified
+    if prompt_variation_ids is not None:
+        editor_map["prompt_variations"] = editor_map["prompt_variations"][
+            editor_map["prompt_variations"]["variation_id"].isin(prompt_variation_ids)
+        ]
 
     saved_files = {}
 

@@ -216,7 +216,14 @@ def _simplify_openai_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Simplified response dictionary containing only essential fields
     """
-    status_code = response_data.get("response", {}).get("status_code")
+    try:
+        status_code = response_data.get("response", {}).get("status_code", 500)
+    except AttributeError:
+        logger.error("no status code for response. default to 500.")
+        logger.error("respose data:")
+        logger.error(str(response_data))
+        status_code = 500
+
     simplified = {
         "custom_id": response_data.get("custom_id"),
         "status_code": status_code,

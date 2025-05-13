@@ -73,27 +73,16 @@ class PromptVariationsDf(pa.DataFrameModel):
         coerce = True
 
 
-class GenAiModel(BaseModel):
-    model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
-
-    model_id: str = Field("", title="Model ID")
-    vendor: str = Field("", title="Vendor")
-    model_name: str = Field("", title="Model name")
-    model_published_date: str = Field("", title="Model Publish Date")
-
-
-class GenAiModelsDf(pa.DataFrameModel):
-    class Config:
-        dtype = PydanticModel(GenAiModel)
-        coerce = True
-
-
 class GenAiModelConfig(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True, protected_namespaces=())
 
     include_in_next_evaluation: bool = Field(False, title="Include in next evaluation")
     model_config_id: str = Field("", title="Model configuration ID")
     model_id: str = Field("", title="Model ID")
+    vendor: str = Field("", title="Vendor")
+    model_published_date: str = Field("", title="Model Publish Date")
+    first_experiment_date: str = Field("", title="First Experiment Date")
+    latest: bool = Field(False, title="Latest?")
     name: str = Field("", title="Name")
     model_parameters: str = Field("", title="Model Parameters")
     repeat_times: int = Field(-1, title="Repeat Times")

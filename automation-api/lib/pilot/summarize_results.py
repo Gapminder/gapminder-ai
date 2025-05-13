@@ -14,10 +14,88 @@ import polars as pl
 
 logger = logging.getLogger(__name__)
 
+# Global dictionary to cache evaluator prefixes loaded from CSV
+_evaluator_prefixes: Optional[Dict[str, str]] = None
 
-def get_evaluator_prefix(evaluator_id: str) -> str:
-    """Map evaluator ID to column prefix using simple substring matching."""
-    # FIXME: put the prefix into ai eval sheet
+
+def load_evaluator_prefixes(input_dir: Path) -> Dict[str, str]:
+    """
+    Load evaluator prefixes from the evaluators.csv file.
+
+    Args:
+        input_dir: Path to the experiment directory
+
+    Returns:
+        Dictionary mapping evaluator_id to metric_prefix
+    """
+    global _evaluator_prefixes
+
+    # Return cached result if already loaded
+    if _evaluator_prefixes is not None:
+        return _evaluator_prefixes
+
+    # Initialize empty dictionary
+    _evaluator_prefixes = {}
+
+    # Construct path to evaluators.csv
+    evaluators_csv_path = input_dir / "ai_eval_sheets" / "evaluators.csv"
+
+    # Check if file exists
+    if not evaluators_csv_path.exists():
+        logger.warning(
+            f"Evaluators configuration not found at {evaluators_csv_path}. "
+            "Will use default evaluator prefix mapping."
+        )
+        return _evaluator_prefixes
+
+    try:
+        # Read CSV file with polars
+        df = pl.read_csv(evaluators_csv_path)
+
+        # Check if required columns exist
+        required_columns = ["evaluator_id", "metric_prefix"]
+        if not all(col in df.columns for col in required_columns):
+            logger.warning(
+                f"Required columns {required_columns} not found in {evaluators_csv_path}. "
+                "Will use default evaluator prefix mapping."
+            )
+            return _evaluator_prefixes
+
+        # Extract mapping as dictionary
+        for row in df.select(required_columns).iter_rows():
+            evaluator_id, metric_prefix = row
+            # Remove trailing underscore if present (will be added consistently later)
+            prefix = metric_prefix.rstrip("_")
+            _evaluator_prefixes[evaluator_id] = prefix
+
+        logger.info(f"Loaded {len(_evaluator_prefixes)} evaluator prefixes from {evaluators_csv_path}")
+
+    except Exception as e:
+        logger.warning(
+            f"Error loading evaluator prefixes from {evaluators_csv_path}: {str(e)}. "
+            "Will use default evaluator prefix mapping."
+        )
+
+    return _evaluator_prefixes
+
+
+def get_evaluator_prefix(evaluator_id: str, prefixes: Optional[Dict[str, str]] = None) -> str:
+    """
+    Map evaluator ID to column prefix, using configuration from evaluators.csv if available.
+    Falls back to substring matching if the evaluator is not found in the configuration.
+
+    Args:
+        evaluator_id: ID of the evaluator
+        prefixes: Dictionary of evaluator prefixes from load_evaluator_prefixes
+
+    Returns:
+        Column prefix to use for the evaluator
+    """
+    # If we have a mapping and the evaluator is in it, use that
+    if prefixes and evaluator_id in prefixes:
+        return prefixes[evaluator_id]
+
+    # Fall back to substring matching
     evaluator_id = evaluator_id.lower()
     if "claude" in evaluator_id:
         return "claude"
@@ -25,6 +103,8 @@ def get_evaluator_prefix(evaluator_id: str) -> str:
         return "gpt4"
     elif "gemini" in evaluator_id:
         return "gemini"
+    elif "mistral" in evaluator_id:
+        return "mistral"
     return evaluator_id.replace("-", "_")
 
 
@@ -199,7 +279,9 @@ def calculate_final_score(scores: List[int]) -> int:
     return most_common_score if is_clear_winner else 0
 
 
-def process_group(response_path: Path, eval_paths: List[Path], output_dir: Path) -> None:
+def process_group(
+    response_path: Path, eval_paths: List[Path], output_dir: Path, evaluator_prefixes: Dict[str, str]
+) -> None:
     """Process a group of response + eval files into final output."""
     model_id = response_path.name.split("-")[0]
 
@@ -215,7 +297,7 @@ def process_group(response_path: Path, eval_paths: List[Path], output_dir: Path)
             eval_path.name,
         )
         evaluator_id = eval_file_match.group("evaluator_id") if eval_file_match else "unknown"
-        prefix = get_evaluator_prefix(evaluator_id)
+        prefix = get_evaluator_prefix(evaluator_id, evaluator_prefixes)
         evals = load_jsonl(eval_path)
         eval_df = pl.DataFrame(process_evals(evals, prefix, model_id))
         eval_dfs.append(pivot_eval_df(eval_df, prefix))
@@ -272,15 +354,26 @@ def create_master_output(input_dir: str, language: str = "en-US") -> pl.DataFram
     res_list = [pl.read_parquet(x) for x in glob(f"{input_dir}/*parquet")]
 
     # make sure the columns are in same order
-    cols = res_list[0].columns
+    cols = ["model_config_id", "question_id", "prompt_variation_id", "response", "final_correctness"]
     res_list = [r.select(cols) for r in res_list]
 
     res = pl.concat(res_list)
 
+    # Get the directory name correctly even with relative paths like "./"
+    input_path = Path(input_dir).resolve()
+    dir_name = input_path.name
+
+    # Extract date part only (first 8 digits) for last_evaluation_datetime
+    # If format is YYYYMMDD_HHMMSS, take just YYYYMMDD
+    date_part = dir_name.split("_")[0]
+    # Ensure we only get the date part (first 8 digits) if it's a full datetime
+    if len(date_part) >= 8:
+        date_part = date_part[:8]
+
     # Add metadata columns and map correctness
     res = res.with_columns(
         pl.lit(language).alias("language"),
-        pl.lit(input_dir.split("/")[-1]).alias("last_evaluation_datetime"),
+        pl.lit(date_part).alias("last_evaluation_datetime"),
         pl.col("final_correctness").replace_strict(result_map).alias("result"),
     )
 
@@ -302,21 +395,25 @@ def main(input_dir: Path, output_dir: Optional[Path] = None) -> None:
     output_dir = output_dir or input_dir
     output_dir.mkdir(exist_ok=True)
 
+    # Load evaluator prefixes from configuration file
+    evaluator_prefixes = load_evaluator_prefixes(input_dir)
+
     file_groups = find_file_groups(input_dir)
     for model_id, (resp_path, eval_paths) in file_groups.items():
         logger.info(f"Processing {model_id}...")
-        process_group(resp_path, eval_paths, output_dir)
+        process_group(resp_path, eval_paths, output_dir, evaluator_prefixes)
 
     # Combine all parquet to create a master output csv file
     # I need to provide the fullpath, because it is needed for
     # computing the evaluation date.
     master_output = create_master_output(str(input_dir.resolve()))
 
-    # Extract the basename from output_dir for the filename suffix
-    basename = output_dir.name
+    # Get the proper directory name even for relative paths like "./"
+    resolved_output_dir = output_dir.resolve()
+    dir_name = resolved_output_dir.name
 
-    # Create the output CSV filename with the basename as suffix
-    csv_output_path = output_dir / f"master_output_{basename}.csv"
+    # Create the output CSV filename with the directory name as suffix
+    csv_output_path = output_dir / f"master_output_{dir_name}.csv"
 
     # Write to CSV with the correct filename
     master_output.write_csv(csv_output_path)

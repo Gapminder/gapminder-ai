@@ -1,0 +1,2 @@
+model_config_id,model_id,vendor,model_published_date,first_experiment_date,latest,name,model_parameters,repeat_times,memory,memory_size
+mc064,o3-2025-04-16,openAI,2025-04-16,2025-04-29,False,o3 (Medium),"{""temperature"": 1, ""reasoning_effort"": ""medium"", ""max_completion_tokens"": 5000}",1,False,0

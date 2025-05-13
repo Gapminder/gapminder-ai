@@ -14,6 +14,7 @@ from lib.pilot.send_batch_prompt import process_batch
 class JsonlFormat(Enum):
     OPENAI = "openai"
     VERTEX = "vertex"
+    MISTRAL = "mistral"
 
 
 logger = AppSingleton().get_logger()
@@ -219,6 +220,12 @@ def generate_eval_prompts(
                             "method": "POST",
                             "url": "/v1/chat/completions",
                             "body": eval_request,
+                        }
+                    elif format == JsonlFormat.MISTRAL:
+                        # Create evaluation request object for Mistral
+                        request_obj = {
+                            "custom_id": custom_id,
+                            "body": {"messages": [{"role": "user", "content": eval_prompt}], **model_parameters},
                         }
                     else:  # Vertex format
                         request_obj = {

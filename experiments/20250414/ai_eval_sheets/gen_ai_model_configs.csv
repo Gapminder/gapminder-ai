@@ -1,0 +1,2 @@
+model_config_id,model_id,vendor,model_published_date,first_experiment_date,latest,name,model_parameters,repeat_times,memory,memory_size
+mc057,deepseek/deepseek-reasoner,Deepseek,2025-01-20,2025-04-10,False,R1,"{""temperature"": 0.01, ""max_tokens"": 5000}",1,False,0
