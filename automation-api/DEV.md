@@ -2,12 +2,13 @@
 
 ### Setting up the development environment
 
-First, install Python 3.9 and [Poetry](https://python-poetry.org/) on your system.
+First, install Python 3.13 and [uv](https://github.com/astral-sh/uv) on your system.
 
 Then, install dependencies:
 
 ```
-poetry install
+uv venv
+uv pip install -e .
 ```
 
 This sets up a local Python environment with all the relevant dependencies, including the Development Tools listed further down in this readme.
@@ -15,7 +16,9 @@ This sets up a local Python environment with all the relevant dependencies, incl
 The remaining commands in this readme assume you have activated the local Python environment by running:
 
 ```
-poetry shell
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate     # On Windows
 ```
 
 Now install the Git hooks that will make it harder to accidentally commit incorrectly formatted files:
@@ -98,7 +101,7 @@ read_config()
 When new dependencies gets added/updated/removed (in `pyproject.toml`) by collaborators, you need to run the following to install the latest dependencies:
 
 ```
-poetry install
+uv pip install -e .
 ```
 
 ### Run tests, formatters and linters
@@ -132,7 +135,7 @@ pytest tests/test_lib_import_statement.py
 
 #### Principles
 
-* Simple for developers to get up-and-running (`poetry`, `poethepoet`)
+* Simple for developers to get up-and-running (`uv`, `poethepoet`)
 * Unit tests with test coverage reports (`pytest`)
 * Consistent style (`ruff`, `black`)
 * Prevent use of old Python syntax (`pyupgrade`)
@@ -140,7 +143,7 @@ pytest tests/test_lib_import_statement.py
 
 #### Development tools
 
-* [`poetry`](https://python-poetry.org/) for dependency management
+* [`uv`](https://github.com/astral-sh/uv) for dependency management
 * [`poethepoet`](https://github.com/nat-n/poethepoet) as local task runner
 * [`ruff`](https://beta.ruff.rs/docs/), [`black`](https://github.com/psf/black) and [`pyupgrade`](https://github.com/asottile/pyupgrade) for linting
 * [`mypy`](https://mypy.readthedocs.io/en/stable/) for type hinting

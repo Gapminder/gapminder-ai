@@ -25,11 +25,19 @@ Please refer to the current configuration spreadsheet[2] for the expected column
 
 ## How to run an experiment
 
-### perpare the environment
+### prepare the environment
 
-0. make sure python and poetry installed
+0. make sure python and [uv](https://github.com/astral-sh/uv) installed
 1. clone this repo
-2. enable the automation-api environment by issuing `poetry shell`
+2. create and enable a virtual environment:
+   ```
+   cd automation-api
+   uv venv
+   source .venv/bin/activate  # On Unix/macOS
+   # or
+   .venv\Scripts\activate     # On Windows
+   uv pip install -e .
+   ```
 3. add an .env file `cp .env.example .env`, and edit `.env` properly.
 4. If using redis for litellm cache, please make sure redis is installed and edit the REDIS_HOST/REDIS_PORT in .env
 
@@ -45,10 +53,10 @@ The `gm-eval` command-line tool simplifies running experiments by providing a un
 
 #### Installation
 
-The tool is automatically installed when you set up the poetry environment:
+The tool is automatically installed when you set up the environment:
 
 ```bash
-poetry install
+uv pip install -e .
 ```
 
 #### Basic Usage
