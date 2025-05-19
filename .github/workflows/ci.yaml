@@ -66,11 +66,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: automation-api/.venv
-          key: uv-venv-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('automation-api/uv.lock') }}
+          key: uv-venv-dev-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('automation-api/uv.lock', 'automation-api/pyproject.toml') }}
 
       - name: Install dependencies
-        run: cd automation-api && uv pip install -e .
+        run: cd automation-api && uv pip install -e ".[dev]"
         if: steps.cached-uv-dependencies.outputs.cache-hit != 'true'
+
+      - name: Ensure poethepoet is installed
+        run: cd automation-api && uv pip install poethepoet
 
       - name: Run tests
         run: cd automation-api && poe pytest
@@ -102,11 +105,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: agent/.venv
-          key: uv-venv-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('agent/requirements.txt') }}
+          key: uv-venv-with-automation-api-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('agent/requirements.txt', 'automation-api/pyproject.toml') }}
 
       - name: Install dependencies
-        run: uv pip install -r agent/requirements.txt
+        run: |
+          # Install automation-api first
+          cd automation-api && uv pip install -e . && cd ..
+          # Install agent requirements with a modified requirements file
+          cat agent/requirements.txt | grep -v "automation-api" > agent/requirements.without.automation-api.txt
+          uv pip install -r agent/requirements.without.automation-api.txt
         if: steps.cached-uv-dependencies.outputs.cache-hit != 'true'
+
+      - name: Ensure automation-api is installed
+        run: cd automation-api && uv pip install -e .
 
       - name: Run tests
         run: python -m pytest agent
