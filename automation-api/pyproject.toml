@@ -1,101 +1,83 @@
-[tool.poetry]
+[project]
 name = "gapminder-ai-automation-ai"
 version = "0.1.0"
 description = "Secured API endpoints that enables AI automation workflows"
-authors = ["Gapminder Foundation <info@gapminder.org>"]
+authors = [{ name = "Gapminder Foundation", email = "info@gapminder.org" }]
+requires-python = "~=3.13"
 readme = "README.md"
 classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.13",
 ]
-packages = [{ include = "lib" }]
+dependencies = [
+    "pandas>=2.0.3,<3",
+    "mypy>=1.9.0,<2",
+    "unidecode>=1.3.6,<2",
+    "polars>=1.19.0,<2",
+    "tokenizers>=0.21.1,<0.22",
+    "pydantic>=2.1.1,<3",
+    "pandera[mypy]>=0.22.0,<0.23",
+    "functions-framework>=3.0.0,<4",
+    "python-dotenv>=0.20.0,<0.21",
+    "gspread>=5.1.1,<6",
+    "gspread-dataframe",
+    "google-auth>=2.6.6,<3",
+    "google-api-python-client>=2.45.0,<3",
+    "types-requests>=2.28.11.6,<3",
+    "bracelogger>=1.1.0,<2",
+    "litellm[proxy]~=1.55",
+    "huggingface_hub<1.0",
+    "google-generativeai>=0.3.2,<0.4",
+    "websocket-client>=1.6.1,<2",
+    "dashscope>=1.6.0,<2",
+    "redis>=5.0.1,<6",
+    "google-cloud-aiplatform>=1.39.0,<2",
+    "langdetect>=1.0.9,<2",
+    "duckdb<2",
+    "duckdb-engine<2",
+    "jupysql>=0.10.10,<0.11",
+    "anthropic[vertex]>=0.42.0,<0.43",
+    "fireworks-ai>=0.15.1,<0.16",
+    "mistralai>=1.5.2,<2",
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 gm-eval = "lib.pilot.gm_eval.cli:main"
 
-[tool.poetry.dependencies]
-python = ">=3.11,<3.12"
-pandas = "^2.0.3"
-mypy = "^1.9.0"
-unidecode = "^1.3.6"
-polars = "^1.19.0"
+[dependency-groups]
+dev = [
+    "coverage>=6.3.2,<7",
+    "freezegun>=1.2.1,<2",
+    "poethepoet>=0.13.1,<0.14",
+    "pre-commit>=2.18.1,<3",
+    "pytest>=7.2.0,<8",
+    "pytest-cov>=4.0.0,<5",
+    "jupyter>=1.0.0,<2",
+    "ipykernel>=6.6.0,<7",
+    "jupytext>=1.14.4,<2",
+    "pytest-mock>=3.6.1,<4",
+]
 
-# for data frames schemas / types validation
-pydantic = "^2.1.1"
-pandera = {extras = ["mypy"], version = "^0.22.0"}
-# numpy = "<2.0"
+[tool.uv]
 
-# to simplify development and deployment of cloud functions
-functions-framework = "^3.0.0"
-python-dotenv = "^0.20.0"
-
-# for gsheets import/export
-gspread = "^5.1.1"
-gspread-dataframe = {git = "https://github.com/robin900/gspread-dataframe.git", rev="master"}
-
-# for gdrive API consumption
-google-auth = "^2.6.6"
-google-api-python-client = "^2.45.0"
-
-# typehints
-types-requests = "^2.28.11.6"
-
-# for logging that supports {variables} in brace format
-bracelogger = "^1.1.0"
-
-# for access to AI models
-litellm = {extras = ["proxy"], version =  "^1.55"}
-
-# for hugging face
-huggingface_hub = "^0.15.1"
-
-# for google PaLM
-google-generativeai = "^0.3.2"
-
-# for iflytek
-websocket-client = "^1.6.1"
-
-# for alibaba
-dashscope = "^1.6.0"
-
-# yival
-redis = "^5.0.1"
-
-# gemini
-google-cloud-aiplatform = "^1.39.0"
-
-# unsorted (new deps gets listed here)
-langdetect = "^1.0.9"
-duckdb = "^0.10.2"
-duckdb-engine = "^0.12.0"
-jupysql = "^0.10.10"
-anthropic = {extras = ["vertex"], version = "^0.42.0"}
-fireworks-ai = "^0.15.1"
-mistralai = "^1.5.2"
-
-
-
-[tool.poetry.dev-dependencies]
-coverage = "^6.3.2"
-freezegun = "^1.2.1"
-poethepoet = "^0.13.1"
-pre-commit = "^2.18.1"
-pytest = "^7.2.0"
-pytest-cov = "^4.0.0"
-jupyter = "^1.0.0"
-ipykernel = "^6.6.0"
-jupytext = "^1.14.4"
-pytest-mock = "^3.6.1"
-
-[[tool.poetry.source]]
+[[tool.uv.index]]
 name = "pytorch_cpu"
 url = "https://download.pytorch.org/whl/cpu"
-priority = "explicit"
+explicit = true
+
+[tool.uv.sources]
+gspread-dataframe = { git = "https://github.com/robin900/gspread-dataframe.git", rev = "master" }
+
+[tool.hatch.build.targets.sdist]
+include = ["lib"]
+
+[tool.hatch.build.targets.wheel]
+include = ["lib"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.poe.tasks]
 test = ["pytest", "lint"]
@@ -113,7 +95,7 @@ start_redis = "docker run --rm -p 26379:6379 --name local-redis redis redis-serv
 shell = "cd yival_experiments && yival run --output ./output/$experiment ./experiment_configurations/$experiment.yaml"
 help = "Run a yival experiment with a given name."
 
-  [[tool.poe.tasks.run_experiment.args]]
+[[tool.poe.tasks.run_experiment.args]]
   name = "experiment"
   help = "Name of the experiment to run"
   options = ["-e", "--experiment"]
@@ -122,12 +104,11 @@ help = "Run a yival experiment with a given name."
 shell = "python yival_experiments/scripts/generate_experiment_config.py --evaluator $evaluator"
 help = "generate experiment config, and set evaluator"
 
-  [[tool.poe.tasks.generate_experiment_config.args]]
+[[tool.poe.tasks.generate_experiment_config.args]]
   name = "evaluator"
   help = "Name of the evaluator"
   options = ["-e", "--evaluator"]
   default = "gpt4"
-
 
 [tool.poe]
 envfile = ".env"

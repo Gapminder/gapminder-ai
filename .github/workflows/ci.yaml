@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [3.11]
+        python: [3.13]
 
     steps:
       - name: Checkout code
@@ -21,6 +21,12 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+          activate-environment: true
+
       - name: Load cached pre-commit environment
         uses: actions/cache@v4
         with:
@@ -28,7 +34,7 @@ jobs:
           key: pre-commit-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Install pre-commit
-        run: pip install pre-commit
+        run: uv pip install pre-commit
 
       - name: Lint
         run: pre-commit run --all-files
@@ -38,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [3.11]
+        python: [3.13]
 
     steps:
       - name: Checkout code
@@ -49,34 +55,28 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Load cached Poetry installation
-        uses: actions/cache@v4
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
         with:
-          path: ~/.local
-          key: poetry-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('.github/workflows/ci.yaml') }}
+          python-version: ${{ matrix.python }}
+          activate-environment: true
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.6.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
+      - name: Load cached uv venv
+        id: cached-uv-dependencies
         uses: actions/cache@v4
         with:
           path: automation-api/.venv
-          key: venv-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('automation-api/poetry.lock') }}
+          key: uv-venv-dev-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('automation-api/uv.lock', 'automation-api/pyproject.toml') }}
 
       - name: Install dependencies
-        run: poetry install
-        working-directory: automation-api
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: cd automation-api && uv pip install -e ".[dev]"
+        if: steps.cached-uv-dependencies.outputs.cache-hit != 'true'
+
+      - name: Ensure poethepoet is installed
+        run: cd automation-api && uv pip install poethepoet
 
       - name: Run tests
-        run: poetry run poe pytest
-        working-directory: automation-api
+        run: cd automation-api && poe pytest
 
   test-agent:
     name: "(agent) Test"
@@ -95,20 +95,29 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python }}
+          activate-environment: true
 
       - name: Load cached uv venv
         id: cached-uv-dependencies
         uses: actions/cache@v4
         with:
           path: agent/.venv
-          key: uv-venv-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('agent/requirements.txt') }}
+          key: uv-venv-with-automation-api-${{ runner.os }}-${{matrix.python}}-${{ hashFiles('agent/requirements.txt', 'automation-api/pyproject.toml') }}
 
       - name: Install dependencies
-        run: uv pip install -r agent/requirements.txt --python $(which python)
+        run: |
+          # Install automation-api first
+          cd automation-api && uv pip install -e . && cd ..
+          # Install agent requirements with a modified requirements file
+          cat agent/requirements.txt | grep -v "automation-api" > agent/requirements.without.automation-api.txt
+          uv pip install -r agent/requirements.without.automation-api.txt
         if: steps.cached-uv-dependencies.outputs.cache-hit != 'true'
 
+      - name: Ensure automation-api is installed
+        run: cd automation-api && uv pip install -e .
+
       - name: Run tests
-        run: uv run --python $(which python) python -m pytest agent
+        run: python -m pytest agent
