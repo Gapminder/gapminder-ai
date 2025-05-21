@@ -109,7 +109,7 @@ def determine_correctness(options, correct_index, very_wrong_answer):
 def main():
     # Define input and output paths
     input_csv_path = 'halted_questions.csv'
-    output_dir = './'
+    output_dir = './ai_eval_sheets'
     output_questions_path = output_dir + 'questions.csv'
     output_options_path = output_dir + 'question_options.csv'
 
@@ -267,7 +267,8 @@ def main():
             new_option_letter_map = {i: chr(65 + i) for i in range(len(selected_options))}
 
             # Get the very wrong answer for this question, if available
-            very_wrong_answer = row.get('Very Wrong Answer', '').strip() if 'Very Wrong Answer' in row else ''
+            raw_vwa_val = row.get('Very Wrong Answer')
+            very_wrong_answer = str(raw_vwa_val).strip() if pd.notna(raw_vwa_val) else ''
 
             # Create a map of options and their correctness values
             option_texts = [opt_detail['text'] for opt_detail in selected_options]
@@ -319,7 +320,8 @@ def main():
     except FileNotFoundError:
         print(f"Error: Input file not found at {input_csv_path}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        raise
+        # print(f"An error occurred: {e}")
 
 if __name__ == '__main__':
     main()
