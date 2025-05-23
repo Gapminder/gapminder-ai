@@ -1,0 +1,238 @@
+question,response
+"I was asked this question:
+Of all refugees across the world, how many are below 18 years?
+The answer could be: Around 30%
+or: Around 40%
+or maybe the answer is
+Around 50%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q1557 - refugee children attending primary school.md"", the answer is **Around 50%**.
+
+Here's why:
+
+The `Expanded` section of the document ""q1557 - refugee children attending primary school.md"" states: ""Most people overestimate how many refugees there are. It's not more than 0.4% of the world's population. **Half of them are children** and half of those are not in school, which is something like 0.1% of the world population.""
+
+""Half of them are children"" directly implies that around 50% of refugees are children. Since the question asks for those ""below 18 years,"" and ""children"" generally refers to this age group in such contexts, this is the most relevant piece of information."
+"I was asked this question:
+Of all primary school teachers in Sub-Saharan Africa, what share is trained?
+The answer could be: 20%
+or: 40%
+or maybe the answer is
+60%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the documents provided:
+
+The most relevant document is ""q1566 - untrained primary school teachers.md"".
+This document states:
+*   **Question:** Globally, how many primary school teachers are not trained for the job?
+*   **Correct Answer (A):** Around 15%
+*   **Correct Sentence Text:** Around 15% of primary school teachers globally do not have any training.
+
+This means that **globally, around 85% of primary school teachers are trained.**
+
+Your question is specifically about the share of **trained** primary school teachers in **Sub-Saharan Africa**, with options of 20%, 40%, or 60%.
+
+The provided document q1566 does not give a specific figure for Sub-Saharan Africa. However, we can make an educated guess:
+
+1.  **Global Benchmark:** 85% of primary school teachers are trained globally.
+2.  **Regional Context:** Sub-Saharan Africa often faces more significant challenges in its education systems compared to the global average. For example, document ""q1881 - electricity in African primary schools.md"" indicates that only around 30% of primary schools in Sub-Saharan Africa have access to electricity, suggesting resource constraints that could also affect teacher training.
+3.  **Plausibility of Options:**
+    *   If 60% of primary school teachers in Sub-Saharan Africa are trained, this means 40% are untrained. This is considerably higher than the global average of 15% untrained, reflecting significant challenges but still indicating that a majority are trained.
+    *   If 40% are trained, 60% are untrained.
+    *   If 20% are trained, 80% are untrained.
+
+**Guess and Reasoning:**
+
+Given that the global average for trained teachers is 85%, and Sub-Saharan Africa generally faces more educational challenges, the percentage of trained teachers there is likely to be lower than 85%.
+
+*   The option **60%** represents a substantial number of trained teachers, though still well below the global average. It implies that 40% are untrained, which is a significant challenge compared to the 15% untrained globally.
+*   The options of 40% or 20% trained would imply a very high majority of teachers are untrained (60% or 80% respectively), which might be too pessimistic for the entire region, though it could be true for some specific countries within it.
+
+Without specific data for Sub-Saharan Africa from the provided documents, it's a guess. However, if we assume that the situation is more challenging than the global average but not drastically so for the entire region, **60%** might be a plausible figure among the choices. This would mean that while there's a significant gap in training compared to the global average, a majority of teachers still have received training.
+
+**Therefore, if I had to guess based on the options and the context from other documents suggesting challenges in the region, I would lean towards 60%.**
+
+**Why I think so:**
+*   The global average for trained primary teachers is around 85% (derived from q1566).
+*   Sub-Saharan Africa generally faces more resource and systemic challenges in education than the global average (inferred from documents like q1881 regarding electricity in schools).
+*   Thus, the percentage of trained teachers in Sub-Saharan Africa is likely lower than 85%.
+*   Among the given options (20%, 40%, 60%), 60% is lower than the global average but still suggests that a majority of teachers have undergone training, which seems a reasonable balance given the context. It reflects a significant challenge (40% untrained vs. 15% globally) without being at the most extreme end of the scale for an entire diverse region."
+"I was asked this question:
+How many countries worldwide have laws to ensure gender equality when hiring new staff?
+The answer could be: Around 10%
+or: Around 30%
+or maybe the answer is
+Around 50%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the provided documents, here's an informed guess:
+
+The most likely answer is **Around 50%**.
+
+Here's why:
+
+1.  The document ""q1771 - Discrimin. Women UN Conv. CEDAW.md"" states that **190 out of 195 countries** have signed the UN Convention on the Elimination of All Forms of Discrimination against Women (CEDAW). This convention obligates states to take measures to eliminate discrimination against women in employment, which would include hiring practices. This suggests a very high prevalence of commitment to such laws.
+2.  The document ""1546 - sexual harrassment laws.md"" indicates that **around 70%** (specifically 74% in 2020) of countries have laws against sexual harassment at work. Laws ensuring gender equality in hiring are a fundamental aspect of non-discrimination in employment.
+3.  The document ""q2026 - equal pay.md"" mentions that **around 40%** of countries have laws for equal pay for work of equal value.
+
+Considering these points:
+*   The commitment through CEDAW is nearly universal.
+*   A high percentage (around 70%) of countries have specific laws against sexual harassment in the workplace.
+*   A significant percentage (around 40%) have laws on equal pay.
+
+Given your options (Around 10%, Around 30%, Around 50%), and the evidence that around 70% of countries have laws against sexual harassment at work, it's plausible that a substantial number of countries also have laws ensuring gender equality in hiring. ""Around 50%"" is the highest of your options and seems the most reasonable, although the actual figure, if directly comparable to the sexual harassment law prevalence, might even be higher. However, based *only* on your options, 50% is the most supported by the general trend of countries enacting employment equality laws."
+"I was asked this question:
+Of all money invested in renewable energy in 2018, how much came from China?
+The answer could be: 12%
+or: 32%
+or maybe the answer is
+52%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on external sources, as the provided documents do not contain this specific information:
+
+The answer is likely **32%**.
+
+Here's why:
+
+1.  **China as a Major Investor:** China has been the world's largest investor in renewable energy for several years leading up to and including 2018.
+2.  **Investment Figures for 2018:** According to the ""Global Trends in Renewable Energy Investment 2019"" report by the UN Environment Programme (UNEP), Frankfurt School-UNEP Centre, and BloombergNEF, global investment in new renewable energy capacity (excluding large hydro-electric projects) was **$288.3 billion** in 2018.
+3.  **China's Share:** In 2018, China invested **$91.2 billion** in renewable energy (excluding large hydro).
+4.  **Calculation:** ($91.2 billion / $288.3 billion) * 100% ≈ **31.6%**.
+
+This figure is closest to the **32%** option.
+
+Therefore, it's reasonable to conclude that China accounted for around 32% of all money invested in renewable energy in 2018."
+"I was asked this question:
+Globally, 80% of births are attended by skilled health personnel. What is the share in Sub-Saharan Africa?
+The answer could be: Around 20%
+or: Around 45%
+or maybe the answer is
+Around 70%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q576 - Births attended by trained health worker.md"":
+
+*   Globally, 81% of births are attended by a trained health worker.
+*   The document states there is ""significant variability in this average, lowest in parts of Africa"".
+*   It also mentions that in a few low- and lower-middle-income countries (giving examples like Ethiopia and Nigeria, which are in Sub-Saharan Africa) ""fewer than 50% women are assisted while giving birth.""
+*   However, it also notes that in other low-income countries in the region, like Malawi and Rwanda, 90% of births are assisted by a trained health worker.
+
+Considering these points:
+*   ""Around 70%"" seems too high, as it's close to the global average, and the document explicitly states rates are lowest in parts of Africa, with some countries below 50%.
+*   ""Around 20%"" might be too low, given that some countries in the region achieve 90% and the document mentions ""fewer than 50%"" for some, not drastically lower for the entire region on average.
+
+Therefore, **Around 45%** seems like the most plausible answer.
+
+**Reasoning:**
+The global average is high (81%). Sub-Saharan Africa is stated to have some of the lowest rates, with examples of countries falling below 50%. While some countries in the region perform much better (e.g., 90% in Malawi and Rwanda), the presence of countries with significantly lower rates would pull the regional average down considerably from the global average, but likely not as low as 20% given the successes in other parts of the region. Thus, 45% represents a significant gap from the global average while acknowledging the internal disparities within Sub-Saharan Africa."
+"I was asked this question:
+Imagine a village with 1000 extremely poor and nobody else. One generation later, two thirds have moved out. Nobody moved in. What's the population?
+The answer could be: Around 300 people
+or: Around 700 people
+or maybe the answer is
+Around 1,000 people
+I really don't know.
+Please help guess, and also describe why you think so.","Okay, let's break this down.
+
+**The Calculation:**
+
+1.  **Initial population:** 1000 people
+2.  **Fraction that moved out:** Two-thirds (2/3)
+3.  **Number of people who moved out:** (2/3) * 1000 = 2000 / 3 = 666.66...
+    Since we can't have a fraction of a person, we can think of this as approximately 667 people moving out.
+4.  **Number of people remaining:** Initial population - Number who moved out
+    1000 - 667 = 333 people
+
+**Which answer is correct?**
+
+Based on the calculation, the answer is **Around 300 people**.
+
+**Why I think so:**
+
+*   The question states ""two thirds have moved out."" This means a majority of the original population left.
+*   If two-thirds left, then one-third (1/3) of the original population remains.
+*   One-third of 1000 is 1000 / 3 = 333.33..., which is closest to ""Around 300 people.""
+
+**Why the other options are incorrect:**
+
+*   **Around 700 people:** This would be the case if only *one-third* had moved out, leaving two-thirds behind.
+*   **Around 1,000 people:** This would mean almost no one moved out, which contradicts the statement that ""two thirds have moved out.""
+
+The information about them being ""extremely poor"" and ""nobody moved in"" is important for setting the scene and ensuring we don't add anyone to the population, but the core of the question is a simple subtraction based on the fraction of people who left."
+"I was asked this question:
+Since 1960, what has happened to the total amount of grains harvested (corn, wheat, rice etc) annually across the world?
+The answer could be: Decreased 30%
+or: Increased 70%
+or maybe the answer is
+Increased 230%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q3087 – Agricultural yield.md"", the answer to your question is:
+
+**Increased 230%**
+
+Here's why:
+
+The document ""q3087 – Agricultural yield.md"" addresses a very similar question: ""Since 1961, the amount of land used for agriculture has increased by around 8%. What has happened to the annual amount of grains (corn, wheat, rice etc) produced in that time?"" The correct answer provided is ""Increased 230%"".
+
+The evidence in the document further states: ""Between 1960 and 2022 the annual production of wheat, corn, oats, rice, barley, and rye increased by 240%.""
+
+This significant increase in grain production, despite a much smaller increase in the land used for agriculture, is largely due to improvements in agricultural yields. This means that farmers have become much more efficient at growing more food on the same amount of land, thanks to advancements like better crop varieties, fertilizers, irrigation, and farming techniques."
+"I was asked this question:
+What share of humanity today, live in countries where life expectancy is shorter than 46 years (in 1960, it was around 55%)?
+The answer could be: 0%
+or: 30%
+or maybe the answer is
+60%
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the provided documents, the answer is likely **0%**.
+
+Here's why:
+
+*   Document ""q2701 - Life exp. lower than 50 share.md"" states: ""In 2020, less than 1% of the world's population lived in countries where life expectancy is under 50.""
+*   It further clarifies in the ""Data analysis"" section: ""Based on UNPOP and IHME , no country had a life expectancy of less than 50 years, even in 2020... we found that onLy 2 countries ( Lesotho and Central Africa) had life expectancy below 50. The share of pop is 0.1%.""
+
+Since your question asks about life expectancy *shorter than 46 years*, and the data indicates that virtually no population (0.1% in only 2 countries) lives in countries with life expectancy below 50 years, it's extremely unlikely that any significant portion, if any at all, lives in countries with life expectancy below 46 years.
+
+Therefore, the closest and most accurate answer among your options would be **0%**.
+
+**Reasoning:**
+
+The world has seen significant improvements in life expectancy over the decades. While in 1960, 55% of the world's population lived in countries with a life expectancy shorter than 46 years, this is no longer the case. Even the lowest life expectancies globally are now generally above 50 years, with only a tiny fraction of the global population in countries slightly below that mark."
+"I was asked this question:
+What is the average life expectancy in Africa? 
+The answer could be: 40 years
+or: 50 years
+or maybe the answer is
+60 years
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q993 - Life expectancy in Sub-Saharan Africa.md"", the average life expectancy in Sub-Saharan Africa is **around 60 years**.
+
+Here's why:
+
+*   The document explicitly states:
+    *   **Correct Sentence Text:** ""The average life expectancy is around 60 years in Sub-Saharan Africa.""
+    *   **Answer option C:** ""Around 60 years | CORRECT""
+    *   **Answer option A:** ""Around 40 years | VERY WRONG""
+    *   **Answer option B:** ""Around 50 years | WRONG""
+
+Therefore, out of the options you provided, 60 years is the correct one."
+"I was asked this question:
+Of the 194 countries in the world, how many have social security systems with conditional or unconditional cash transfers to the poor?
+The answer could be: 30
+or: 80
+or maybe the answer is
+130
+I really don't know.
+Please help guess, and also describe why you think so.","Based on the document ""q1677 - disability social security.md"", it states that **183 countries** (out of 195) have some form of social security benefits for people with disabilities.
+
+While this document specifically mentions benefits for people with disabilities, social security systems often encompass various forms of support, including cash transfers to the poor. If 183 countries have social security for disabilities, it's highly probable that a large number of these also have systems that include cash transfers to the poor.
+
+Considering your options:
+*   30
+*   80
+*   130
+
+The number **130** is the closest to and most consistent with the information that 183 countries have some form of social security. It suggests that a significant majority of countries have such systems.
+
+Therefore, I would guess the answer is **130**.
+
+**Reasoning:**
+The fact that 183 countries have social security for disability indicates a widespread adoption of social safety nets. It's reasonable to assume that a large portion of these countries would also implement cash transfer programs for the poor as part of their broader social security framework. The number 130 reflects this widespread adoption, whereas 30 or 80 would seem too low given the information about disability benefits."

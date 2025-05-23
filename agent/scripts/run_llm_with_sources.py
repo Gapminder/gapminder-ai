@@ -97,10 +97,12 @@ def load_system_prompt(directory, source_file_percentage=0.5, content_percentage
 if __name__ == "__main__":
     # Setup paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    questions_file = os.path.abspath(os.path.join(script_dir, "question_prompts.jsonl"))
+    questions_file = os.path.abspath(
+        os.path.join(script_dir, "../notebooks/20250523_unpublished/mc066-question_prompts.jsonl")
+    )
     output_dir = os.path.abspath(os.path.join(script_dir, "..", "output"))
     os.makedirs(output_dir, exist_ok=True)
-    output_csv = os.path.abspath(os.path.join(output_dir, "responses.csv"))
+    output_csv = os.path.abspath(os.path.join(output_dir, "responses-unpublished.csv"))
     sources_dir = os.path.abspath(os.path.join(script_dir, "..", "sources"))
 
     # Setup vertex AI env with service account credentials
@@ -152,7 +154,7 @@ if __name__ == "__main__":
                 try:
                     response = model.generate_content(
                         contents=[question_text],
-                        generation_config={"temperature": 0.0, "max_output_tokens": 2048},
+                        generation_config={"temperature": 0.0, "max_output_tokens": 5000},
                     )
 
                     if not response.text:
