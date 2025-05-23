@@ -34,7 +34,8 @@ def filter_included_rows(df: pd.DataFrame) -> pd.DataFrame:
 def read_ai_eval_spreadsheet() -> AiEvalData:
     config = read_config()
     authorized_clients = get_service_account_authorized_clients()
-    ai_eval_spreadsheet_id = config["AI_EVAL_DEV_SPREADSHEET_ID"]
+    # TODO: add option to use the DEV SPREADSHEET
+    ai_eval_spreadsheet_id = config["AI_EVAL_SPREADSHEET_ID"]
     ai_eval_spreadsheet = get_ai_eval_spreadsheet(authorized_clients, ai_eval_spreadsheet_id)
     try:
         return read_ai_eval_data(ai_eval_spreadsheet)
