@@ -1,9 +1,0 @@
-variation_id,prompt_family,prompt_variation,language,question_template,question_prefix,ai_prefix,question_prompt_template,question_prompt_template_example,follow_up_answer_correctness_evaluation_prompt_template
-v_reasoning,natural_language,reasoning,en-US,"{question_text}
-The answer could be: {option_a}
-or: {option_b}
-or maybe the answer is
-{option_c}",nan,nan,"I was asked this question:
-{question}
-I really don't know.
-Please help guess, and also describe why you think so.",nan,

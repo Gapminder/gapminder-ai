@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import random
+import os
 
 def clean_option_text(option_text):
     """Removes leading option markers like 'A. ', 'B. ' etc."""
@@ -109,9 +110,9 @@ def determine_correctness(options, correct_index, very_wrong_answer):
 def main():
     # Define input and output paths
     input_csv_path = 'halted_questions.csv'
-    output_dir = './ai_eval_sheets'
-    output_questions_path = output_dir + 'questions.csv'
-    output_options_path = output_dir + 'question_options.csv'
+    output_dir = './'
+    output_questions_path = os.path.join(output_dir, 'questions.csv')
+    output_options_path = os.path.join(output_dir, 'question_options.csv')
 
     # Debug counters
     total_questions = 0
@@ -176,6 +177,8 @@ def main():
             # Process options
             # Split options, then clean them
             parsed_options = [clean_option_text(opt) for opt in split_options(answer_options_str)]
+            # drop empty ones
+            parsed_options = [x for x in parsed_options if x != ""]
 
             # Clean the correct answer text as well, in case it has markers
             correct_answer_text_cleaned = clean_option_text(correct_answer_text_raw)
