@@ -1,0 +1,6 @@
+model_config_id,model_id,vendor,model_published_date,first_experiment_date,latest,name,model_parameters,repeat_times,memory,memory_size
+mc050,anthropic/claude-3-7-sonnet-20250219,Anthropic,2025-02-19,2025-03-18,False,Sonnet 3.7 (Thinking),"{""temperature"": 1, ""thinking"":{""type"":""enabled"", ""budget_tokens"":6000}, ""max_tokens"": 8000}",1,False,0
+mc053,perplexity/sonar-reasoning-pro,Perplexity,2025-02-11,2025-04-03,False,Sonar Reasoning Pro,"{""temperature"": 0.01, ""max_tokens"": 5000}",1,False,0
+mc057,deepseek/deepseek-reasoner,Deepseek,2025-01-20,2025-04-10,False,R1,"{""temperature"": 0.01, ""max_tokens"": 5000}",1,False,0
+mc064,o3-2025-04-16,OpenAI,2025-04-16,2025-04-29,False,o3 (Medium),"{""temperature"": 1, ""reasoning_effort"": ""medium"", ""max_completion_tokens"": 5000}",1,False,0
+mc066,vertex_ai/gemini-2.5-pro-preview-05-06,Google,2025-05-06,nan,False,Gemini Pro 2.5 Preview,"{""temperature"": 0, ""max_output_tokens"": 5000}",1,False,0

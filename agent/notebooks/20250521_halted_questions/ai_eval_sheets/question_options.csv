@@ -1,0 +1,295 @@
+question_option_id,question_id,language,letter,question_option,correctness_of_answer_option
+0-a1,0,en-US,A,40%,1
+0-a2,0,en-US,B,60%,2
+0-a3,0,en-US,C,80%,3
+1-a1,1,en-US,A,Stay about the same,1
+1-a2,1,en-US,B,Increase by 30 million,2
+1-a3,1,en-US,C,Increase by 300 million,3
+2-a1,2,en-US,A,25%,3
+2-a2,2,en-US,B,50%,2
+2-a3,2,en-US,C,75%,1
+3-a1,3,en-US,A,277 million,1
+3-a2,3,en-US,B,377 million,2
+3-a3,3,en-US,C,477 million,3
+4-a1,4,en-US,A,11%,1
+4-a2,4,en-US,B,21%,2
+4-a3,4,en-US,C,31%,3
+5-a1,5,en-US,A,5%,3
+5-a2,5,en-US,B,15%,2
+5-a3,5,en-US,C,25%,1
+6-a1,6,en-US,A,Asia,2
+6-a2,6,en-US,B,North Africa & Middle East,1
+6-a3,6,en-US,C,North & South America,3
+7-a1,7,en-US,A,It decreased,1
+7-a2,7,en-US,B,It remained the same,2
+7-a3,7,en-US,C,It increased,3
+8-a1,8,en-US,A,Wars and conflict,3
+8-a2,8,en-US,B,population growth,1
+8-a3,8,en-US,C,corruption,2
+9-a1,9,en-US,A,War and conflicts,3
+9-a2,9,en-US,B,Health problems,1
+9-a3,9,en-US,C,Climate change,2
+10-a1,10,en-US,A,They consume more fat,2
+10-a2,10,en-US,B,They are older on average,1
+10-a3,10,en-US,C,They move and exercise less,3
+11-a1,11,en-US,A,Europe,2
+11-a2,11,en-US,B,Latin America,1
+11-a3,11,en-US,C,Asia,3
+12-a1,12,en-US,A,It went down,3
+12-a2,12,en-US,B,It remained the same,2
+12-a3,12,en-US,C,It went up,1
+13-a1,13,en-US,A,It went down,3
+13-a2,13,en-US,B,It remained the same,2
+13-a3,13,en-US,C,It went up,1
+14-a1,14,en-US,A,Europe,2
+14-a2,14,en-US,B,Americas,3
+14-a3,14,en-US,C,Africa,1
+15-a1,15,en-US,A,10% or less,1
+15-a2,15,en-US,B,20%,2
+15-a3,15,en-US,C,30% or more,3
+16-a1,16,en-US,A,Sub-Saharan Africa,1
+16-a2,16,en-US,B,Europe,2
+16-a3,16,en-US,C,Asia,3
+17-a1,17,en-US,A,Lower administration costs,2
+17-a2,17,en-US,B,Most care work is unpaid,1
+17-a3,17,en-US,C,Lots of infrastructure is private,3
+18-a1,18,en-US,A,Low-income countries,1
+18-a2,18,en-US,B,Middle-income countries,2
+18-a3,18,en-US,C,High-income countries,3
+19-a1,19,en-US,A,10%,3
+19-a2,19,en-US,B,20%,2
+19-a3,19,en-US,C,30%,1
+20-a1,20,en-US,A,Half a year,3
+20-a2,20,en-US,B,1 and a half years,2
+20-a3,20,en-US,C,2 and a half years,1
+21-a1,21,en-US,A,USA,2
+21-a2,21,en-US,B,Russia,3
+21-a3,21,en-US,C,Australia,1
+22-a1,22,en-US,A,Clean fuels are not as good for cooking,2
+22-a2,22,en-US,B,population growth,1
+22-a3,22,en-US,C,lack of supply of clean fuels,3
+23-a1,23,en-US,A,0.3%,1
+23-a2,23,en-US,B,3%,2
+23-a3,23,en-US,C,30%,3
+24-a1,24,en-US,A,50 hours,1
+24-a2,24,en-US,B,150 hours,2
+24-a3,24,en-US,C,250 hours,3
+25-a1,25,en-US,A,7%,1
+25-a2,25,en-US,B,37%,2
+25-a3,25,en-US,C,67%,3
+26-a1,26,en-US,A,United Kingdom,2
+26-a2,26,en-US,B,Switzerland,3
+26-a3,26,en-US,C,Germany,1
+27-a1,27,en-US,A,4%,3
+27-a2,27,en-US,B,14%,2
+27-a3,27,en-US,C,24%,1
+28-a1,28,en-US,A,39%,1
+28-a2,28,en-US,B,59%,2
+28-a3,28,en-US,C,79%,3
+29-a1,29,en-US,A,8%,1
+29-a2,29,en-US,B,38%,2
+29-a3,29,en-US,C,68%,3
+30-a1,30,en-US,A,12%,1
+30-a2,30,en-US,B,22%,2
+30-a3,30,en-US,C,32%,3
+31-a1,31,en-US,A,0-10%,1
+31-a2,31,en-US,B,20-30%,2
+31-a3,31,en-US,C,30-40%,3
+32-a1,32,en-US,A,4%,1
+32-a2,32,en-US,B,34%,2
+32-a3,32,en-US,C,64%,3
+33-a1,33,en-US,A,Stayed the same,2
+33-a2,33,en-US,B,Increased by 25%,3
+33-a3,33,en-US,C,Increased by 50%,1
+34-a1,34,en-US,A,World population,2
+34-a2,34,en-US,B,World economy,3
+34-a3,34,en-US,C,Material footprint,1
+35-a1,35,en-US,A,It decreased,1
+35-a2,35,en-US,B,It didn't change,2
+35-a3,35,en-US,C,It also increased,3
+36-a1,36,en-US,A,5%,1
+36-a2,36,en-US,B,15%,2
+36-a3,36,en-US,C,30%,3
+37-a1,37,en-US,A,In 2: poor and rich,3
+37-a2,37,en-US,B,In 3: low; middle; high,2
+37-a3,37,en-US,C,In 4: low; lower middle; upper middle; high income,1
+38-a1,38,en-US,A,13%,3
+38-a2,38,en-US,B,23%,2
+38-a3,38,en-US,C,33%,1
+39-a1,39,en-US,A,less than 10%,1
+39-a2,39,en-US,B,around 50%,2
+39-a3,39,en-US,C,more than 90%,3
+40-a1,40,en-US,A,Electricity,1
+40-a2,40,en-US,B,Political instability,2
+40-a3,40,en-US,C,Corruption,3
+41-a1,41,en-US,A,16%,1
+41-a2,41,en-US,B,36%,2
+41-a3,41,en-US,C,56%,3
+42-a1,42,en-US,A,500000,3
+42-a2,42,en-US,B,1 million,2
+42-a3,42,en-US,C,1.5 million,1
+43-a1,43,en-US,A,1 million,3
+43-a2,43,en-US,B,4.5 million,2
+43-a3,43,en-US,C,9 million,1
+44-a1,44,en-US,A,43%,1
+44-a2,44,en-US,B,63%,2
+44-a3,44,en-US,C,83%,3
+45-a1,45,en-US,A,500 times,1
+45-a2,45,en-US,B,1000 times,2
+45-a3,45,en-US,C,1500 times,3
+46-a1,46,en-US,A,30,1
+46-a2,46,en-US,B,130,2
+46-a3,46,en-US,C,230,3
+47-a1,47,en-US,A,Low-income countries,3
+47-a2,47,en-US,B,Middel-income countries,2
+47-a3,47,en-US,C,High-income countries,1
+48-a1,48,en-US,A,Education,3
+48-a2,48,en-US,B,Equal pay,1
+48-a3,48,en-US,C,Children,2
+49-a1,49,en-US,A,A majority got richer,1
+49-a2,49,en-US,B,About the same share got richer as poorer,2
+49-a3,49,en-US,C,A majority got poorer,3
+50-a1,50,en-US,A,50-60%,1
+50-a2,50,en-US,B,40-50%,2
+50-a3,50,en-US,C,30-40%,3
+51-a1,51,en-US,A,Less than 10%,3
+51-a2,51,en-US,B,Roughly 25%,2
+51-a3,51,en-US,C,More than 50%,1
+52-a1,52,en-US,A,1%,3
+52-a2,52,en-US,B,8%,2
+52-a3,52,en-US,C,18%,1
+53-a1,53,en-US,A,2%,3
+53-a2,53,en-US,B,10%,2
+53-a3,53,en-US,C,18%,1
+54-a1,54,en-US,A,Around 5%,3
+54-a2,54,en-US,B,Around 15%,2
+54-a3,54,en-US,C,Around 25%,1
+55-a1,55,en-US,A,40%,3
+55-a2,55,en-US,B,60%,2
+55-a3,55,en-US,C,80%,1
+56-a1,56,en-US,A,14%,3
+56-a2,56,en-US,B,34%,2
+56-a3,56,en-US,C,54%,1
+57-a1,57,en-US,A,10%,1
+57-a2,57,en-US,B,30%,2
+57-a3,57,en-US,C,50%,3
+58-a1,58,en-US,A,Around 2050,3
+58-a2,58,en-US,B,Around 2080,2
+58-a3,58,en-US,C,Around 2110,1
+59-a1,59,en-US,A,40%,1
+59-a2,59,en-US,B,60%,2
+59-a3,59,en-US,C,80%,3
+60-a1,60,en-US,A,reduce to 20% of current emissions,3
+60-a2,60,en-US,B,reduce to 50% of current emissions,1
+60-a3,60,en-US,C,reduce to 80% of current emissions,2
+61-a1,61,en-US,A,It decreases,1
+61-a2,61,en-US,B,it doesn't influence temperature,2
+61-a3,61,en-US,C,it increases,3
+62-a1,62,en-US,A,317,1
+62-a2,62,en-US,B,1017,2
+62-a3,62,en-US,C,3017,3
+63-a1,63,en-US,A,Close to 0% of today’s amount,3
+63-a2,63,en-US,B,Around 25% of today’s amount,2
+63-a3,63,en-US,C,More than 50% of today's amount,1
+64-a1,64,en-US,A,It decreased it 20%,1
+64-a2,64,en-US,B,It increased it 50%,3
+64-a3,64,en-US,C,It increased it 20%,2
+65-a1,65,en-US,A,It cools down,1
+65-a2,65,en-US,B,It is not influenced by lower layer,2
+65-a3,65,en-US,C,It also warms up,3
+66-a1,66,en-US,A,1%,1
+66-a2,66,en-US,B,50%,2
+66-a3,66,en-US,C,99%,3
+67-a1,67,en-US,A,Water vapor,2
+67-a2,67,en-US,B,Carbon dioxide,3
+67-a3,67,en-US,C,Nitrogen,1
+68-a1,68,en-US,A,Jupiter,2
+68-a2,68,en-US,B,Earth,3
+68-a3,68,en-US,C,Uranus,1
+69-a1,69,en-US,A,Increased by 30%,1
+69-a2,69,en-US,B,100%,2
+69-a3,69,en-US,C,300%,3
+70-a1,70,en-US,A,Vegetation dies: browning effect,2
+70-a2,70,en-US,B,More vegetation: greening effect,1
+70-a3,70,en-US,C,It accelerates the life cycles of vegetation,3
+71-a1,71,en-US,A,Manufacturing,2
+71-a2,71,en-US,B,Electricity generation,1
+71-a3,71,en-US,C,Transportation,3
+72-a1,72,en-US,A,0%,3
+72-a2,72,en-US,B,20%,2
+72-a3,72,en-US,C,40%,1
+73-a1,73,en-US,A,40%,1
+73-a2,73,en-US,B,60%,2
+73-a3,73,en-US,C,80%,3
+74-a1,74,en-US,A,14,3
+74-a2,74,en-US,B,54,2
+74-a3,74,en-US,C,104,1
+75-a1,75,en-US,A,7%,3
+75-a2,75,en-US,B,27%,2
+75-a3,75,en-US,C,47%,1
+76-a1,76,en-US,A,Climate change,3
+76-a2,76,en-US,B,Plants & animals from other locations,1
+76-a3,76,en-US,C,Residential & commercial development,2
+77-a1,77,en-US,A,17%,3
+77-a2,77,en-US,B,37%,2
+77-a3,77,en-US,C,57%,1
+78-a1,78,en-US,A,20%,1
+78-a2,78,en-US,B,35%,2
+78-a3,78,en-US,C,50%,3
+79-a1,79,en-US,A,11%,3
+79-a2,79,en-US,B,26%,2
+79-a3,79,en-US,C,41%,1
+80-a1,80,en-US,A,30%,3
+80-a2,80,en-US,B,60%,2
+80-a3,80,en-US,C,90%,1
+81-a1,81,en-US,A,Economy,2
+81-a2,81,en-US,B,Climate,1
+81-a3,81,en-US,C,Political stability,3
+82-a1,82,en-US,A,43,1
+82-a2,82,en-US,B,58,2
+82-a3,82,en-US,C,73,3
+83-a1,83,en-US,A,25%,1
+83-a2,83,en-US,B,50%,2
+83-a3,83,en-US,C,75%,3
+84-a1,84,en-US,A,Low-income countries,3
+84-a2,84,en-US,B,Middle-income countries,2
+84-a3,84,en-US,C,High-income countries,1
+85-a1,85,en-US,A,Low-income countries,1
+85-a2,85,en-US,B,Middle-inome countries,2
+85-a3,85,en-US,C,High-income countries,3
+86-a1,86,en-US,A,Food,2
+86-a2,86,en-US,B,textiles and clothing,3
+86-a3,86,en-US,C,consumer goods,1
+87-a1,87,en-US,A,11%,3
+87-a2,87,en-US,B,31%,2
+87-a3,87,en-US,C,51%,1
+88-a1,88,en-US,A,24%,3
+88-a2,88,en-US,B,44%,2
+88-a3,88,en-US,C,64%,1
+89-a1,89,en-US,A,Around 20%,3
+89-a2,89,en-US,B,Around 50%,2
+89-a3,89,en-US,C,Around 80%,1
+90-a1,90,en-US,A,14%,3
+90-a2,90,en-US,B,34%,2
+90-a3,90,en-US,C,64%,1
+91-a1,91,en-US,A,Low-income countries,1
+91-a2,91,en-US,B,Middle-income countries,2
+91-a3,91,en-US,C,High-income countries,3
+92-a1,92,en-US,A,Declined around 5%,1
+92-a2,92,en-US,B,Stayed the same,2
+92-a3,92,en-US,C,Increased around 5%,3
+93-a1,93,en-US,A,Declined around 13%,3
+93-a2,93,en-US,B,Stayed the same,2
+93-a3,93,en-US,C,Increased around 13%,1
+94-a1,94,en-US,A,Around 20%,3
+94-a2,94,en-US,B,Around 50%,1
+94-a3,94,en-US,C,Around 80%,2
+95-a1,95,en-US,A,10,3
+95-a2,95,en-US,B,15,2
+95-a3,95,en-US,C,20,1
+96-a1,96,en-US,A,2050,2
+96-a2,96,en-US,B,2100,3
+96-a3,96,en-US,C,never,1
+97-a1,97,en-US,A,Low-income countries,1
+97-a2,97,en-US,B,Middle-inome countries,2
+97-a3,97,en-US,C,High-income countries,3
