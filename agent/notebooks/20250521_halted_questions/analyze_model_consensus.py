@@ -34,7 +34,7 @@ def determine_result(row):
 
     # If the highest rate is greater than 85%, use that result
     # Otherwise, mark as "indecisive"
-    threshold = 85.0
+    threshold = 90.0
     if max_rate > threshold:
         return result_type
     else:

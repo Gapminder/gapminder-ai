@@ -5,9 +5,9 @@ question,most_common_result,consensus_count,total_models,consensus_percentage,qu
 2,indecisive,5,5,100.0,"What Share Of The World'S Population Has Access To Food, Shelter, Water, Vaccination, Education And Mobile Phones?"
 20,correct,5,5,100.0,The Number Of Liters Of Water It Takes To Produce One T-Shirt Is The Same Amount Of Drinking Water One Person Needs For How Long?
 21,correct,5,5,100.0,Which Country Is The Largest Exporter Of Coal In The World Today?
-22,correct,5,5,100.0,"Since 2016, The Number Of People Who Cook Using Stoves That Don’T Produce Smoke Has Remained At Around 3 Billion People. Why Is That?"
 29,correct,5,5,100.0,"Worldwide, How Many People With Jobs Live In Extreme Poverty?"
 31,correct,5,5,100.0,"Worldwide, What Is The Unemployment Rate Among People Aged 25 Years And Older?"
+33,indecisive,5,5,100.0,"Since 2010, What Has Happened To The Number Of Atms Per Person Worldwide?"
 34,indecisive,5,5,100.0,What Has Grown The Fastest Since The Year 2000?
 36,correct,5,5,100.0,What Is The Global Unemployment Rate?
 37,correct,5,5,100.0,How Can The World Best Be Divided?
@@ -32,5 +32,5 @@ question,most_common_result,consensus_count,total_models,consensus_percentage,qu
 85,correct,5,5,100.0,Which Countries Have The Highest Levels Of Corruption?
 86,indecisive,5,5,100.0,What Is The Most Imported Product To Sub-Saharan Africa?
 89,indecisive,5,5,100.0,What Share Of Development Frameworks Designed In Countries Donating Aid Are Drawn Up Using Priorities And Objectives Drawn Up By The Recipient Country?
-92,correct,5,5,100.0,"In The Past Ten Years, The Share Of The World’S Population Living In Democratic Countries Has:"
+95,indecisive,5,5,100.0,"In 1990, There Were 4 Countries Where Populists Were In Power. In How Many Countries Are Populists In Power Today?"
 96,correct,5,5,100.0,The World Population Is Currently 7.7 Billion People. When Will The World Population Be Double Of That?
