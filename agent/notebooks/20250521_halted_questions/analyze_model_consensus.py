@@ -5,20 +5,52 @@ from pathlib import Path
 # Set working directory to the datapoints folder
 datapoints_dir = Path("datapoints")
 
-# Read the evaluation results
-file_path = datapoints_dir / "ddf--datapoints--evaluation_result--by--question--model_configuration--prompt_variation.csv"
-df = pl.read_csv(file_path)
+# Read the rate files
+correct_rate_df = pl.read_csv(datapoints_dir / "ddf--datapoints--correct_rate--by--question--model_configuration.csv")
+wrong_rate_df = pl.read_csv(datapoints_dir / "ddf--datapoints--wrong_rate--by--question--model_configuration.csv")
+very_wrong_rate_df = pl.read_csv(datapoints_dir / "ddf--datapoints--very_wrong_rate--by--question--model_configuration.csv")
+indecisive_rate_df = pl.read_csv(datapoints_dir / "ddf--datapoints--indecisive_rate--by--question--model_configuration.csv")
 
-# Group by question and model_configuration to get the most common evaluation result for each model on each question
-# This aggregates across different prompt variations
+# Join the dataframes
 model_results = (
-    df.group_by(["question", "model_configuration", "evaluation_result"])
-    .count()
-    .sort(["question", "model_configuration", "count"], descending=[False, False, True])
-    .group_by(["question", "model_configuration"])
-    .first()
-    .select(["question", "model_configuration", "evaluation_result"])
+    correct_rate_df
+    .join(wrong_rate_df, on=["question", "model_configuration"])
+    .join(very_wrong_rate_df, on=["question", "model_configuration"])
+    .join(indecisive_rate_df, on=["question", "model_configuration"])
 )
+
+# Determine the model result based on the highest rate
+def determine_result(row):
+    rates = {
+        "correct": row["correct_rate"],
+        "wrong": row["wrong_rate"],
+        "very_wrong": row["very_wrong_rate"],
+        "indecisive": row["indecisive_rate"]
+    }
+
+    # Find the result with the highest rate
+    max_result = max(rates.items(), key=lambda x: x[1])
+    result_type, max_rate = max_result
+
+    # If the highest rate is greater than 85%, use that result
+    # Otherwise, mark as "indecisive"
+    threshold = 90.0
+    if max_rate > threshold:
+        return result_type
+    else:
+        return "indecisive"
+
+# Apply the function to determine the model result for each row
+results = []
+for row in model_results.to_dicts():
+    results.append({
+        "question": row["question"],
+        "model_configuration": row["model_configuration"],
+        "evaluation_result": determine_result(row)
+    })
+
+# Convert to Polars DataFrame
+model_results = pl.DataFrame(results)
 
 # Get the distinct model configurations to count how many we have
 model_configs = model_results.select("model_configuration").unique().sort("model_configuration")
