@@ -28,6 +28,13 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         help="Base directory containing ai_eval_sheets folder",
     )
     parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["batch", "litellm"],
+        default="batch",
+        help="Processing mode to use (default: batch)",
+    )
+    parser.add_argument(
         "--send",
         action="store_true",
         help="Send generated prompts immediately after creation",
@@ -63,6 +70,8 @@ def handle(args: argparse.Namespace) -> int:
             return 1
 
         # Run the generate eval prompts main function
+        # Note: The mode parameter is available but not currently used by generate_eval_prompts_main
+        # This maintains compatibility while allowing future mode-specific evaluation logic
         generate_eval_prompts_main(args.base_path, args.response_file, args.send, args.wait)
 
         return 0

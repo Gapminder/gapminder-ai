@@ -6,11 +6,15 @@ import argparse
 import os
 
 from lib.pilot.gm_eval.utils import (
-    extract_model_config_id_from_filename,
+    detect_provider_from_model_id,
+    get_batch_model_name,
+    get_default_output_path,
     get_model_id_from_config_id,
+    get_provider_method_from_model_id,
+    is_openai_compatible_provider,
     logger,
 )
-from lib.pilot.send_batch_prompt import PROVIDER_CLASSES, process_batch
+from lib.pilot.send_batch_prompt import process_batch
 
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
@@ -21,16 +25,23 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         parser: Argument parser to add arguments to
     """
     parser.add_argument(
-        "jsonl_file",
+        "--mode",
         type=str,
-        help="Path to the JSONL file containing prompts",
+        choices=["batch", "litellm"],
+        default="batch",
+        help="Processing mode to use (default: batch)",
     )
     parser.add_argument(
-        "--method",
+        "--model-config-id",
         type=str,
         required=True,
-        choices=list(PROVIDER_CLASSES.keys()),
-        help="LLM provider to use for processing",
+        help="Model configuration ID to process",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=".",
+        help="Directory containing configuration files and where to save outputs",
     )
     parser.add_argument(
         "--wait",
@@ -42,16 +53,6 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         type=int,
         default=1,
         help="Number of processes to use (default: 1)",
-    )
-    parser.add_argument(
-        "--provider",
-        type=str,
-        help="Custom provider name (e.g., alibaba)",
-    )
-    parser.add_argument(
-        "--model-id",
-        type=str,
-        help="Model ID to use (required for vertex AI and mistral)",
     )
     parser.add_argument(
         "--timeout-hours",
@@ -71,34 +72,44 @@ def handle(args: argparse.Namespace) -> int:
         Exit code (0 for success, non-zero for failure)
     """
     try:
-        # Check if the JSONL file exists
-        if not os.path.isfile(args.jsonl_file):
-            logger.error(f"JSONL file not found: {args.jsonl_file}")
+        # Get the model ID from configuration
+        jsonl_file = get_default_output_path(args.model_config_id, args.output_dir)
+        full_model_id = get_model_id_from_config_id(jsonl_file, args.model_config_id, keep_provider_prefix=True)
+
+        if not full_model_id:
+            logger.error(f"Could not find model configuration for {args.model_config_id}")
             return 1
 
-        # If model_id is not provided and method is mistral or vertex, try to get it from the CSV file
-        model_id = args.model_id
-        if model_id is None and args.method.lower() in ["mistral", "vertex"]:
-            # Extract model_config_id from the filename
-            model_config_id = extract_model_config_id_from_filename(args.jsonl_file)
-            if model_config_id:
-                # Look up the model_id in the CSV file
-                model_id = get_model_id_from_config_id(args.jsonl_file, model_config_id)
-                if model_id:
-                    logger.info(f"Using model_id '{model_id}' from config for {model_config_id}")
-                else:
-                    logger.warning(f"Could not find model_id for {model_config_id} in config file")
-            else:
-                logger.warning(f"Could not extract model_config_id from filename: {args.jsonl_file}")
+        # Check if the JSONL file exists - if not, we need to generate it first
+        if not os.path.isfile(jsonl_file):
+            logger.error(f"JSONL file not found: {jsonl_file}")
+            logger.error("Please run 'gm-eval generate' first to create the prompts file")
+            return 1
+
+        # Detect provider and method from model ID
+        provider, model_name = detect_provider_from_model_id(full_model_id)
+        method = get_provider_method_from_model_id(full_model_id)
+
+        logger.info(f"Detected provider: {provider}, method: {method}")
+        logger.info(f"Full model ID: {full_model_id}")
+
+        # Get the appropriate model name for the selected mode
+        model_id_for_batch = get_batch_model_name(full_model_id, args.mode)
+        logger.info(f"Using model name for {args.mode} mode: {model_id_for_batch}")
+
+        # Determine provider name for OpenAI-compatible providers
+        provider_name = None
+        if is_openai_compatible_provider(provider):
+            provider_name = provider
 
         # Process the batch
         process_batch(
-            args.jsonl_file,
-            args.method,
+            jsonl_file,
+            method,
             args.wait,
             args.processes,
-            args.provider,
-            model_id,
+            provider_name,
+            model_id_for_batch if method in ["mistral", "vertex"] else None,
             args.timeout_hours,
         )
 

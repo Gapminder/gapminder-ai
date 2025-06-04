@@ -1,0 +1,14 @@
+ # General Rules for Automation API
+
+ - when start a task, try to find if there are related items in backlogs. Read them to know the current status about the project.
+ - if no related items found. Plan your action and create the plan in backlogs/
+ - An item in backlogs/ should have 2 sections:
+   1. the plan
+   2. summarization of each edit session about what has been done.
+ - after a task is done, update the backlog and README.md/DEV.md in the project folder. (automation_api/README.md / automation_api/DEV.md)
+ - at current stage, don't keep backward compatibility, breaking changes are fine.
+
+# How to test the gm-eval command
+- Remind me (the human user) about I should update the configuration speadsheet before start.
+- create a temp folder in project root
+- in the temp folder, run `gm-eval download` and then `gm-eval run`

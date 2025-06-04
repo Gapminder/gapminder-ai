@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from lib.app_singleton import AppSingleton
 from lib.pilot.gm_eval import __version__
-from lib.pilot.gm_eval.commands import download, evaluate, generate, merge, run, send, split, summarize
+from lib.pilot.gm_eval.commands import download, evaluate, generate, merge, run, send, send_file, split, summarize
 
 
 def setup_logging(debug: bool = False) -> None:
@@ -52,8 +52,12 @@ def create_parser() -> argparse.ArgumentParser:
     generate.add_arguments(generate_parser)
 
     # Send command
-    send_parser = subparsers.add_parser("send", help="Send the batch to a provider")
+    send_parser = subparsers.add_parser("send", help="Send batch using mode-based detection")
     send.add_arguments(send_parser)
+
+    # Send-file command
+    send_file_parser = subparsers.add_parser("send-file", help="Send a specific JSONL file to a provider")
+    send_file.add_arguments(send_file_parser)
 
     # Evaluate command
     evaluate_parser = subparsers.add_parser("evaluate", help="Generate and optionally send evaluation prompts")
@@ -109,6 +113,8 @@ def main(args: Optional[List[str]] = None) -> int:
         return generate.handle(parsed_args)
     elif parsed_args.command == "send":
         return send.handle(parsed_args)
+    elif parsed_args.command == "send-file":
+        return send_file.handle(parsed_args)
     elif parsed_args.command == "evaluate":
         return evaluate.handle(parsed_args)
     elif parsed_args.command == "summarize":

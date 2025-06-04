@@ -112,9 +112,69 @@ Please make sure to use the correct format for each provider.
 - mistral
 - vertex
 
-3. **Send prompts**:
+3. **Send prompts** (Mode-based - Recommended):
    ```bash
-   gm-eval send experiments/20250411/mc049-question_prompts.jsonl --method openai --wait
+   gm-eval send --mode batch --model-config-id mc049 --output-dir experiments/20250411 --wait
+   ```
+   
+   Or for LiteLLM mode:
+   ```bash
+   gm-eval send --mode litellm --model-config-id mc049 --output-dir experiments/20250411 --wait
+   ```
+
+   **Send prompts** (Legacy file-based):
+   ```bash
+   gm-eval send-file experiments/20250411/mc049-question_prompts.jsonl --method openai --wait
+   ```
+
+## Mode-Based Processing (New)
+
+The gm-eval tool now supports two processing modes with automatic provider detection:
+
+### Modes
+
+- **batch**: Uses provider-specific batch APIs (OpenAI Batch, Anthropic Batch, Vertex AI Batch, etc.)
+- **litellm**: Uses LiteLLM for real-time processing across multiple providers
+
+### Automatic Provider Detection
+
+Model configurations use provider prefixes in the `model_id` field:
+- `openai/gpt-4` → OpenAI provider, batch mode
+- `anthropic/claude-3` → Anthropic provider, batch mode  
+- `vertex_ai/publishers/google/models/gemini-2.0-flash-001` → Vertex AI provider, batch mode
+- `deepseek/deepseek-reasoner` → LiteLLM mode
+- `alibaba/qwen-3` → OpenAI-compatible provider (different API key/URL)
+
+### Mode Behavior
+
+**Batch Mode:**
+- Removes provider prefixes from model names (e.g., `mistral/mistral-small` → `mistral-small`)
+- Uses provider-specific batch APIs
+- Supports waiting for completion with `--wait`
+
+**LiteLLM Mode:**
+- Preserves full model names with prefixes
+- Real-time processing through LiteLLM
+- Supports concurrent processing with `--processes`
+
+### Updated Workflow
+
+1. **Run entire workflow** (Recommended):
+   ```bash
+   gm-eval run --mode batch --model-config-id mc049 --output-dir experiments/20250411 --wait
+   ```
+
+2. **Individual steps with mode**:
+   ```bash
+   # Download and generate (unchanged)
+   gm-eval download --output-dir experiments/20250411
+   gm-eval generate --model-config-id mc049 --base-path experiments/20250411
+
+   # Send with automatic detection
+   gm-eval send --mode batch --model-config-id mc049 --output-dir experiments/20250411 --wait
+
+   # Evaluate with mode support
+   gm-eval evaluate experiments/20250411/mc049-question_prompts-response.jsonl --mode batch --send --wait
    ```
 
 4. **Generate and send evaluation prompts**:

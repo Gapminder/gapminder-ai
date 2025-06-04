@@ -15,8 +15,10 @@ from datetime import datetime
 
 from lib.pilot.gm_eval.commands import download, evaluate, generate, send, summarize
 from lib.pilot.gm_eval.utils import (
+    detect_provider_from_model_id,
     ensure_directory,
     get_default_output_path,
+    get_jsonl_format_from_provider,
     get_model_id_from_config_id,
     get_response_path,
     logger,
@@ -37,11 +39,11 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         help="ID of the model configuration to use",
     )
     parser.add_argument(
-        "--method",
+        "--mode",
         type=str,
-        required=True,
-        choices=["openai", "anthropic", "vertex", "litellm", "mistral"],
-        help="LLM provider to use for processing",
+        choices=["batch", "litellm"],
+        default="batch",
+        help="Processing mode to use (default: batch)",
     )
     parser.add_argument(
         "--output-dir",
@@ -54,23 +56,7 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Wait for batch completion and download results at each step. Required for summarize step to run.",
     )
-    parser.add_argument(
-        "--provider",
-        type=str,
-        help="Custom provider name (e.g., alibaba)",
-    )
-    parser.add_argument(
-        "--model-id",
-        type=str,
-        help="Model ID to use (required for vertex AI and mistral)",
-    )
-    parser.add_argument(
-        "--jsonl-format",
-        type=str,
-        choices=["openai", "vertex", "mistral"],
-        default="openai",
-        help="Format of JSONL output",
-    )
+
     parser.add_argument(
         "--processes",
         type=int,
@@ -138,13 +124,26 @@ def handle(args: argparse.Namespace) -> int:
         else:
             print("\n=== Step 1: Skipping download ===")
 
+        # Get model configuration and detect provider/format
+        prompt_path = get_default_output_path(args.model_config_id, args.output_dir)
+        full_model_id = get_model_id_from_config_id(prompt_path, args.model_config_id, keep_provider_prefix=True)
+
+        if not full_model_id:
+            logger.error(f"Could not find model configuration for {args.model_config_id}")
+            return 1
+
+        provider, model_name = detect_provider_from_model_id(full_model_id)
+        jsonl_format = get_jsonl_format_from_provider(provider)
+
+        print(f"Detected provider: {provider}, format: {jsonl_format}")
+
         # Step 2: Generate prompts
         if not args.skip_generate:
             print("\n=== Step 2: Generating prompts ===")
             generate_args = argparse.Namespace(
                 base_path=args.output_dir,
                 model_config_id=args.model_config_id,
-                jsonl_format=args.jsonl_format,
+                jsonl_format=jsonl_format,
             )
             result = generate.handle(generate_args)
             if result != 0:
@@ -152,33 +151,20 @@ def handle(args: argparse.Namespace) -> int:
         else:
             print("\n=== Step 2: Skipping generate ===")
 
-        # Get prompt and response paths
-        prompt_path = get_default_output_path(args.model_config_id, args.output_dir)
+        # Get response path
         response_path = get_response_path(prompt_path)
 
         # Step 3: Send prompts
         if not args.skip_send:
             print("\n=== Step 3: Sending prompts ===")
 
-            # If model_id is not provided and method is mistral or vertex, try to get it from the CSV file
-            model_id = args.model_id
-            if model_id is None and args.method.lower() in ["mistral", "vertex"]:
-                # Look up the model_id in the CSV file
-                model_id = get_model_id_from_config_id(prompt_path, args.model_config_id)
-                if model_id:
-                    print(f"Using model_id '{model_id}' from config for {args.model_config_id}")
-                else:
-                    print(f"Could not find model_id for {args.model_config_id} in config file")
-
-            # Always wait for results in the send step, regardless of the --wait flag
-            # This ensures we have the response file for the evaluate step
+            # Use the new mode-based send command
             send_args = argparse.Namespace(
-                jsonl_file=prompt_path,
-                method=args.method,
+                mode=args.mode,
+                model_config_id=args.model_config_id,
+                output_dir=args.output_dir,
                 wait=True,  # Always wait for send step
                 processes=args.processes,
-                provider=args.provider,
-                model_id=model_id,
                 timeout_hours=args.timeout_hours,
             )
             result = send.handle(send_args)
@@ -193,6 +179,7 @@ def handle(args: argparse.Namespace) -> int:
             evaluate_args = argparse.Namespace(
                 response_file=response_path,
                 base_path=args.output_dir,
+                mode=args.mode,
                 send=True,  # Always send when running the full workflow
                 wait=args.wait,
             )
