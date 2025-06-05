@@ -68,7 +68,10 @@ def create_parser() -> argparse.ArgumentParser:
     summarize.add_arguments(summarize_parser)
 
     # Run command
-    run_parser = subparsers.add_parser("run", help="Run the entire workflow in sequence")
+    run_parser = subparsers.add_parser(
+        "run",
+        help="Run the experiment workflow (download, generate, send, evaluate). Use 'summarize' command separately when all experiments are complete.",
+    )
     run.add_arguments(run_parser)
 
     # Split command

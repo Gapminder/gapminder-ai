@@ -268,7 +268,7 @@ def convert_to_jsonl_vertex(df: pl.DataFrame, output_path: str, model_parameters
             f.write(f"{json_line}\n")
 
 
-def main(base_path, model_config_id, jsonl_format):
+def main(base_path, model_config_id, jsonl_format, mode=None):
     # Construct input paths
     sheets_dir = os.path.join(base_path, "ai_eval_sheets")
     questions_path = os.path.join(sheets_dir, "questions.csv")
@@ -301,8 +301,11 @@ def main(base_path, model_config_id, jsonl_format):
 
     # Get model parameters
     original_model_id = model_config["model_id"][0]
-    # Transform model ID based on JSONL format using centralized function
-    model_id = transform_model_id(original_model_id, jsonl_format=jsonl_format)
+    # Transform model ID based on mode (if provided) or JSONL format
+    if mode is not None:
+        model_id = transform_model_id(original_model_id, mode=mode)
+    else:
+        model_id = transform_model_id(original_model_id, jsonl_format=jsonl_format)
     model_parameters = model_config["model_parameters"][0]
 
     # parse the parameters

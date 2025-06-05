@@ -1,19 +1,20 @@
 """
 Run command for the gm-eval CLI tool.
 
-This command runs the entire workflow in sequence:
+This command runs the experiment workflow in sequence:
 1. Download configurations from AI Eval spreadsheet
 2. Generate prompts for a specific model config
 3. Send the batch to a provider
 4. Generate and send evaluation prompts
-5. Summarize results
+
+Use 'gm-eval summarize' command separately when all experiments are complete.
 """
 
 import argparse
 import os
 from datetime import datetime
 
-from lib.pilot.gm_eval.commands import download, evaluate, generate, send, summarize
+from lib.pilot.gm_eval.commands import download, evaluate, generate, send
 from lib.pilot.gm_eval.utils import (
     detect_provider_from_model_id,
     ensure_directory,
@@ -54,7 +55,7 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--wait",
         action="store_true",
-        help="Wait for batch completion and download results at each step. Required for summarize step to run.",
+        help="Wait for batch completion and download results at each step (applies to batch mode only).",
     )
 
     parser.add_argument(
@@ -87,11 +88,6 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         "--skip-evaluate",
         action="store_true",
         help="Skip generating and sending evaluation prompts",
-    )
-    parser.add_argument(
-        "--skip-summarize",
-        action="store_true",
-        help="Skip summarizing results",
     )
 
 
@@ -194,23 +190,9 @@ def handle(args: argparse.Namespace) -> int:
         else:
             print("\n=== Step 4: Skipping evaluate ===")
 
-        # Step 5: Summarize results
-        if not args.skip_summarize and args.wait:
-            print("\n=== Step 5: Summarizing results ===")
-            summarize_args = argparse.Namespace(
-                input_dir=args.output_dir,
-                output_dir=args.output_dir,
-            )
-            result = summarize.handle(summarize_args)
-            if result != 0:
-                return result
-        else:
-            if args.skip_summarize:
-                print("\n=== Step 5: Skipping summarize (--skip-summarize) ===")
-            elif not args.wait:
-                print("\n=== Step 5: Skipping summarize (--wait not specified) ===")
-
-        print("\n=== Workflow completed successfully ===")
+        print("\n=== Experiment completed successfully ===")
+        print("\nTo summarize results after all experiments are complete, run:")
+        print(f"gm-eval summarize --input-dir {args.output_dir}")
         return 0
     except Exception as e:
         logger.error(f"Error running workflow: {str(e)}")
