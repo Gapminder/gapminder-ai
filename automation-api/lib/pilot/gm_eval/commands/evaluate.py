@@ -70,9 +70,7 @@ def handle(args: argparse.Namespace) -> int:
             return 1
 
         # Run the generate eval prompts main function
-        # Note: The mode parameter is available but not currently used by generate_eval_prompts_main
-        # This maintains compatibility while allowing future mode-specific evaluation logic
-        generate_eval_prompts_main(args.base_path, args.response_file, args.send, args.wait)
+        generate_eval_prompts_main(args.base_path, args.response_file, args.send, args.wait, args.mode)
 
         return 0
     except Exception as e:

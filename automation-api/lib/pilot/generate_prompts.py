@@ -6,6 +6,7 @@ from enum import Enum
 import polars as pl
 
 from lib.app_singleton import AppSingleton
+from lib.pilot.gm_eval.utils import transform_model_id
 
 
 class JsonlFormat(Enum):
@@ -299,9 +300,9 @@ def main(base_path, model_config_id, jsonl_format):
         raise ValueError(f"Model config ID {model_config_id} not found")
 
     # Get model parameters
-    model_id = model_config["model_id"][0]
-    if model_id.startswith("anthropic/"):
-        model_id = model_id.replace("anthropic/", "")
+    original_model_id = model_config["model_id"][0]
+    # Transform model ID based on JSONL format using centralized function
+    model_id = transform_model_id(original_model_id, jsonl_format=jsonl_format)
     model_parameters = model_config["model_parameters"][0]
 
     # parse the parameters

@@ -69,6 +69,12 @@ gm-eval --help
 
 #### Running a Complete Experiment
 
+Before running experiment, it's recommanded to create a folder to store the experiment configs and results. For example:
+
+```bash
+mkdir experiments && cd experiments
+```
+
 To run a complete experiment for a model configuration in one command:
 
 ```bash
@@ -76,7 +82,7 @@ gm-eval run --model-config-id mc049 --method openai --wait
 ```
 
 This will:
-1. Download configurations from the AI Eval spreadsheet into current_dir/experiments/YYYYMMDD/
+1. Download configurations from the AI Eval spreadsheet into current_dir/YYYYMMDD_HHMMSS/
 2. Generate prompts for the specified model
 3. Send the prompts to the specified provider
 4. Generate and send evaluation prompts and wait for evaluation results
@@ -93,15 +99,17 @@ You can also run each step individually:
 
 1. **Download configurations**:
    ```bash
-   gm-eval download --output-dir experiments/
+   gm-eval download
    ```
+
+   This creates a folder with timestamp format like `20250604_130353`
 
 2. **Generate prompts**:
 
-for example the above step created an 20250411/ dir, then:
+for example the above step created a `20250604_130353/` dir, then:
 
    ```bash
-   gm-eval generate --model-config-id mc049 --base-path experiments/20250411 --jsonl-format openai
+   gm-eval generate --model-config-id mc049 --base-path 20250604_130353 --jsonl-format openai
    ```
 
 Please make sure to use the correct format for each provider.
@@ -114,17 +122,17 @@ Please make sure to use the correct format for each provider.
 
 3. **Send prompts** (Mode-based - Recommended):
    ```bash
-   gm-eval send --mode batch --model-config-id mc049 --output-dir experiments/20250411 --wait
+   gm-eval send --mode batch --model-config-id mc049 --output-dir 20250604_130353 --wait
    ```
-   
+
    Or for LiteLLM mode:
    ```bash
-   gm-eval send --mode litellm --model-config-id mc049 --output-dir experiments/20250411 --wait
+   gm-eval send --mode litellm --model-config-id mc049 --output-dir 20250604_130353 --wait
    ```
 
    **Send prompts** (Legacy file-based):
    ```bash
-   gm-eval send-file experiments/20250411/mc049-question_prompts.jsonl --method openai --wait
+   gm-eval send-file 20250604_130353/mc049-question_prompts.jsonl --method openai --wait
    ```
 
 ## Mode-Based Processing (New)
@@ -140,7 +148,7 @@ The gm-eval tool now supports two processing modes with automatic provider detec
 
 Model configurations use provider prefixes in the `model_id` field:
 - `openai/gpt-4` → OpenAI provider, batch mode
-- `anthropic/claude-3` → Anthropic provider, batch mode  
+- `anthropic/claude-3` → Anthropic provider, batch mode
 - `vertex_ai/publishers/google/models/gemini-2.0-flash-001` → Vertex AI provider, batch mode
 - `deepseek/deepseek-reasoner` → LiteLLM mode
 - `alibaba/qwen-3` → OpenAI-compatible provider (different API key/URL)
@@ -161,25 +169,25 @@ Model configurations use provider prefixes in the `model_id` field:
 
 1. **Run entire workflow** (Recommended):
    ```bash
-   gm-eval run --mode batch --model-config-id mc049 --output-dir experiments/20250411 --wait
+   gm-eval run --mode batch --model-config-id mc049 --wait
    ```
 
 2. **Individual steps with mode**:
    ```bash
-   # Download and generate (unchanged)
-   gm-eval download --output-dir experiments/20250411
-   gm-eval generate --model-config-id mc049 --base-path experiments/20250411
+   # Download and generate (creates timestamped folder like 20250604_130353)
+   gm-eval download
+   gm-eval generate --model-config-id mc049 --base-path 20250604_130353
 
    # Send with automatic detection
-   gm-eval send --mode batch --model-config-id mc049 --output-dir experiments/20250411 --wait
+   gm-eval send --mode batch --model-config-id mc049 --output-dir 20250604_130353 --wait
 
    # Evaluate with mode support
-   gm-eval evaluate experiments/20250411/mc049-question_prompts-response.jsonl --mode batch --send --wait
+   gm-eval evaluate 20250604_130353/mc049-question_prompts-response.jsonl --mode batch --send --wait
    ```
 
 4. **Generate and send evaluation prompts**:
    ```bash
-   gm-eval evaluate experiments/20250411/mc049-question_prompts-response.jsonl --send --wait
+   gm-eval evaluate 20250604_130353/mc049-question_prompts-response.jsonl --send --wait
    ```
 
    You will want to run this twice. First without the `--wait` to send all evaluator prompts,
@@ -194,7 +202,7 @@ Model configurations use provider prefixes in the `model_id` field:
 
 5. **Summarize results**:
    ```bash
-   gm-eval summarize --input-dir experiments/20250411
+   gm-eval summarize --input-dir 20250604_130353
    ```
 
    NOTE: Please be sure not to use `.` for input-dir, otherwise the filename of output file will not

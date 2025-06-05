@@ -145,9 +145,81 @@ def detect_provider_from_model_id(model_id: str) -> Tuple[str, str]:
     return provider.lower(), model_name
 
 
+def transform_model_id(model_id: str, mode: Optional[str] = None, jsonl_format: Optional[str] = None) -> str:
+    """
+    Centralized model ID transformation based on mode or JSONL format.
+
+    This is the single source of truth for all model ID transformations.
+
+    Args:
+        model_id: Full model ID (may include provider prefix)
+        mode: Processing mode ("batch" or "litellm") - takes precedence over jsonl_format
+        jsonl_format: JSONL format ("openai", "vertex", "mistral") - used if mode not specified
+
+    Returns:
+        Transformed model ID appropriate for the mode/format
+
+    Rules:
+        - LiteLLM mode: Keep all provider prefixes (openai/, vertex_ai/, mistral/, etc.)
+        - Batch mode: Remove all prefixes, except vertex_ai keeps full path after prefix
+    """
+    # Mode takes precedence over jsonl_format
+    if mode is not None:
+        if mode == "litellm":
+            # For LiteLLM mode: keep all provider prefixes, except vertex_ai needs special handling
+            if model_id.startswith("vertex_ai/"):
+                # vertex_ai/publishers/google/models/gemini-2.0-flash-001 -> vertex_ai/gemini-2.0-flash-001
+                return "vertex_ai/" + model_id.split("/")[-1]
+            return model_id
+
+        elif mode == "batch":
+            # For batch mode: remove all prefixes
+            if model_id.startswith("vertex_ai/"):
+                # Special case: vertex_ai/publishers/google/models/gemini-2.0-flash-001
+                # -> publishers/google/models/gemini-2.0-flash-001
+                return model_id.replace("vertex_ai/", "")
+            elif "/" in model_id:
+                # All other providers: remove first prefix
+                # openai/gpt-4 -> gpt-4, mistral/mistral-large -> mistral-large
+                return model_id.split("/", 1)[1]
+            return model_id
+
+    # Use jsonl_format when mode is not specified (backward compatibility)
+    if jsonl_format == "openai":
+        # For OpenAI format: extract just the model name
+        if model_id.startswith("vertex_ai/"):
+            # vertex_ai/publishers/google/models/gemini-2.0-flash-001 -> gemini-2.0-flash-001
+            return model_id.split("/")[-1]
+        elif "/" in model_id:
+            # For all other providers, remove the first prefix
+            return model_id.split("/", 1)[1]
+        return model_id
+
+    elif jsonl_format == "vertex":
+        # For Vertex format: handle vertex_ai specially, others normally
+        if model_id.startswith("vertex_ai/"):
+            # Remove only the vertex_ai/ prefix, keep the full model path
+            return model_id.replace("vertex_ai/", "")
+        elif "/" in model_id:
+            # For all other providers, remove the first prefix
+            return model_id.split("/", 1)[1]
+        return model_id
+
+    elif jsonl_format == "mistral":
+        # For Mistral format: remove first prefix for all providers except vertex_ai
+        if "/" in model_id and not model_id.startswith("vertex_ai/"):
+            return model_id.split("/", 1)[1]
+        return model_id
+
+    # Default: return model_id unchanged
+    return model_id
+
+
 def get_batch_model_name(model_id: str, mode: str) -> str:
     """
     Get the appropriate model name for the specified mode.
+
+    DEPRECATED: Use transform_model_id() instead.
 
     Args:
         model_id: Full model ID (may include provider prefix)
@@ -156,14 +228,7 @@ def get_batch_model_name(model_id: str, mode: str) -> str:
     Returns:
         Model name appropriate for the mode
     """
-    if mode == "batch":
-        # For batch mode, remove provider prefix
-        if "/" in model_id:
-            return model_id.split("/", 1)[1]
-        return model_id
-    else:
-        # For litellm mode, keep the full model_id with prefix
-        return model_id
+    return transform_model_id(model_id, mode=mode)
 
 
 def get_provider_method_from_model_id(model_id: str) -> str:

@@ -108,8 +108,8 @@ def handle(args: argparse.Namespace) -> int:
     try:
         # Create output directory if not specified
         if args.output_dir is None:
-            date_str = datetime.now().strftime("%Y%m%d")
-            args.output_dir = os.path.join("experiments", date_str)
+            date_str = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            args.output_dir = os.path.join("./", date_str)
 
         ensure_directory(args.output_dir)
         print(f"Using output directory: {args.output_dir}")
@@ -117,7 +117,7 @@ def handle(args: argparse.Namespace) -> int:
         # Step 1: Download configurations
         if not args.skip_download:
             print("\n=== Step 1: Downloading configurations ===")
-            download_args = argparse.Namespace(output_dir=args.output_dir)
+            download_args = argparse.Namespace(output_dir=args.output_dir, filter_questions=None, filter_prompts=None)
             result = download.handle(download_args)
             if result != 0:
                 return result
@@ -133,7 +133,12 @@ def handle(args: argparse.Namespace) -> int:
             return 1
 
         provider, model_name = detect_provider_from_model_id(full_model_id)
-        jsonl_format = get_jsonl_format_from_provider(provider)
+
+        # Override JSONL format for litellm mode
+        if args.mode == "litellm":
+            jsonl_format = "openai"
+        else:
+            jsonl_format = get_jsonl_format_from_provider(provider)
 
         print(f"Detected provider: {provider}, format: {jsonl_format}")
 

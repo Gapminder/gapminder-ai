@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 import polars as pl
 
 from lib.app_singleton import AppSingleton
+from lib.pilot.gm_eval.utils import transform_model_id
 from lib.pilot.send_batch_prompt import process_batch
 
 
@@ -265,7 +266,7 @@ def generate_eval_prompts(
     return prompt_id_mapping
 
 
-def main(base_path, response_file, send, wait):
+def main(base_path, response_file, send, wait, mode="batch"):
     # Construct input paths
     sheets_dir = os.path.join(base_path, "ai_eval_sheets")
     questions_path = os.path.join(sheets_dir, "questions.csv")
@@ -293,21 +294,30 @@ def main(base_path, response_file, send, wait):
         output_path = os.path.join(base_path, f"{response_basename}-eval-prompts-{evaluator_id}.jsonl")
         model_parameters = json.loads(evaluator["parameters"])
 
+        # Override JSONL format for litellm mode
+        if mode == "litellm":
+            jsonl_format = JsonlFormat.OPENAI
+        else:
+            jsonl_format = JsonlFormat(evaluator["jsonl_format"])
+
+        # Transform model ID based on mode
+        model_id = transform_model_id(evaluator["evaluator_id"], mode=mode)
+
         # Generate evaluation prompts
         prompt_id_mapping = generate_eval_prompts(
             combined_questions,
             responses,
             metrics,
             output_path,
-            model=evaluator["evaluator_id"],
+            model=model_id,
             model_parameters=model_parameters,
-            format=JsonlFormat(evaluator["jsonl_format"]),
+            format=jsonl_format,
         )
 
         print(f"Generated evaluation prompts for {evaluator['evaluator_id']} in {output_path}")
 
         # Save prompt ID mapping if using Vertex format
-        if evaluator["jsonl_format"] == JsonlFormat.VERTEX.value:
+        if jsonl_format == JsonlFormat.VERTEX:
             mapping_df = pl.DataFrame(
                 {
                     "prompt_id": [x[0] for x in prompt_id_mapping],
@@ -322,12 +332,16 @@ def main(base_path, response_file, send, wait):
         if send:
             method = evaluator["provider"]
 
+            # Override method for litellm mode
+            if mode == "litellm":
+                method = "litellm"
+
             # Process the batch
             print(f"Sending prompts for {evaluator['evaluator_id']}...")
             process_batch(
                 jsonl_file=output_path,
                 method=method,
-                model_id=evaluator["evaluator_id"],
+                model_id=model_id,
                 wait=wait,
             )
 
@@ -346,6 +360,13 @@ if __name__ == "__main__":
         help="Base directory containing ai_eval_sheets folder",
     )
     parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["batch", "litellm"],
+        default="batch",
+        help="Processing mode to use (default: batch)",
+    )
+    parser.add_argument(
         "--send",
         action="store_true",
         help="Send generated prompts immediately after creation",
@@ -357,4 +378,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.base_path, args.response_file, args.send, args.wait)
+    main(args.base_path, args.response_file, args.send, args.wait, args.mode)

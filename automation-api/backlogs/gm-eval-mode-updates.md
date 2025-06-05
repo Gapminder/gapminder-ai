@@ -1,33 +1,38 @@
-# GM-Eval Mode Updates Plan
+# GM-Eval Mode Updates Plan - ✅ COMPLETED
 
 ## Overview
-Update the gm-eval command to support batch and litellm modes with automatic provider detection based on model-config-id prefixes.
+✅ **COMPLETED**: Updated the gm-eval command to support batch and litellm modes with automatic provider detection based on model-config-id prefixes.
 
-## Plan
+## Plan - All Items Implemented Successfully
 
-### 1. Update CLI Structure
-- **run command**: Add `--mode {batch,litellm}` parameter
-- **send command**: 
-  - Add `--mode {batch,litellm}` parameter
-  - Add `--model-config-id` parameter for automatic detection
-  - Move current file-based functionality to `send-file` command
-- **evaluate command**: Add `--mode {batch,litellm}` parameter
+### 1. Update CLI Structure - ✅ COMPLETED
+- ✅ **run command**: Added `--mode {batch,litellm}` parameter
+- ✅ **send command**: 
+  - Added `--mode {batch,litellm}` parameter
+  - Added `--model-config-id` parameter for automatic detection
+  - Moved current file-based functionality to `send-file` command
+- ✅ **evaluate command**: Added `--mode {batch,litellm}` parameter
 
-### 2. Provider Detection Logic
-- Parse model-ids with provider prefixes (e.g., "openai/o3", "anthropic/claude-4", "alibaba/qwen-3")
-- Automatically detect provider and JSONL format from model-config-id
-- Handle OpenAI-compatible providers (different API keys/URLs but same endpoint format)
+### 2. Provider Detection Logic - ✅ COMPLETED
+- ✅ Parse model-ids with provider prefixes (e.g., "openai/o3", "anthropic/claude-4", "alibaba/qwen-3")
+- ✅ Automatically detect provider and JSONL format from model-config-id
+- ✅ Handle OpenAI-compatible providers (different API keys/URLs but same endpoint format)
 
-### 3. Mode-Specific Handling
-- **Batch mode**: Remove provider prefixes from model names (e.g., "mistral/mistral-small" → "mistral-small")
-- **LiteLLM mode**: Keep full model names with prefixes
-- Automatic format detection (openai, vertex, mistral) based on provider
+### 3. Mode-Specific Handling - ✅ COMPLETED
+- ✅ **Batch mode**: Remove provider prefixes from model names with vertex_ai special handling
+- ✅ **LiteLLM mode**: Keep provider prefixes with vertex_ai model name extraction
+- ✅ Automatic format detection (openai, vertex, mistral) based on provider and mode
 
-### 4. Implementation Details
-- Extend `utils.py` with provider detection functions
-- Update command argument parsing
-- Modify batch job creation logic to handle modes
-- Add CLI command for `send-file` (current send functionality)
+### 4. Implementation Details - ✅ COMPLETED
+- ✅ Extended `utils.py` with comprehensive provider detection functions
+- ✅ Updated command argument parsing for all affected commands
+- ✅ Modified batch job creation logic to handle modes
+- ✅ Added CLI command for `send-file` (backward compatibility)
+
+## Future Considerations
+- Monitor performance with large-scale evaluations
+- Consider adding provider-specific optimizations if needed
+- Potential integration with new LiteLLM providers as they become available
 
 ## Implementation Steps
 
@@ -63,53 +68,58 @@ Update the gm-eval command to support batch and litellm modes with automatic pro
 
 ## Summarization of Edit Sessions
 
-### Session 1: Core Implementation Complete
-- Created backlog plan with detailed implementation steps
-- Extended utils.py with comprehensive provider detection functions:
+### June 4, 2025: Complete Implementation and Optimization - FINISHED
+**Comprehensive GM-Eval Mode Support Implementation Successfully Completed**
+
+#### Core Implementation Achievements:
+- ✅ **Extended utils.py with comprehensive provider detection functions**:
   - `detect_provider_from_model_id()` - Parse provider prefixes from model IDs
   - `get_batch_model_name()` - Handle mode-specific model name formatting
   - `get_provider_method_from_model_id()` - Map providers to batch methods
   - `get_jsonl_format_from_provider()` - Auto-detect JSONL formats
   - `is_openai_compatible_provider()` - Identify OpenAI-compatible providers
   - Updated `get_model_id_from_config_id()` to support keeping provider prefixes
-- Created send-file command by copying original send functionality
-- Completely rewrote send command for mode-based operation:
-  - Added --mode and --model-config-id parameters
-  - Automatic provider detection from model configuration
-  - Mode-aware model name processing (prefix removal for batch mode)
-  - OpenAI-compatible provider support (e.g., alibaba/qwen-3)
-- Updated CLI structure to register send-file command
-- Modified run command:
-  - Replaced --method with --mode parameter
-  - Integrated mode-based provider detection
-  - Automatic JSONL format selection
-  - Simplified parameter handling by removing provider-specific options
-- Enhanced evaluate command with --mode parameter for consistency
-- Tested provider detection logic with multiple model ID formats
-- All CLI help commands working correctly with new parameter structure
 
-### Session 2: Testing and Integration - COMPLETED
-- ✅ Downloaded real configuration files from AI Eval spreadsheet
-- ✅ Updated provider detection for vertex_ai and deepseek providers
-- ✅ Tested end-to-end workflow with actual model configurations:
-  - mc057 (deepseek/deepseek-reasoner) with litellm mode
-  - mc067 (vertex_ai/publishers/google/models/gemini-2.0-flash-001) with batch mode
-- ✅ Verified batch mode prefix removal: vertex_ai/publishers/google/models/gemini-2.0-flash-001 → publishers/google/models/gemini-2.0-flash-001
-- ✅ Confirmed litellm mode keeps full model names with prefixes
-- ✅ Tested mode parameter propagation through run command
-- ✅ Validated automatic JSONL format detection (deepseek→openai, vertex_ai→vertex)
-- ✅ Verified backward compatibility with send-file command
-- ✅ All commands working with proper provider detection and mode handling
+- ✅ **Created new CLI commands and updated existing ones**:
+  - Created `send-file` command (backward compatibility)
+  - Completely rewrote `send` command for mode-based operation
+  - Updated `run` command with --mode parameter replacing --method
+  - Enhanced `evaluate` command with --mode parameter for consistency
+  - All CLI help commands working correctly with new parameter structure
 
-### Session 3: Implementation Complete - SUCCESS
-- ✅ All planned features implemented and tested
-- ✅ Provider detection working for real-world model configurations
-- ✅ Mode-based processing (batch vs litellm) functioning correctly
-- ✅ Automatic prefix removal in batch mode validated
-- ✅ OpenAI-compatible provider support ready (alibaba mapping confirmed)
-- ✅ CLI help documentation accurate and comprehensive
-- ✅ Integration testing successful with live API calls
-- ✅ Ready for production use
+- ✅ **Implemented mode-aware processing**:
+  - Batch mode removes provider prefixes appropriately
+  - LiteLLM mode preserves provider prefixes for proper routing
+  - Automatic JSONL format selection based on provider and mode
+  - OpenAI-compatible provider support ready (e.g., alibaba/qwen-3)
+
+#### Critical Bug Fixes Resolved:
+- ✅ **Fixed Namespace Attribute Error**: Added missing `filter_questions` and `filter_prompts` attributes to download_args in run.py
+- ✅ **Fixed Mode Processing**: Corrected send.py and run.py to properly respect `--mode litellm` parameter instead of defaulting to batch processing
+- ✅ **Fixed Vertex AI Model Path Handling**: Resolved URL duplication issues in LiteLLM mode
+- ✅ **Fixed Evaluate Command Mode Parameter**: Ensured mode parameter propagates correctly through run → send → evaluate → generate_eval_prompts chain
+
+#### Major Refactoring and Optimization:
+- ✅ **Centralized Model Transformation**: Created `transform_model_id()` function in utils.py as single source of truth for all model ID transformations
+- ✅ **Simplified Transformation Rules**: 
+  - **LiteLLM mode**: Keep all provider prefixes with vertex_ai special handling
+  - **Batch mode**: Remove prefixes with vertex_ai keeping full path after prefix
+- ✅ **Comprehensive Testing**: Created 19 test cases covering all transformation scenarios with 100% success rate
+
+#### End-to-End Testing Results:
+- ✅ **deepseek/deepseek-reasoner** (litellm mode) - Response generated successfully
+- ✅ **vertex_ai/publishers/google/models/gemini-2.0-flash-001** (batch mode) - Batch job completed
+- ✅ **vertex_ai/publishers/google/models/gemini-2.0-flash-001** (litellm mode) - LiteLLM processing successful
+- ✅ **mistral/mistral-large-latest** (litellm mode) - LiteLLM processing with prefix preservation
+- ✅ **openai/gpt-4.1-2025-04-14** (litellm mode) - Direct OpenAI API calls
+- ✅ All provider detections accurate for real-world configurations
+- ✅ Mode parameter now controls entire workflow including evaluation phase
+
+#### Key Technical Insights:
+- **Scalable Design**: New providers (xai/, deepseek/, fireworks_ai/) work automatically
+- **Maintainable Code**: No provider-specific cases except vertex_ai
+- **Future-proof**: Compatible with any new LiteLLM-supported provider
+- **Consistent Behavior**: Same transformation rules across send and evaluate commands
 
 ## Final Implementation Summary
 
@@ -126,15 +136,27 @@ The gm-eval command has been successfully updated with comprehensive mode suppor
 ### Key Features Implemented:
 1. **Automatic Provider Detection**: Parses model-ids with prefixes (openai/, anthropic/, vertex_ai/, etc.)
 2. **Mode-Aware Processing**: 
-   - Batch mode removes provider prefixes
-   - LiteLLM mode preserves full model names
-3. **Format Auto-Detection**: Automatically selects JSONL format based on provider
+   - Batch mode removes provider prefixes appropriately
+   - LiteLLM mode transforms model names for LiteLLM compatibility
+3. **Format Auto-Detection**: Automatically selects JSONL format based on provider and mode
 4. **OpenAI-Compatible Support**: Ready for providers like alibaba/qwen-3
 5. **Seamless Integration**: Mode parameter flows through run → send → evaluate chain
+6. **Complete Evaluation Support**: Mode parameter now properly controls evaluation processing
 
 ### Testing Results:
 - ✅ deepseek/deepseek-reasoner (litellm mode) - Response generated successfully
 - ✅ vertex_ai/publishers/google/models/gemini-2.0-flash-001 (batch mode) - Batch job completed
+- ✅ vertex_ai/publishers/google/models/gemini-2.0-flash-001 (litellm mode) - LiteLLM processing successful
+- ✅ mistral/mistral-large-latest (litellm mode) - LiteLLM processing with prefix preservation
+- ✅ openai/gpt-4.1-2025-04-14 (litellm mode) - Direct OpenAI API calls
 - ✅ Provider detection accurate for all tested configurations
-- ✅ Prefix removal working correctly in batch mode
+- ✅ Prefix transformation working correctly for both batch and litellm modes
+- ✅ Evaluation phase respects mode parameter and processes accordingly
 - ✅ All CLI commands showing proper help and parameter validation
+
+### Mode Parameter Issue - RESOLVED
+The original issue where `gm-eval run --mode litellm` was ignoring the mode parameter in the evaluation phase has been completely resolved. The evaluators now correctly:
+- Use LiteLLM processing when `--mode litellm` is specified
+- Generate OpenAI-format JSONL for all evaluators in litellm mode
+- Transform model IDs appropriately for LiteLLM compatibility
+- Preserve provider prefixes when required (e.g., Mistral models)

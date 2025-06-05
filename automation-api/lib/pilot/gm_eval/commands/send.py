@@ -7,12 +7,12 @@ import os
 
 from lib.pilot.gm_eval.utils import (
     detect_provider_from_model_id,
-    get_batch_model_name,
     get_default_output_path,
     get_model_id_from_config_id,
     get_provider_method_from_model_id,
     is_openai_compatible_provider,
     logger,
+    transform_model_id,
 )
 from lib.pilot.send_batch_prompt import process_batch
 
@@ -88,13 +88,18 @@ def handle(args: argparse.Namespace) -> int:
 
         # Detect provider and method from model ID
         provider, model_name = detect_provider_from_model_id(full_model_id)
-        method = get_provider_method_from_model_id(full_model_id)
+
+        # Override method based on mode
+        if args.mode == "litellm":
+            method = "litellm"
+        else:
+            method = get_provider_method_from_model_id(full_model_id)
 
         logger.info(f"Detected provider: {provider}, method: {method}")
         logger.info(f"Full model ID: {full_model_id}")
 
         # Get the appropriate model name for the selected mode
-        model_id_for_batch = get_batch_model_name(full_model_id, args.mode)
+        model_id_for_batch = transform_model_id(full_model_id, mode=args.mode)
         logger.info(f"Using model name for {args.mode} mode: {model_id_for_batch}")
 
         # Determine provider name for OpenAI-compatible providers
