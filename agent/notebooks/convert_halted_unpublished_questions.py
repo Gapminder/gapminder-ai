@@ -1,7 +1,18 @@
+"""
+The script converts halted unpublished questions into a format suitable for gm-eval to read.
+
+The input CSV expected following columns:
+- Question
+- Answer options
+- Correct answer
+- Very Wrong answer
+"""
+
 import pandas as pd
 import re
 import random
 import os
+import argparse
 
 def clean_option_text(option_text):
     """Removes leading option markers like 'A. ', 'B. ' etc."""
@@ -108,9 +119,29 @@ def determine_correctness(options, correct_index, very_wrong_answer):
 
 
 def main():
-    # Define input and output paths
-    input_csv_path = 'halted_questions.csv'
-    output_dir = './'
+    # Set up command line argument parsing
+    parser = argparse.ArgumentParser(description='Convert halted questions CSV to questions and options CSV files.')
+    parser.add_argument('-i', '--input',
+                       default='halted_questions.csv',
+                       help='Path to input CSV file (default: halted_questions.csv)')
+    parser.add_argument('-o', '--output-dir',
+                       default='./',
+                       help='Output directory for generated CSV files (default: current directory)')
+    parser.add_argument('-s', '--start-index',
+                       type=int,
+                       default=0,
+                       help='Starting index for question IDs (default: 0)')
+
+    args = parser.parse_args()
+
+    # Use command line arguments
+    input_csv_path = args.input
+    output_dir = args.output_dir
+    start_index = args.start_index
+
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
     output_questions_path = os.path.join(output_dir, 'questions.csv')
     output_options_path = os.path.join(output_dir, 'question_options.csv')
 
@@ -126,17 +157,17 @@ def main():
         # The CSV has multiple initial rows that are not the true header.
         # We'll look for a row that contains expected column names.
         df_full = pd.read_csv(input_csv_path, dtype=str)
-        df_full.columns = df_full.columns.map(lambda x: x.strip().replace("\n", " "))
+        df_full.columns = df_full.columns.map(lambda x: x.strip().replace("\n", " ").lower())
 
-        expected_cols = ['Question', 'Correct Answer', 'Answer options', 'Very Wrong Answer']
+        expected_cols = ['question', 'correct answer', 'answer options', 'very wrong answer']
 
         # Drop rows where essential information for questions or options is missing
         # or where ID combo is a placeholder like '#REF!'
         # Note: Very Wrong Answer can be missing, so we don't include it in the required columns
-        required_cols = ['Question', 'Correct Answer', 'Answer options']
+        required_cols = ['question', 'correct answer', 'answer options']
         df_input = df_full.dropna(subset=required_cols)[expected_cols]
-        if not df_input[df_input.duplicated(subset=["Question"])].empty:
-            print(df_input[df_input.duplicated(subset=["Question"])])
+        if not df_input[df_input.duplicated(subset=["question"])].empty:
+            print(df_input[df_input.duplicated(subset=["question"])])
             raise ValueError("Duplicated question")
 
         total_questions = len(df_input)
@@ -148,18 +179,18 @@ def main():
         processed_question_ids = set()
 
         for index, row in df_input.iterrows():
-            question_id_raw = str(index)
+            question_id_raw = str(index + start_index)
 
             # Safely extract question text, handling cases where it might be a Series
-            raw_question_val = row['Question']
+            raw_question_val = row['question']
             if isinstance(raw_question_val, pd.Series):
                 actual_question_string = raw_question_val.iloc[0]
             else:
                 actual_question_string = raw_question_val
-            question_text = str(actual_question_string).strip().title()
+            question_text = str(actual_question_string).strip()
 
-            correct_answer_text_raw = str(row.get('Correct Answer', '')).strip().title()
-            answer_options_str = str(row.get('Answer options', '')).strip()
+            correct_answer_text_raw = str(row.get('correct answer', '')).strip()
+            answer_options_str = str(row.get('answer options', '')).strip()
 
             if not question_id_raw or not question_text:
                 print(f"Skipping row {index} due to missing ID combo or Question text.")
@@ -270,7 +301,7 @@ def main():
             new_option_letter_map = {i: chr(65 + i) for i in range(len(selected_options))}
 
             # Get the very wrong answer for this question, if available
-            raw_vwa_val = row.get('Very Wrong Answer')
+            raw_vwa_val = row.get('very wrong answer')
             very_wrong_answer = str(raw_vwa_val).strip() if pd.notna(raw_vwa_val) else ''
 
             # Create a map of options and their correctness values
