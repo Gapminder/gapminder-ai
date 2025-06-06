@@ -3,3 +3,4 @@
 .env
 litellm/*.log
 __pycache__
+archived
