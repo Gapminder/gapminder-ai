@@ -5,7 +5,7 @@ import json
 import os
 import tempfile
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 
 def make_tmp_file_google_application_credentials(base64encoded_credentials):
@@ -27,7 +27,14 @@ def make_tmp_file_google_application_credentials(base64encoded_credentials):
 
 
 def read_config() -> dict[str, str]:
-    load_dotenv()
+    # Search for .env file starting from the current working directory
+    # and moving up through parent directories
+    dotenv_path = find_dotenv(usecwd=True)
+    if dotenv_path:
+        load_dotenv(dotenv_path)
+    else:
+        # Fallback to default behavior if no .env file is found
+        load_dotenv()
 
     config = {}
     # Mandatory configuration

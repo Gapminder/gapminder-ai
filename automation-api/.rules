@@ -1,0 +1,31 @@
+ # General Rules for Automation API
+ - before start a task, try to find if there are related items in backlogs. Read them to know the current status about the project.
+ - if no related items found, plan your action and create the plan in backlogs/. Read the README.md file in the project folder.
+ - An item in backlogs/ should have 2 sections:
+   1. the overview, the plan, the todo list. (no need to put development setup details)
+   2. summarization of what has been done.
+ - after a task is done, update the backlog and README.md/DEV.md in the project folder. (automation_api/README.md / automation_api/DEV.md)
+ - breaking changes are fine, we don't need to keep backward compatibility.
+
+# How to test the gm-eval command
+- create a temp folder in project root
+- in the temp folder, run the gm-eval commands as you need
+- double check the downloaded ai_eval_sheets. If they contains many data (more than 5 questions and 5 prompts), stop and confirm if you can continue first.
+
+# Environment
+- Use Python version specified in .python-version
+- Always work within the virtual environment
+- use uv for virtual environment
+- use poethepoet for tasks
+- use pytest for tests
+- Keep pyproject.toml updated when adding new dependencies
+
+# Code Quality
+- We use pre-commit hooks for code quality checks
+   - Run `pre-commit install` to set up the hooks (only needed for new env)
+   - Hooks will run automatically on git commit. (So you don't need to run it manually)
+   - You can also run manually with `pre-commit run --all-files`.
+- use snake_case for variable names
+- use all uppercase for constants
+- prefer functional programming style
+- write meaningful comments, avoid comments that are redundant or unnecessary or just "user told me to do it"

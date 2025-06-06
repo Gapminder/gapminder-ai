@@ -224,8 +224,6 @@ def _send_batch_file(
     output_uri = f"gs://{gcs_bucket}/batch_results"
 
     # Submit batch prediction job
-    # Strip vertex_ai/ prefix if present
-    model_id = model_id.replace("vertex_ai/", "")
     logger.info(f"Submitting batch prediction job for model {model_id}")
     batch_job = BatchPredictionJob.submit(
         source_model=model_id,
