@@ -105,25 +105,36 @@ def process_batch(
 
         # Send the batch
         batch_id = batch_job.send()
+
+        # Check if batch was skipped due to existing response file
+        batch_was_skipped = batch_job.is_completed and batch_id == batch_job.output_path
+
         if method != "litellm":
             print(f"Batch ID: {batch_id}")
 
             # Add logging here - AFTER the batch is submitted
             if wait:
-                logger.info("Waiting for batch completion...")
-                logger.info("If you're using batch mode, you can stop this command with Ctrl+C")
-                logger.info("and rerun it later with the same parameters to check if results are ready.")
+                if batch_was_skipped:
+                    logger.info("Response file already exists - no need to wait.")
+                else:
+                    logger.info("Waiting for batch completion...")
+                    logger.info("If you're using batch mode, you can stop this command with Ctrl+C")
+                    logger.info("and rerun it later with the same parameters to check if results are ready.")
             else:
                 logger.info("Batch job submitted successfully. Results will be available later.")
                 logger.info("You can rerun this command with the same parameters and --wait to check for results.")
 
         # Wait for completion if requested
         if wait and method != "litellm":
-            result_path = batch_job.wait_for_completion()
-            if result_path:
-                print(f"Results saved to: {result_path}")
+            if batch_was_skipped:
+                # Response file already exists, just return the path
+                print(f"Results already available at: {batch_job.output_path}")
             else:
-                print("Batch processing failed or was cancelled.")
+                result_path = batch_job.wait_for_completion()
+                if result_path:
+                    print(f"Results saved to: {result_path}")
+                else:
+                    print("Batch processing failed or was cancelled.")
 
     except Exception as e:
         logger.error(f"Error processing batch: {str(e)}")

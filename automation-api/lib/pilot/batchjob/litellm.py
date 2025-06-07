@@ -11,7 +11,6 @@ from litellm import Cache  # type: ignore
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
-from ..utils import get_output_path
 from .base import BaseBatchJob
 
 logger = AppSingleton().get_logger()
@@ -38,17 +37,10 @@ class LiteLLMBatchJob(BaseBatchJob):
             provider: API provider (e.g., "alibaba")
             num_processes: Number of processes to use for parallel processing
         """
-        self.jsonl_path = jsonl_path
+        super().__init__(jsonl_path)
         self._provider = provider
         self._num_processes = num_processes
-        self._output_path = get_output_path(jsonl_path)
         self._batch_id = jsonl_path
-
-        # Check if job is already completed
-        if os.path.exists(self._output_path):
-            self._is_completed = True
-        else:
-            self._is_completed = False
 
     def send(self) -> str:
         """
@@ -60,9 +52,8 @@ class LiteLLMBatchJob(BaseBatchJob):
             result: the output path, or empty string if failed to send prompts
         """
         try:
-            # Check if already completed
-            if self._is_completed and os.path.exists(self._output_path):
-                logger.info(f"Batch {self._batch_id} already completed.")
+            # Check if response file already exists
+            if self.should_skip_processing():
                 return self._output_path
 
             # Process all prompts
@@ -91,7 +82,7 @@ class LiteLLMBatchJob(BaseBatchJob):
         Returns:
             status: Job status string ("completed" or "n/a")
         """
-        if self._is_completed or os.path.exists(self._output_path):
+        if self.is_completed or os.path.exists(self._output_path):
             return "completed"
         else:
             return "n/a"
