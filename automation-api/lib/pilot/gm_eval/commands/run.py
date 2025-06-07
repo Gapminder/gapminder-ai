@@ -167,6 +167,7 @@ def handle(args: argparse.Namespace) -> int:
                 wait=True,  # Always wait for send step
                 processes=args.processes,
                 timeout_hours=args.timeout_hours,
+                force_regenerate=False,  # Default to not force regenerate
             )
             result = send.handle(send_args)
             if result != 0:
