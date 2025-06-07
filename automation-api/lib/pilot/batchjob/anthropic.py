@@ -13,6 +13,7 @@ from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
 from .base import BaseBatchJob
+from .utils import post_process_response
 
 logger = AppSingleton().get_logger()
 
@@ -215,9 +216,13 @@ def _simplify_anthropic_response(response_data: Any) -> Dict[str, Any]:
     if status == "succeeded":
         # skip thinking responses
         contents = [m for m in response_data.result.message.content if m.type == "text"]
-        simplified["content"] = contents[0].text
+        if contents:  # Ensure there is text content
+            simplified["content"] = contents[0].text
     elif status == "errored":
         simplified["error"] = (str(response_data.result.error),)
+
+    # Post-process the response content
+    simplified["content"] = post_process_response(simplified["content"])
 
     return simplified
 

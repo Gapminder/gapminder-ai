@@ -12,6 +12,7 @@ from lib.config import read_config
 
 from ..utils import generate_batch_id
 from .base import BaseBatchJob
+from .utils import post_process_response
 
 logger = AppSingleton().get_logger()
 config = read_config()
@@ -63,6 +64,9 @@ def _simplify_mistral_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
         # sometimes there is no error message, we create one
         else:
             simplified["error"] = f"Error: status code {status_code}"
+
+    # Post-process the response content
+    simplified["content"] = post_process_response(simplified["content"])
 
     return simplified
 
