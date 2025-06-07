@@ -102,6 +102,13 @@ class LiteLLMBatchJob(BaseBatchJob):
 
 
 # helper functions
+def _init_worker():
+    """Initialize worker process to properly handle signals."""
+    import signal
+
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
 def _setup_litellm_cache() -> None:
     """Configure LiteLLM Redis cache with 60 day TTL."""
     if "REDIS_HOST" in config and "REDIS_PORT" in config:
@@ -184,11 +191,16 @@ def _process_batch_prompts(
         # Process prompts using multiprocessing if enabled
         if num_processes > 1:
             logger.info(f"Using multiprocessing with {num_processes} processes")
-            with mp.Pool(processes=num_processes) as pool:
-                results = pool.starmap(
-                    _process_single_prompt,
-                    [(prompt, provider) for prompt in all_prompts],
-                )
+            try:
+                with mp.Pool(processes=num_processes, initializer=_init_worker) as pool:
+                    results = pool.starmap(
+                        _process_single_prompt,
+                        [(prompt, provider) for prompt in all_prompts],
+                    )
+            except KeyboardInterrupt:
+                logger.info("Keyboard interrupt received. Terminating workers...")
+                # Let the context manager handle cleanup
+                raise
         else:
             logger.info("Processing prompts sequentially")
             results = [_process_single_prompt(prompt, provider) for prompt in all_prompts]
@@ -201,6 +213,9 @@ def _process_batch_prompts(
         logger.info(f"Completed processing all {total_prompts} prompts")
         return output_path
 
+    except KeyboardInterrupt:
+        logger.info("Process was interrupted by user. Partial results may have been cached if you have redis running.")
+        return None
     except Exception as e:
         logger.error(f"Error processing batch prompts: {str(e)}")
         return None
