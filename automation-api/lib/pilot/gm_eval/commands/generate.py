@@ -52,6 +52,7 @@ def handle(args: argparse.Namespace) -> int:
         base_path = args.base_path
         model_config_id = args.model_config_id
         jsonl_format = args.jsonl_format
+        mode = args.mode
 
         # Ensure the base path exists
         ensure_directory(base_path)
@@ -64,7 +65,7 @@ def handle(args: argparse.Namespace) -> int:
             return 1
 
         # Run the generate prompts main function
-        generate_prompts_main(base_path, model_config_id, jsonl_format)
+        generate_prompts_main(base_path, model_config_id, jsonl_format, mode)
 
         return 0
     except Exception as e:
