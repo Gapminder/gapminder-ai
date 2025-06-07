@@ -196,16 +196,25 @@ def _process_batch_prompts(
         # Process prompts using multiprocessing if enabled
         if num_processes > 1:
             logger.info(f"Using multiprocessing with {num_processes} processes")
+            pool = None  # Initialize pool to None
             try:
-                with mp.Pool(processes=num_processes, initializer=_init_worker) as pool:
-                    results = pool.starmap(
-                        _process_single_prompt,
-                        [(prompt, provider) for prompt in all_prompts],
-                    )
+                pool = mp.Pool(processes=num_processes, initializer=_init_worker)
+                results = pool.starmap(
+                    _process_single_prompt,
+                    [(prompt, provider) for prompt in all_prompts],
+                )
+                pool.close()  # Close the pool normally
+                pool.join()  # Wait for all worker processes to finish
             except KeyboardInterrupt:
                 logger.info("Keyboard interrupt received. Terminating workers...")
-                # Let the context manager handle cleanup
-                raise
+                if pool:
+                    pool.terminate()  # Terminate all worker processes
+                    logger.info("Waiting for workers to terminate...")
+                    pool.join()  # Wait for them to exit
+                    # Check if processes are still alive after timeout (optional, for logging)
+                    # This part is tricky as direct access to process objects is not clean with Pool
+                    # For now, we assume terminate + join is the best effort.
+                raise  # Re-raise the KeyboardInterrupt to be caught by the outer handler
         else:
             logger.info("Processing prompts sequentially")
             results = [_process_single_prompt(prompt, provider) for prompt in all_prompts]
@@ -220,7 +229,8 @@ def _process_batch_prompts(
 
     except KeyboardInterrupt:
         logger.info("Process was interrupted by user. Partial results may have been cached if you have redis running.")
-        return None
+        # Re-raise the interrupt so the caller knows execution was halted.
+        raise
     except Exception as e:
         logger.error(f"Error processing batch prompts: {str(e)}")
         return None
