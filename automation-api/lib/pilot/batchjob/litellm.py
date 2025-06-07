@@ -12,6 +12,7 @@ from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
 from .base import BaseBatchJob
+from .utils import post_process_response
 
 logger = AppSingleton().get_logger()
 config = read_config()
@@ -138,6 +139,10 @@ def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
 
         response = litellm.completion(**request_body)  # type: ignore
         content = response.choices[0].message.content
+
+        # Post-process the response content
+        content = post_process_response(content)
+
         try:  # when citations available, add them to the content.
             citation_str = "\n".join(f"[{n+1}]: {link}" for n, link in enumerate(response.citations))
             content = f"{content}\n\nCitations:\n\n{citation_str}"

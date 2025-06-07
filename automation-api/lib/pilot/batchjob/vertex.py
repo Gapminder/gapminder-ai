@@ -16,6 +16,7 @@ from lib.config import read_config
 
 from ..utils import get_batch_id_and_output_path
 from .base import BaseBatchJob
+from .utils import post_process_response
 
 logger = AppSingleton().get_logger()
 
@@ -287,6 +288,9 @@ def _simplify_vertex_response(response_data: Dict[str, Any], custom_id: Optional
     except (KeyError, TypeError, IndexError) as e:
         # FIXME: should read error from the response_data.
         simplified["error"] = str(e)
+
+    # Post-process the response content
+    simplified["content"] = post_process_response(simplified["content"])
 
     return simplified
 
