@@ -3,7 +3,7 @@
 import json
 import multiprocessing as mp
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import litellm
 from litellm import Cache  # type: ignore
@@ -58,19 +58,30 @@ class LiteLLMBatchJob(BaseBatchJob):
                 return self._output_path
 
             # Process all prompts
-            result = _process_batch_prompts(self.jsonl_path, self._output_path, self._num_processes, self._provider)
+            result_path = _process_batch_prompts(
+                self.jsonl_path, self._output_path, self._num_processes, self._provider
+            )
 
-            if result:
+            if result_path:  # Check if a valid path was returned
                 self._is_completed = True
                 logger.info(f"Batch {self._batch_id} completed successfully.")
-                logger.info(f"Results saved to {result}")
-                return result
+                logger.info(f"Results saved to {result_path}")
+                return result_path
             else:
-                logger.error(f"Batch {self._batch_id} processing failed.")
+                # This case now covers both processing failure and interruption before completion
+                logger.error(f"Batch {self._batch_id} processing failed or was interrupted before completion.")
                 return ""
-
+        except KeyboardInterrupt:
+            logger.warning(f"Batch {self._batch_id} sending was interrupted by user (Ctrl+C).")
+            # _process_batch_prompts is expected to handle its own cleanup of workers.
+            # If _process_batch_prompts created a partial file and didn't clean it,
+            # cleanup logic could be added here, but the proposed _process_batch_prompts
+            # aims to avoid writing partial files on interrupt.
+            raise  # Re-raise to allow application to terminate
         except Exception as e:
             logger.error(f"Error sending batch: {str(e)}")
+            # If _process_batch_prompts terminated workers due to an error and re-raised,
+            # it would be caught here.
             raise
 
     def check_status(self) -> str:
@@ -100,14 +111,6 @@ class LiteLLMBatchJob(BaseBatchJob):
     def output_path(self) -> str:
         """Get the output file path."""
         return self._output_path
-
-
-# helper functions
-def _init_worker():
-    """Initialize worker process to properly handle signals."""
-    import signal
-
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 def _setup_litellm_cache() -> None:
@@ -183,54 +186,88 @@ def _process_batch_prompts(
     provider: Optional[str] = None,
 ) -> Optional[str]:
     """Process batch prompts using LiteLLM with multiprocessing."""
-    try:
-        _setup_litellm_cache()
 
-        # Read all prompts into memory
-        with open(input_jsonl_path) as f:
-            all_prompts = [json.loads(line) for line in f]
+    _setup_litellm_cache()
 
-        total_prompts = len(all_prompts)
-        logger.info(f"Starting to process {total_prompts} prompts with {num_processes} processes")
+    with open(input_jsonl_path) as f:
+        all_prompts = [json.loads(line) for line in f]
 
-        # Process prompts using multiprocessing if enabled
-        if num_processes > 1:
-            logger.info(f"Using multiprocessing with {num_processes} processes")
-            pool = None  # Initialize pool to None
-            try:
-                pool = mp.Pool(processes=num_processes, initializer=_init_worker)
-                results = pool.starmap(
-                    _process_single_prompt,
-                    [(prompt, provider) for prompt in all_prompts],
-                )
-                pool.close()  # Close the pool normally
-                pool.join()  # Wait for all worker processes to finish
-            except KeyboardInterrupt:
-                logger.info("Keyboard interrupt received. Terminating workers...")
-                if pool:
-                    pool.terminate()  # Terminate all worker processes
-                    logger.info("Waiting for workers to terminate...")
-                    pool.join()  # Wait for them to exit
-                    # Check if processes are still alive after timeout (optional, for logging)
-                    # This part is tricky as direct access to process objects is not clean with Pool
-                    # For now, we assume terminate + join is the best effort.
-                raise  # Re-raise the KeyboardInterrupt to be caught by the outer handler
-        else:
-            logger.info("Processing prompts sequentially")
-            results = [_process_single_prompt(prompt, provider) for prompt in all_prompts]
+    total_prompts = len(all_prompts)
+    logger.info(f"Starting to process {total_prompts} prompts with {num_processes} processes")
 
-        # Write all results to output file
-        with open(output_path, "w") as f:
-            for result in results:
-                f.write(json.dumps(result) + "\n")
+    processed_results: List[Dict] = []  # Initialize to an empty list
 
-        logger.info(f"Completed processing all {total_prompts} prompts")
-        return output_path
+    if num_processes > 1:
+        logger.info(f"Using multiprocessing with {num_processes} processes")
+        pool = mp.Pool(processes=num_processes)
+        try:
+            # Use starmap_async for non-blocking behavior in the main thread
+            async_task = pool.starmap_async(
+                _process_single_prompt,
+                [(prompt, provider) for prompt in all_prompts],
+            )
 
-    except KeyboardInterrupt:
-        logger.info("Process was interrupted by user. Partial results may have been cached if you have redis running.")
-        # Re-raise the interrupt so the caller knows execution was halted.
-        raise
-    except Exception as e:
-        logger.error(f"Error processing batch prompts: {str(e)}")
+            # Wait for tasks to complete, checking periodically to allow interrupts
+            logger.info("Tasks submitted to pool. Waiting for completion... (Press Ctrl+C to interrupt)")
+            while not async_task.ready():
+                try:
+                    # get() with a timeout allows KeyboardInterrupt to be caught by the main thread
+                    async_task.get(timeout=1)  # Check every 1 second
+                except mp.TimeoutError:
+                    # This is expected if tasks are still running
+                    continue
+                # If KeyboardInterrupt occurs during get(), it will propagate to the outer handler
+
+            processed_results = async_task.get()  # Retrieve all results once ready
+
+            pool.close()  # No more tasks will be submitted
+            pool.join()  # Wait for all worker processes to complete their current tasks and exit
+            logger.info("All multiprocessing tasks completed and workers joined.")
+        except KeyboardInterrupt:
+            logger.warning("Keyboard interrupt received by main process. Terminating worker processes...")
+            pool.terminate()  # Send SIGTERM to worker processes
+            pool.join()  # Wait for worker processes to terminate
+            logger.info("Worker processes terminated due to keyboard interrupt.")
+            # processed_results will remain as they were (likely empty or incomplete)
+            # Re-raising KeyboardInterrupt is crucial to stop the script.
+            raise
+        except Exception as e:
+            logger.error(f"An error occurred during multiprocessing: {str(e)}")
+            pool.terminate()
+            pool.join()
+            logger.info("Worker processes terminated due to an error.")
+            # Re-raise the caught exception
+            raise
+    else:  # Sequential processing
+        logger.info("Processing prompts sequentially")
+        try:
+            for prompt_data in all_prompts:
+                # Process one by one to allow interruption between prompts
+                if not isinstance(processed_results, list):  # Should not happen with init
+                    processed_results = []
+                processed_results.append(_process_single_prompt(prompt_data, provider))
+            logger.info("Sequential processing completed.")
+        except KeyboardInterrupt:
+            logger.warning("Keyboard interrupt received during sequential processing.")
+            # processed_results will contain items processed so far.
+            # Re-raise to stop the script.
+            raise
+        # Other exceptions in sequential mode will propagate naturally.
+
+    # Write results to output file only if processing wasn't interrupted before completion
+    # and results were actually gathered.
+    if processed_results:  # Check if list is not empty
+        try:
+            with open(output_path, "w") as f:
+                for result_item in processed_results:
+                    f.write(json.dumps(result_item) + "\n")
+            logger.info(f"Successfully wrote {len(processed_results)} results to {output_path}")
+            return output_path
+        except IOError as e:
+            logger.error(f"Failed to write results to {output_path}: {e}")
+            return None  # Indicate failure
+    else:
+        logger.warning(
+            "No results were processed or an interruption occurred before results could be gathered. Output file not written."
+        )
         return None
