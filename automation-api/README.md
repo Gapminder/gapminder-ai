@@ -117,21 +117,22 @@ The gm-eval tool now supports two processing modes with automatic provider detec
 - Uses provider-specific batch APIs (OpenAI, Anthropic, Vertex AI, Mistral, Alibaba)
 - Supports waiting for completion with `--wait`
 - Automatically validates provider compatibility and suggests alternatives
+- Batch mode offers 50% discount for all the models we have encountered.
 
 **LiteLLM Mode:**
 - Real-time processing through LiteLLM
 - Supports all providers (especially those without batch APIs like DeepSeek)
 - Supports concurrent processing with `--processes`
 
-By default, the `run` command uses batch mode, which will send all prompts to the specified provider using Batch API. Batchjobs accepts the `--wait` flag to wait for the batch job to complete before continuing.
+By default, the `run` command uses batch mode, which will send all prompts to the specified provider using Batch API, for both the question prompts and eval prompts. The `run` command will always wait for question prompts to finish before it creates and sends the evaluation batch files. The `--wait` flag then can be used to wait for the evaluation batch jobs to complete and download the results. In a typical workflow, the user would first run the `run` command in batch mode without `--wait` (so that all evaluation batch jobs are sent), and then run it again with `--wait` to wait for all eval jobs to complete.
 
 ```bash
 gm-eval run --model-config-id mc049 --mode batch --wait
 ```
 
-The above command will send the batch to a provider and wait until it gets response file. If --wait flag is not set, it will return immediately after sending the batch. A .processing file with the batch ID will be created to indicate that the batch is still processing. You can run the same command with --wait flag to get the responses file later.
-
 To use Litellm mode, add the `--mode litellm` flag, as shown in previous section.
+
+If you want to send question prompts and evaluation prompts in different modes, you should use separated commands. Please refer to `Running Individual Steps` section for how to run each steps.
 
 #### other useful flags for gm-eval run
 
