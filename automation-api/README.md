@@ -1,8 +1,8 @@
 # Gapminder AI Benchmark tool
 
-This is a set of libraries which help to run experiments for the Gapminder AI worldview benchmark[1] project.
+This is a set of libraries which help to run experiments for the [Gapminder AI worldview benchmark] project.
 
-[1]: https://www.gapminder.org/ai
+[Gapminder AI worldview benchmark]: https://www.gapminder.org/ai
 
 ## The Experiment Configurations
 
@@ -19,9 +19,9 @@ The tool expected following sheets in the experiment config:
 - Model configurations
 - Latest Results
 
-Please refer to the current configuration spreadsheet[2] for the expected columns for each sheet.
+Please refer to the [current configuration spreadsheet] for the expected columns for each sheet.
 
-[2]: https://docs.google.com/spreadsheets/d/1Tsa4FDAP-QhaXNhfclqq2_Wspp32efGeZyGHxSrtRvA/edit?gid=42711988#gid=42711988
+[current configuration spreadsheet]: https://docs.google.com/spreadsheets/d/1Tsa4FDAP-QhaXNhfclqq2_Wspp32efGeZyGHxSrtRvA/edit?gid=42711988#gid=42711988
 
 ### Notes on model ids
 
@@ -57,9 +57,9 @@ Generally the model id scheme will follow the conventions used in Litellm. with 
 
 ### running experiment in Notebook
 
-refer to run_evaluation.py[3] for a demo.
+refer to [run_evaluation.py] for a demo.
 
-[3]: https://github.com/Gapminder/gapminder-ai/blob/253c2b79aef96a5445bd82171e4d11fce488a8c1/automation-api/notebooks/run_evaluation.py
+[run_evaluation.py]: https://github.com/Gapminder/gapminder-ai/blob/253c2b79aef96a5445bd82171e4d11fce488a8c1/automation-api/notebooks/run_evaluation.py
 
 ### Running Experiments with the gm-eval CLI Tool
 
@@ -248,6 +248,7 @@ The CLI provides two commands for managing failed API requests:
    ```
    - Extracts requests that resulted in errors from the responses file
    - Default response path is requests filename with '-response' suffix
+   - use `gm-eval send-file` to send the requests
 
 2. **Merge responses**:
    ```bash
