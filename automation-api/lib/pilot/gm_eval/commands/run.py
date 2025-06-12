@@ -145,6 +145,7 @@ def handle(args: argparse.Namespace) -> int:
                 base_path=args.output_dir,
                 model_config_id=args.model_config_id,
                 jsonl_format=jsonl_format,
+                mode=args.mode,
             )
             result = generate.handle(generate_args)
             if result != 0:
@@ -167,6 +168,7 @@ def handle(args: argparse.Namespace) -> int:
                 wait=True,  # Always wait for send step
                 processes=args.processes,
                 timeout_hours=args.timeout_hours,
+                force_regenerate=False,  # Default to not force regenerate
             )
             result = send.handle(send_args)
             if result != 0:

@@ -10,8 +10,9 @@ from mistralai import Mistral
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
-from ..utils import generate_batch_id, get_output_path
+from ..utils import generate_batch_id
 from .base import BaseBatchJob
+from .utils import post_process_response
 
 logger = AppSingleton().get_logger()
 config = read_config()
@@ -64,6 +65,9 @@ def _simplify_mistral_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
         else:
             simplified["error"] = f"Error: status code {status_code}"
 
+    # Post-process the response content
+    simplified["content"] = post_process_response(simplified["content"])
+
     return simplified
 
 
@@ -84,19 +88,9 @@ class MistralBatchJob(BaseBatchJob):
             model_id: Mistral model ID to use (e.g., mistral-small-latest, codestral-latest)
             timeout_hours: Number of hours after which the job should expire (default: 24, max: 168)
         """
-        self.jsonl_path = jsonl_path
+        super().__init__(jsonl_path)
         self.model_id = model_id or "mistral-small-latest"
         self.timeout_hours = timeout_hours
-        self._batch_id = None
-        self._output_path = get_output_path(jsonl_path)
-        self._processing_file = f"{self._output_path}.processing"
-
-        # Check if job is already being processed
-        if os.path.exists(self._processing_file):
-            with open(self._processing_file, "r") as f:
-                self._batch_id = f.read().strip()
-
-        # initialize client
         self._client = _get_client()
 
     def send(self) -> str:
@@ -107,6 +101,10 @@ class MistralBatchJob(BaseBatchJob):
             batch_id: Unique identifier for the batch job
         """
         try:
+            # Check if response file already exists
+            if self.should_skip_processing():
+                return self._output_path
+
             # Check for existing processing file
             if os.path.exists(self._processing_file):
                 logger.info("Batch already being processed.")

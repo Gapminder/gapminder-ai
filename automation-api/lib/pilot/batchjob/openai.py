@@ -10,8 +10,9 @@ from openai import OpenAI
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
-from ..utils import generate_batch_id, get_output_path
+from ..utils import generate_batch_id
 from .base import BaseBatchJob
+from .utils import post_process_response
 
 logger = AppSingleton().get_logger()
 config = read_config()
@@ -47,18 +48,8 @@ class OpenAIBatchJob(BaseBatchJob):
             jsonl_path: Path to JSONL file containing prompts
             provider: API provider ("openai" or "alibaba")
         """
-        self.jsonl_path = jsonl_path
-        self._batch_id = None
+        super().__init__(jsonl_path)
         self._provider = provider
-        self._output_path = get_output_path(jsonl_path)
-        self._processing_file = f"{self._output_path}.processing"
-
-        # Check if job is already being processed
-        if os.path.exists(self._processing_file):
-            with open(self._processing_file, "r") as f:
-                self._batch_id = f.read().strip()
-
-        # initialize client
         self._client = _get_client(provider)
 
     def send(self) -> str:
@@ -69,6 +60,10 @@ class OpenAIBatchJob(BaseBatchJob):
             batch_id: Unique identifier for the batch job
         """
         try:
+            # Check if response file already exists
+            if self.should_skip_processing():
+                return self._output_path
+
             # Check for existing processing file
             if os.path.exists(self._processing_file):
                 logger.info("Batch already being processed.")
@@ -243,6 +238,9 @@ def _simplify_openai_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
         # sometimes there is no error message, we create one
         else:
             simplified["error"] = f"Error: status code {status_code}"
+
+    # Post-process the response content
+    simplified["content"] = post_process_response(simplified["content"])
 
     return simplified
 

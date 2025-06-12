@@ -10,6 +10,7 @@
 # How to test the gm-eval command
 - create a temp folder in project root
 - in the temp folder, run the gm-eval commands as you need
+    - don't create files your self, always use gm-eval download to get configurations.
 - double check the downloaded ai_eval_sheets. If they contains many data (more than 5 questions and 5 prompts), stop and confirm if you can continue first.
 
 # Environment

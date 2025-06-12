@@ -115,6 +115,24 @@ class BaseBatchJob(abc.ABC):
         """Get the output file path."""
         return self._output_path
 
+    @property
+    def is_completed(self) -> bool:
+        """Check if the batch job is already completed."""
+        return self._is_completed
+
+    def should_skip_processing(self) -> bool:
+        """
+        Check if batch processing should be skipped.
+
+        Returns:
+            True if response file already exists and processing should be skipped
+        """
+        if self._is_completed:
+            logger.info(f"Response file already exists: {self._output_path}")
+            logger.info("Skipping batch processing - job already completed")
+            return True
+        return False
+
     def _get_output_path(self) -> str:
         """Calculate output path from input path."""
         base_name = os.path.splitext(os.path.basename(self.jsonl_path))[0]

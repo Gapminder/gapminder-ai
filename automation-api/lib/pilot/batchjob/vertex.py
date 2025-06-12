@@ -16,6 +16,7 @@ from lib.config import read_config
 
 from ..utils import get_batch_id_and_output_path
 from .base import BaseBatchJob
+from .utils import post_process_response
 
 logger = AppSingleton().get_logger()
 
@@ -40,11 +41,18 @@ class VertexBatchJob(BaseBatchJob):
             jsonl_path: Path to JSONL file containing prompts
             model_id: The model to send to
         """
-        self.jsonl_path = jsonl_path
+        # Initialize base class with custom output path for Vertex AI
+        super().__init__(jsonl_path)
+
+        # Override the output path for Vertex AI specific naming
         _, output_path = get_batch_id_and_output_path(jsonl_path)
-        self._batch_id = None
         self._output_path = output_path
         self._processing_file = f"{self._output_path}.processing"
+
+        # Check if response file exists and update completion status
+        if os.path.exists(self._output_path):
+            self._is_completed = True
+
         self._model_id = model_id
 
         # find custom id mapping file
@@ -63,10 +71,10 @@ class VertexBatchJob(BaseBatchJob):
             custom_id = row["prompt_id"]
             self._custom_id_mapping[prompt_text] = custom_id
 
-            # Check if job is already being processed
-            if os.path.exists(self._processing_file):
-                with open(self._processing_file, "r") as f:
-                    self._batch_id = f.read().strip()
+        # Check if job is already being processed
+        if os.path.exists(self._processing_file):
+            with open(self._processing_file, "r") as f:
+                self._batch_id = f.read().strip()
 
         # initial vertexai
         config = read_config()
@@ -91,6 +99,10 @@ class VertexBatchJob(BaseBatchJob):
             batch_id: Unique identifier for the batch job
         """
         try:
+            # Check if response file already exists
+            if self.should_skip_processing():
+                return self._output_path
+
             # Check for existing processing file
             if os.path.exists(self._processing_file):
                 logger.info("Batch already being processed.")
@@ -276,6 +288,9 @@ def _simplify_vertex_response(response_data: Dict[str, Any], custom_id: Optional
     except (KeyError, TypeError, IndexError) as e:
         # FIXME: should read error from the response_data.
         simplified["error"] = str(e)
+
+    # Post-process the response content
+    simplified["content"] = post_process_response(simplified["content"])
 
     return simplified
 

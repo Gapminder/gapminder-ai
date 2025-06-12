@@ -1,8 +1,8 @@
 # Gapminder AI Benchmark tool
 
-This is a set of libraries which help to run experiments for the Gapminder AI worldview benchmark[1] project.
+This is a set of libraries which help to run experiments for the [Gapminder AI worldview benchmark] project.
 
-[1]: https://www.gapminder.org/ai
+[Gapminder AI worldview benchmark]: https://www.gapminder.org/ai
 
 ## The Experiment Configurations
 
@@ -19,9 +19,9 @@ The tool expected following sheets in the experiment config:
 - Model configurations
 - Latest Results
 
-Please refer to the current configuration spreadsheet[2] for the expected columns for each sheet.
+Please refer to the [current configuration spreadsheet] for the expected columns for each sheet.
 
-[2]: https://docs.google.com/spreadsheets/d/1Tsa4FDAP-QhaXNhfclqq2_Wspp32efGeZyGHxSrtRvA/edit?gid=42711988#gid=42711988
+[current configuration spreadsheet]: https://docs.google.com/spreadsheets/d/1Tsa4FDAP-QhaXNhfclqq2_Wspp32efGeZyGHxSrtRvA/edit?gid=42711988#gid=42711988
 
 ### Notes on model ids
 
@@ -57,9 +57,9 @@ Generally the model id scheme will follow the conventions used in Litellm. with 
 
 ### running experiment in Notebook
 
-refer to run_evaluation.py[3] for a demo.
+refer to [run_evaluation.py] for a demo.
 
-[3]: https://github.com/Gapminder/gapminder-ai/blob/253c2b79aef96a5445bd82171e4d11fce488a8c1/automation-api/notebooks/run_evaluation.py
+[run_evaluation.py]: https://github.com/Gapminder/gapminder-ai/blob/253c2b79aef96a5445bd82171e4d11fce488a8c1/automation-api/notebooks/run_evaluation.py
 
 ### Running Experiments with the gm-eval CLI Tool
 
@@ -117,21 +117,22 @@ The gm-eval tool now supports two processing modes with automatic provider detec
 - Uses provider-specific batch APIs (OpenAI, Anthropic, Vertex AI, Mistral, Alibaba)
 - Supports waiting for completion with `--wait`
 - Automatically validates provider compatibility and suggests alternatives
+- Batch mode offers 50% discount for all the models we have encountered.
 
 **LiteLLM Mode:**
 - Real-time processing through LiteLLM
 - Supports all providers (especially those without batch APIs like DeepSeek)
 - Supports concurrent processing with `--processes`
 
-By default, the `run` command uses batch mode, which will send all prompts to the specified provider using Batch API. Batchjobs accepts the `--wait` flag to wait for the batch job to complete before continuing.
+By default, the `run` command uses batch mode, which will send all prompts to the specified provider using Batch API, for both the question prompts and eval prompts. The `run` command will always wait for question prompts to finish before it creates and sends the evaluation batch files. The `--wait` flag then can be used to wait for the evaluation batch jobs to complete and download the results. In a typical workflow, the user would first run the `run` command in batch mode without `--wait` (so that all evaluation batch jobs are sent), and then run it again with `--wait` to wait for all eval jobs to complete.
 
 ```bash
 gm-eval run --model-config-id mc049 --mode batch --wait
 ```
 
-The above command will send the batch to a provider and wait until it gets response file. If --wait flag is not set, it will return immediately after sending the batch. A .processing file with the batch ID will be created to indicate that the batch is still processing. You can run the same command with --wait flag to get the responses file later.
-
 To use Litellm mode, add the `--mode litellm` flag, as shown in previous section.
+
+If you want to send question prompts and evaluation prompts in different modes, you should use separated commands. Please refer to `Running Individual Steps` section for how to run each steps.
 
 #### other useful flags for gm-eval run
 
@@ -247,6 +248,7 @@ The CLI provides two commands for managing failed API requests:
    ```
    - Extracts requests that resulted in errors from the responses file
    - Default response path is requests filename with '-response' suffix
+   - use `gm-eval send-file` to send the requests
 
 2. **Merge responses**:
    ```bash

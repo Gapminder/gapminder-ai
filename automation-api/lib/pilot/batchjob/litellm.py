@@ -3,7 +3,7 @@
 import json
 import multiprocessing as mp
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import litellm
 from litellm import Cache  # type: ignore
@@ -11,8 +11,8 @@ from litellm import Cache  # type: ignore
 from lib.app_singleton import AppSingleton
 from lib.config import read_config
 
-from ..utils import get_output_path
 from .base import BaseBatchJob
+from .utils import post_process_response
 
 logger = AppSingleton().get_logger()
 config = read_config()
@@ -38,17 +38,10 @@ class LiteLLMBatchJob(BaseBatchJob):
             provider: API provider (e.g., "alibaba")
             num_processes: Number of processes to use for parallel processing
         """
-        self.jsonl_path = jsonl_path
+        super().__init__(jsonl_path)
         self._provider = provider
         self._num_processes = num_processes
-        self._output_path = get_output_path(jsonl_path)
         self._batch_id = jsonl_path
-
-        # Check if job is already completed
-        if os.path.exists(self._output_path):
-            self._is_completed = True
-        else:
-            self._is_completed = False
 
     def send(self) -> str:
         """
@@ -60,25 +53,35 @@ class LiteLLMBatchJob(BaseBatchJob):
             result: the output path, or empty string if failed to send prompts
         """
         try:
-            # Check if already completed
-            if self._is_completed and os.path.exists(self._output_path):
-                logger.info(f"Batch {self._batch_id} already completed.")
+            # Check if response file already exists
+            if self.should_skip_processing():
                 return self._output_path
 
             # Process all prompts
-            result = _process_batch_prompts(self.jsonl_path, self._output_path, self._num_processes, self._provider)
+            result_path = _process_batch_prompts(
+                self.jsonl_path, self._output_path, self._num_processes, self._provider
+            )
 
-            if result:
+            if result_path:  # Check if a valid path was returned
                 self._is_completed = True
                 logger.info(f"Batch {self._batch_id} completed successfully.")
-                logger.info(f"Results saved to {result}")
-                return result
+                logger.info(f"Results saved to {result_path}")
+                return result_path
             else:
-                logger.error(f"Batch {self._batch_id} processing failed.")
+                # This case now covers both processing failure and interruption before completion
+                logger.error(f"Batch {self._batch_id} processing failed or was interrupted before completion.")
                 return ""
-
+        except KeyboardInterrupt:
+            logger.warning(f"Batch {self._batch_id} sending was interrupted by user (Ctrl+C).")
+            # _process_batch_prompts is expected to handle its own cleanup of workers.
+            # If _process_batch_prompts created a partial file and didn't clean it,
+            # cleanup logic could be added here, but the proposed _process_batch_prompts
+            # aims to avoid writing partial files on interrupt.
+            raise  # Re-raise to allow application to terminate
         except Exception as e:
             logger.error(f"Error sending batch: {str(e)}")
+            # If _process_batch_prompts terminated workers due to an error and re-raised,
+            # it would be caught here.
             raise
 
     def check_status(self) -> str:
@@ -91,7 +94,7 @@ class LiteLLMBatchJob(BaseBatchJob):
         Returns:
             status: Job status string ("completed" or "n/a")
         """
-        if self._is_completed or os.path.exists(self._output_path):
+        if self.is_completed or os.path.exists(self._output_path):
             return "completed"
         else:
             return "n/a"
@@ -110,7 +113,6 @@ class LiteLLMBatchJob(BaseBatchJob):
         return self._output_path
 
 
-# helper functions
 def _setup_litellm_cache() -> None:
     """Configure LiteLLM Redis cache with 60 day TTL."""
     if "REDIS_HOST" in config and "REDIS_PORT" in config:
@@ -140,6 +142,10 @@ def _process_single_prompt(data: Dict, provider: Optional[str] = None) -> Dict:
 
         response = litellm.completion(**request_body)  # type: ignore
         content = response.choices[0].message.content
+
+        # Post-process the response content
+        content = post_process_response(content)
+
         try:  # when citations available, add them to the content.
             citation_str = "\n".join(f"[{n+1}]: {link}" for n, link in enumerate(response.citations))
             content = f"{content}\n\nCitations:\n\n{citation_str}"
@@ -180,36 +186,88 @@ def _process_batch_prompts(
     provider: Optional[str] = None,
 ) -> Optional[str]:
     """Process batch prompts using LiteLLM with multiprocessing."""
-    try:
-        _setup_litellm_cache()
 
-        # Read all prompts into memory
-        with open(input_jsonl_path) as f:
-            all_prompts = [json.loads(line) for line in f]
+    _setup_litellm_cache()
 
-        total_prompts = len(all_prompts)
-        logger.info(f"Starting to process {total_prompts} prompts with {num_processes} processes")
+    with open(input_jsonl_path) as f:
+        all_prompts = [json.loads(line) for line in f]
 
-        # Process prompts using multiprocessing if enabled
-        if num_processes > 1:
-            logger.info(f"Using multiprocessing with {num_processes} processes")
-            with mp.Pool(processes=num_processes) as pool:
-                results = pool.starmap(
-                    _process_single_prompt,
-                    [(prompt, provider) for prompt in all_prompts],
-                )
-        else:
-            logger.info("Processing prompts sequentially")
-            results = [_process_single_prompt(prompt, provider) for prompt in all_prompts]
+    total_prompts = len(all_prompts)
+    logger.info(f"Starting to process {total_prompts} prompts with {num_processes} processes")
 
-        # Write all results to output file
-        with open(output_path, "w") as f:
-            for result in results:
-                f.write(json.dumps(result) + "\n")
+    processed_results: List[Dict] = []  # Initialize to an empty list
 
-        logger.info(f"Completed processing all {total_prompts} prompts")
-        return output_path
+    if num_processes > 1:
+        logger.info(f"Using multiprocessing with {num_processes} processes")
+        pool = mp.Pool(processes=num_processes)
+        try:
+            # Use starmap_async for non-blocking behavior in the main thread
+            async_task = pool.starmap_async(
+                _process_single_prompt,
+                [(prompt, provider) for prompt in all_prompts],
+            )
 
-    except Exception as e:
-        logger.error(f"Error processing batch prompts: {str(e)}")
+            # Wait for tasks to complete, checking periodically to allow interrupts
+            logger.info("Tasks submitted to pool. Waiting for completion... (Press Ctrl+C to interrupt)")
+            while not async_task.ready():
+                try:
+                    # get() with a timeout allows KeyboardInterrupt to be caught by the main thread
+                    async_task.get(timeout=1)  # Check every 1 second
+                except mp.TimeoutError:
+                    # This is expected if tasks are still running
+                    continue
+                # If KeyboardInterrupt occurs during get(), it will propagate to the outer handler
+
+            processed_results = async_task.get()  # Retrieve all results once ready
+
+            pool.close()  # No more tasks will be submitted
+            pool.join()  # Wait for all worker processes to complete their current tasks and exit
+            logger.info("All multiprocessing tasks completed and workers joined.")
+        except KeyboardInterrupt:
+            logger.warning("Keyboard interrupt received by main process. Terminating worker processes...")
+            pool.terminate()  # Send SIGTERM to worker processes
+            pool.join()  # Wait for worker processes to terminate
+            logger.info("Worker processes terminated due to keyboard interrupt.")
+            # processed_results will remain as they were (likely empty or incomplete)
+            # Re-raising KeyboardInterrupt is crucial to stop the script.
+            raise
+        except Exception as e:
+            logger.error(f"An error occurred during multiprocessing: {str(e)}")
+            pool.terminate()
+            pool.join()
+            logger.info("Worker processes terminated due to an error.")
+            # Re-raise the caught exception
+            raise
+    else:  # Sequential processing
+        logger.info("Processing prompts sequentially")
+        try:
+            for prompt_data in all_prompts:
+                # Process one by one to allow interruption between prompts
+                if not isinstance(processed_results, list):  # Should not happen with init
+                    processed_results = []
+                processed_results.append(_process_single_prompt(prompt_data, provider))
+            logger.info("Sequential processing completed.")
+        except KeyboardInterrupt:
+            logger.warning("Keyboard interrupt received during sequential processing.")
+            # processed_results will contain items processed so far.
+            # Re-raise to stop the script.
+            raise
+        # Other exceptions in sequential mode will propagate naturally.
+
+    # Write results to output file only if processing wasn't interrupted before completion
+    # and results were actually gathered.
+    if processed_results:  # Check if list is not empty
+        try:
+            with open(output_path, "w") as f:
+                for result_item in processed_results:
+                    f.write(json.dumps(result_item) + "\n")
+            logger.info(f"Successfully wrote {len(processed_results)} results to {output_path}")
+            return output_path
+        except IOError as e:
+            logger.error(f"Failed to write results to {output_path}: {e}")
+            return None  # Indicate failure
+    else:
+        logger.warning(
+            "No results were processed or an interruption occurred before results could be gathered. Output file not written."
+        )
         return None
