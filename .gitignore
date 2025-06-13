@@ -2,4 +2,5 @@
 .aider*
 .env
 litellm/*.log
+archived/
 __pycache__
