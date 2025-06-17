@@ -1,0 +1,2 @@
+model_config_id,model_id,vendor,model_published_date,first_experiment_date,latest,name,model_parameters,repeat_times,memory,memory_size
+mc073,mistral/magistral-medium-2506,Mistral,2025-06-10,2025-06-13,True,Magistral,"{""temperature"": 1.0, ""max_tokens"": 10000}",1,False,0
