@@ -22,7 +22,12 @@ def clean_option_text(option_text):
 
 
 def split_options(options_text):
-    if ',' not in options_text:
+    options_text = options_text.strip()
+    if '\n' in options_text and ',' in options_text:
+        res = options_text.split('\n')
+        # remove the tailing comma if there are any
+        res = [x[:-1] if x[-1] == ',' else x for x in res]
+    elif ',' not in options_text:
         res = options_text.split("\n")
     else:
         step1 = options_text.replace("\n", "")
@@ -225,6 +230,7 @@ def main():
             # Skip questions with fewer than 3 options
             if len(parsed_options) < 3:
                 print(f"Warning: Question QID {question_id_raw} has fewer than 3 options ({len(parsed_options)}). Skipping this question.")
+                print(f"parsed options: {parsed_options}")
                 skipped_too_few_options += 1
                 # Remove the question from questions_data
                 questions_data = [q for q in questions_data if q['question_id'] != question_id_raw]
