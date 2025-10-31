@@ -1,0 +1,4 @@
+model_config_id,model_id,vendor,model_published_date,first_experiment_date,latest,name,model_parameters,repeat_times,memory,memory_size
+mc068,anthropic/claude-sonnet-4-20250514,Anthropic,2025-05-14,2025-06-10,False,Claude 4 Sonnet (Thinking),"{""temperature"": 1, ""thinking"":{""type"":""enabled"", ""budget_tokens"":3000}, ""max_tokens"": 5000}",1,False,0
+mc069,anthropic/claude-opus-4-20250514,Anthropic,2025-05-14,2025-06-10,False,Claude 4 Opus (Thinking),"{""temperature"": 1, ""thinking"":{""type"":""enabled"", ""budget_tokens"":3000}, ""max_tokens"": 5000}",1,False,0
+mc071,alibaba/qwen-plus-latest,Alibaba,2025-04-28,2025-06-10,False,Qwen 3 (Thinking),"{""temperature"": 1, ""max_tokens"": 2000, ""extra_body"":{""enable_thinking"": true, ""thinking_budget"": 3000}}",1,False,0

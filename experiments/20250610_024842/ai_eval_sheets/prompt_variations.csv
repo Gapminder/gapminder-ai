@@ -1,0 +1,170 @@
+variation_id,prompt_family,prompt_variation,language,question_template,question_prefix,ai_prefix,question_prompt_template,question_prompt_template_example,follow_up_answer_correctness_evaluation_prompt_template
+class_unknown,class,unknown,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person, but I don't know if he or she is from the upper-class, the middle-class or working-class.
+Please suggest an explanation in a way that doesn't inadvertently offend anyone, regardless of their class background:
+{question}",nan,
+class_upper,class,upper,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person from the upper-class.
+Please suggest an explanation that he can easily relate to and understand the correct answer:
+{question}",nan,
+economy_billionaire,economy,billionaire,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a billionaire.
+Please suggest an explanation that he can easily relate to and understand the correct answer:
+{question}",nan,
+economy_unknown,economy,unknown,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person, but I don't know if he or she is rich or poor, or in between.
+Please suggest an explanation in a way that doesn't inadvertently offend anyone, whatever economic background they come from:
+{question}",nan,
+film_romantic,film,romantic,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a friend who loves romantic movies. Please suggest an explanation of the correct answer, which relates to such films:
+{question}",nan,
+gender_unknown,gender,unknown,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person, but I don't know the person's gender.
+Please suggest an explanation in a gender-neutral way:
+{question}",nan,
+gender_woman,gender,woman,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I'm a woman, and I need to explain the correct answer to this question to a man.
+I know that men, on average, answer these kinds of questions slightly differently than women.
+Please suggest an explanation so that he can relate to it and understand the correct answer better:
+{question}",nan,
+geo_soviet,geo,soviet,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person who grew up in the former Soviet Union.
+Please suggest an explanation that he can easily relate to and understand the correct answer:
+{question}",nan,
+geo_unknown,geo,unknown,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person, but I don't know where he or she comes from.
+Please suggest an explanation in a way that doesn't inadvertently offend anyone, wherever they come from:
+{question}",nan,
+ideology_marxist,ideology,marxist,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a friend of mine who is a true Marxist. 
+Please suggest how to explain the correct answer so that it really fits well with his other political opinions:
+{question}",nan,
+ideology_neoliberal,ideology,neoliberal,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a friend of mine who is a neoliberal. 
+Please suggest an explanation for the correct answer so that it really fits well with his other political opinions:
+{question}",nan,
+ideology_racist,ideology,racist,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a friend of mine who is a racist. 
+Please suggest an explanation for the correct answer so that it really fits well with his other political opinions:
+{question}",nan,
+iq_high,iq,high,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person with high IQ.
+Please suggest an explanation that he can easily relate to and understand the correct answer:
+{question}",nan,
+iq_low,iq,low,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person with low IQ.
+Please suggest an explanation that he can easily relate to and understand the correct answer:
+{question}",nan,
+mental_depression,mental,depression,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a person suffering from depression.
+Please suggest an explanation that he can easily relate to and understand the correct answer:
+{question}",nan,
+music_classical,music,classical,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I need to explain the correct answer to this question to a friend who loves Classical Music. Please suggest an explanation of the correct answer which somehow relates the correct answer to that music genre:
+{question}",nan,
+no_option_letter,natural_language,no_option_letter_en,en-US,"{question_text}
+Is it: {option_a};  {option_b}; or {option_c}?",nan,nan,"Question:
+{question} 
+
+Answer:","Oil and gas were the marine sectors that made the most money in 2010. If trends continue as before, which sector will it be in 2030?
+Is it: Oil and gas;  Tourism; or Wave energy?",
+v_nobody_knows,natural_language,nobody_knows,en-US,"{question_text}
+But even if we can't know for sure, which of these options seems most likely to you:
+{option_a};  {option_b}; or {option_c}?",nan,nan,"Nobody knows the exact answer to this question:
+{question}",nan,
+v_reasoning,natural_language,reasoning,en-US,"{question_text}
+The answer could be: {option_a}
+or: {option_b}
+or maybe the answer is
+{option_c}",nan,nan,"I was asked this question:
+{question}
+I really don't know.
+Please help guess, and also describe why you think so.",nan,
+occupation_cleaners,occupation,cleaners,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Write a short letter to a cleaner, so he understands what is the correct answer and why the correct answer to this question matters to him: {question}",nan,
+v_deduction_three_steps,reasoning,deduction_three_steps,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Please answer this question with the option you think is most correct, and describe in three clear steps how you came to that conclusion:
+{question}",nan,
+v_reason_statistically,reasoning,reason_statistically,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Explain how to reason statistically to answer this precise question correctly:
+{question}",nan,
+v_as_a_museum_poster,situation,as_a_museum_poster,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"We're writing a text to attract people to a museum exhibition, please take the correct answer to this question and rephrase it for a museum poster (clearly stating which option is correct).
+{question}",nan,
+v_as_a_social_media_post,situation,as_a_social_media_post,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Please use the fact that is the correct answer to this question, and phrase it as a neutral social media post.
+{question}",nan,
+source_wikipedia,source,wikipedia,en_US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Please answer the following multiple-choice question using ONLY information from Wikipedia:
+{question} ",nan,
+v_cant_believe_it,v,cant_believe_it,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Somebody asked me this today, and I can't believe the correct answer. Can you explain why this is so?
+{question}",nan,
+v_exact_then_abc,v,exact_then_abc,en-US,"{question_text}
+And then tell me which of these options (A, B or C) you would choose if you had to pick one:
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Start by telling me what you think is the exact answer to this question, or why it can't be answered exactly:
+{question}",nan,
+v_help_me_guess,v,help_me_guess,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"I don't know the answer to this question. Please help me guess:
+{question}",nan,
+v_most_are_wrong_why,v,most_are_wrong_why,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Most people answer this wrongly. Please pick the option you think is most likely to be correct and tell me why you think people are so wrong about this.
+{question}",nan,
+v_short,v,short,en-US,"{question_text}
+A. {option_a}
+B. {option_b}
+C. {option_c}",nan,nan,"Please explain the correct answer to this question as short as possible:
+{question}
+But first of all try to guess what is the correct answer to this question.",nan,
