@@ -15,7 +15,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class Question(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True)
 
-    include_in_next_evaluation: bool = Field(False, title="Include in next evaluation", validate_default=True)
+    include_in_next_evaluation: bool = Field(
+        False, title="Include in next evaluation", validate_default=True
+    )
     question_id: str = Field("", title="Question ID")
     language: str = Field("", title="Language")
     published_version_of_question: str = Field("", title="Published version of question")
@@ -54,8 +56,10 @@ class PromptVariation(BaseModel):
 
     include_in_next_evaluation: bool = Field(False, title="Include in next evaluation")
     variation_id: str = Field("", title="Variation ID")
+    prompt_family_id: str = Field("", title="Prompt Family ID")
+    prompt_specific_id: str = Field("", title="Prompt Specific ID")
     prompt_family: str = Field("", title="Prompt Family")
-    prompt_variation: str = Field("", title="Prompt Variation")
+    prompt_specific: str = Field("", title="Prompt Specific")
     language: str = Field("", title="Language")
     question_template: str = Field("", title="Question template")
     question_prefix: str = Field("", title="Question prefix")
