@@ -41,9 +41,7 @@ sheet_names = {
 }
 
 
-def get_ai_eval_spreadsheet(
-    authorized_clients: AuthorizedClients, ai_eval_spreadsheet_id: str
-) -> Spreadsheet:
+def get_ai_eval_spreadsheet(authorized_clients: AuthorizedClients, ai_eval_spreadsheet_id: str) -> Spreadsheet:
     ai_eval_spreadsheet = authorized_clients.gc.open_by_key(ai_eval_spreadsheet_id)
     return ai_eval_spreadsheet
 
