@@ -17,9 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class Question(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True)
 
-    include_in_next_evaluation: bool = Field(
-        False, title="Include in next evaluation", validate_default=True
-    )
+    include_in_next_evaluation: bool = Field(False, title="Include in next evaluation", validate_default=True)
     question_id: str = Field("", title="Question ID")
     language: str = Field("", title="Language")
     published_version_of_question: str = Field("", title="Published version of question")
