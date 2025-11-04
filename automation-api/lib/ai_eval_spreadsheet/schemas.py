@@ -6,6 +6,8 @@
 # Note that most types are str since spreadsheet columns can be formulas
 
 
+from datetime import datetime
+
 import pandas as pd
 import pandera as pa
 from pandera.engines.pandas_engine import PydanticModel
@@ -54,8 +56,10 @@ class PromptVariation(BaseModel):
 
     include_in_next_evaluation: bool = Field(False, title="Include in next evaluation")
     variation_id: str = Field("", title="Variation ID")
+    prompt_family_id: str = Field("", title="Prompt Family ID")
+    prompt_specific_id: str = Field("", title="Prompt Specific ID")
     prompt_family: str = Field("", title="Prompt Family")
-    prompt_variation: str = Field("", title="Prompt Variation")
+    prompt_specific: str = Field("", title="Prompt Specific")
     language: str = Field("", title="Language")
     question_template: str = Field("", title="Question template")
     question_prefix: str = Field("", title="Question prefix")
@@ -88,6 +92,20 @@ class GenAiModelConfig(BaseModel):
     repeat_times: int = Field(-1, title="Repeat Times")
     memory: bool = Field(False, title="Memory")
     memory_size: int = Field(-1, title="Memory Size")
+
+    @field_validator("model_published_date", mode="before")
+    @classmethod
+    def validate_date_format(cls, v):  # noqa: N805
+        # date formats: we are using "%Y-%m-%d" for now, but can add more
+        # to below list.
+        date_formats = ["%Y-%m-%d"]
+        for fmt in date_formats:
+            try:
+                datetime.strptime(str(v), fmt)
+                return str(v)
+            except ValueError:
+                continue
+        raise ValueError(f"model_published_date must be a valid date string (%Y-%m-%d), got: {v}")
 
 
 class GenAiModelConfigsDf(pa.DataFrameModel):

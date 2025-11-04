@@ -73,7 +73,7 @@ def read_ai_eval_data(
         row_schema=PromptVariation,
         worksheet_name=sheet_names["prompt_variations"],
         header_row_number=0,
-        evaluate_formulas=False,
+        evaluate_formulas=True,
     )
 
     gen_ai_model_configs = GsheetsWorksheetEditor(
