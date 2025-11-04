@@ -41,7 +41,9 @@ sheet_names = {
 }
 
 
-def get_ai_eval_spreadsheet(authorized_clients: AuthorizedClients, ai_eval_spreadsheet_id: str) -> Spreadsheet:
+def get_ai_eval_spreadsheet(
+    authorized_clients: AuthorizedClients, ai_eval_spreadsheet_id: str
+) -> Spreadsheet:
     ai_eval_spreadsheet = authorized_clients.gc.open_by_key(ai_eval_spreadsheet_id)
     return ai_eval_spreadsheet
 
@@ -73,7 +75,7 @@ def read_ai_eval_data(
         row_schema=PromptVariation,
         worksheet_name=sheet_names["prompt_variations"],
         header_row_number=0,
-        evaluate_formulas=False,
+        evaluate_formulas=True,
     )
 
     gen_ai_model_configs = GsheetsWorksheetEditor(
